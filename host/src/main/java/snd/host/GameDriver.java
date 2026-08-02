@@ -53,6 +53,15 @@ public final class GameDriver {
         if (proc == null) {
             return "no input processor yet";
         }
+        if (verb.equalsIgnoreCase("shift+tab")) {
+            // The processor path can't fake held modifiers (SndInput reads
+            // live key state), so drive the navigator action directly.
+            snd.core.ModModule m = snd.core.Dispatcher.current();
+            if (m == null) {
+                return "no module loaded";
+            }
+            return "shift+tab -> " + m.devCommand("nav", "PREV_STOP");
+        }
         if (verb.startsWith("type:")) {
             String text = verb.substring(5);
             for (int i = 0; i < text.length(); i++) {

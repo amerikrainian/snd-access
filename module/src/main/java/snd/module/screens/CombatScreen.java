@@ -208,7 +208,42 @@ public class CombatScreen extends AccessScreen {
             final Ent ent = ents.get(i);
             b.addItem(ControlId.referenced(ent, CompositeKey.of(key, i)), entNode(ds, ent));
         }
+        if (!heroes) {
+            buildReinforcements(b, ds);
+        }
         b.popContext();
+    }
+
+    // The "Reinforcements: N" box atop the enemy column: the count as the
+    // game's own pattern string, the waiting monsters' names on Backspace.
+    private void buildReinforcements(GraphBuilder b, final DungeonScreen ds) {
+        final List<com.tann.dice.gameplay.content.ent.Monster> waiting =
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getReinforcements();
+        if (waiting == null || waiting.isEmpty()) {
+            return;
+        }
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.TEXT;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameText.t("Reinforcements: " + waiting.size());
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onSecondary = new Runnable() {
+            @Override
+            public void run() {
+                StringBuilder sb = new StringBuilder();
+                for (com.tann.dice.gameplay.content.ent.Monster m : waiting) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(GameText.t(m.getName(true)));
+                }
+                host.speech().speak(sb.toString(), false);
+            }
+        };
+        b.addItem(ControlId.structural(CompositeKey.of("enemies", "reinforcements")), vt);
     }
 
     private NodeVtable entNode(final DungeonScreen ds, final Ent ent) {
@@ -508,13 +543,26 @@ public class CombatScreen extends AccessScreen {
 
         NodeVtable confirm = new NodeVtable();
         confirm.controlType = ControlTypes.BUTTON;
-        confirm.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-            @Override
-            public String get() {
-                String label = GameUi.confirmLabel(confirmButton);
-                return label != null ? label : Loc.get("combat", "confirm");
-            }
-        }, AnnouncementKinds.LABEL));
+        confirm.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        String label = GameUi.confirmLabel(confirmButton);
+                        return label != null ? label : Loc.get("combat", "confirm");
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        // The skull icons + red border, as words.
+                        int deaths = predictedDeaths(ds);
+                        if (deaths <= 0) {
+                            return null;
+                        }
+                        return deaths == 1 ? Loc.get("combat", "predicted_death_one")
+                                : Loc.get("combat", "predicted_deaths", "n", deaths);
+                    }
+                }, AnnouncementKinds.VALUE));
         confirm.onActivate = new Runnable() {
             @Override
             public void run() {
@@ -522,6 +570,92 @@ public class CombatScreen extends AccessScreen {
             }
         };
         b.addItem(ControlId.structural(CompositeKey.of("buttons", "confirm")), confirm);
+
+        buildSystemButtons(b, ds);
+    }
+
+    private static int predictedDeaths(DungeonScreen ds) {
+        int deaths = 0;
+        for (Ent hero : ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
+                .getEntities(true, false)) {
+            EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, hero);
+            if (future != null && future.isDead()) {
+                deaths++;
+            }
+        }
+        return deaths;
+    }
+
+    // ---- the top icon row (all icon-only and rebuilt every turn, so these
+    // drive the underlying actions, never the actors) ----
+
+    private void buildSystemButtons(GraphBuilder b, final DungeonScreen ds) {
+        b.addItem(ControlId.structural(CompositeKey.of("sys", "menu")),
+                simpleButton(Loc.get("ui", "sys.menu"), new Runnable() {
+                    @Override
+                    public void run() {
+                        com.tann.dice.screens.dungeon.DungeonUtils.showCogMenu();
+                    }
+                }));
+        b.addItem(ControlId.structural(CompositeKey.of("sys", "summary")),
+                simpleButton(Loc.get("combat", "run_summary"), new Runnable() {
+                    @Override
+                    public void run() {
+                        // The # button's panel — a blocker push the modal reader covers.
+                        ds.getFightLog().getContext().showHashContents();
+                    }
+                }));
+        final java.util.List<com.tann.dice.screens.dungeon.panels.hourglass.HourglassElement> schedule =
+                com.tann.dice.screens.dungeon.panels.hourglass.HourglassUtils.getHourglassItems(
+                        ds.getFightLog().getSnapshot(FightLog.Temporality.Present));
+        if (!schedule.isEmpty()) {
+            b.addItem(ControlId.structural(CompositeKey.of("sys", "hourglass")),
+                    simpleButton(Loc.get("combat", "future_schedule"), new Runnable() {
+                        @Override
+                        public void run() {
+                            host.speech().speak(scheduleText(ds, schedule), false);
+                        }
+                    }));
+        }
+        if (com.tann.dice.gameplay.save.settings.option.OptionLib.SEARCH_BUTT.c()) {
+            b.addItem(ControlId.structural(CompositeKey.of("sys", "search")),
+                    simpleButton(Loc.get("ui", "sys.search"), new Runnable() {
+                        @Override
+                        public void run() {
+                            com.tann.dice.screens.dungeon.panels.book.page.stuffPage.APIUtils.showSearch();
+                        }
+                    }));
+        }
+    }
+
+    // "Turn 4: message; Turn 6: message" — the hourglass panel's schedule,
+    // the only surfacing of delayed effects.
+    private static String scheduleText(DungeonScreen ds,
+            java.util.List<com.tann.dice.screens.dungeon.panels.hourglass.HourglassElement> schedule) {
+        int turn = ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getTurn();
+        StringBuilder sb = new StringBuilder();
+        for (com.tann.dice.screens.dungeon.panels.hourglass.HourglassElement e : schedule) {
+            for (int t : e.getTurns(turn)) {
+                if (sb.length() > 0) {
+                    sb.append("; ");
+                }
+                sb.append(GameText.t("Turn " + t)).append(": ").append(GameText.t(e.getRealMessage()));
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : GameText.t("Turn " + turn);
+    }
+
+    private static NodeVtable simpleButton(final String label, Runnable action) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return label;
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onActivate = action;
+        return vt;
     }
 
     /** "2/3" — the counter the visual UI draws on the Reroll button. */

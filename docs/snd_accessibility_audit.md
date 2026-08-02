@@ -314,9 +314,14 @@ path), Backspace reads the calculated effect. The mana store reads as the game's
 stored" banner text. Cast-error banners speak via 3.12's channel. Verified live: the mana node
 with the game's words; ability cards use the same game paths and read whenever a caster exists.
 
-## 3.7 Confirm Button Warnings — NOT STARTED
+## 3.7 Confirm Button Warnings — DONE
 
 `ConfirmButton` states: Done Rolling / End turn, pulsating when everything is used. When ending the turn would let **N heroes die**, the tick icon is replaced by **skull icons (one per predicted death) + a red border** — no text anywhere.
+
+> **Coverage:** the confirm node's label is the button's own state text (read reflectively from
+`ConfirmState`), and the skull row reads as a value — "a hero dies this turn" / "n heroes die
+this turn", counted from the Future snapshot the same way the per-hero prediction is (which also
+speaks on each endangered hero's own node, verified live with a lethal wolf intent).
 
 ## 3.8 Undo — DONE
 
@@ -328,7 +333,7 @@ from the watcher's command-count diff regardless of input path; the rewind-to-ro
 announces itself through the phase change ("Your roll"). Verified live: the rewind path and the
 button readout; Z falls through the navigator untouched.
 
-## 3.9 Top Icon Button Row — NOT STARTED
+## 3.9 Top Icon Button Row — DONE
 
 `DungeonUtils.makeButtonsGroup` — all icon-only, all mouse-only, and the row is **rebuilt every turn** (any state would be lost):
 
@@ -338,20 +343,44 @@ button readout; Z falls through the navigator untouched.
 - **Target** (conditional) → **press-and-hold** to reveal targeting arrows (Tab is the keyboard equivalent)
 - **Search** (optional) → name/description search
 
-## 3.10 Reinforcements Panel — NOT STARTED
+> **Coverage:** named nodes in the combat buttons stop driving the underlying actions, never the
+rebuilt actors: Menu (`showCogMenu`, ESC also works), Run summary (`showHashContents` — a
+blocker push the modal reader walks: mode+difficulty, fight/turn, modifiers with right-click
+detail; verified live), Turn schedule (conditional — speaks the hourglass elements as "Turn n:
+message" using the game's own pattern strings), and Search (conditional on its option). The
+press-and-hold target-arrows button stays visual; the same information reads per-node as
+intents and the damage preview.
+
+## 3.10 Reinforcements Panel — DONE
 
 When more monsters wait off-screen: a "Reinforcements: N" box atop the enemy column; click lists upcoming monster names. Flashes on change. Mouse only.
 
-## 3.11 Surrender Phase — NOT STARTED
+> **Coverage:** a node at the end of the enemies stop whenever `Snapshot.getReinforcements()` is
+non-empty — the game's own "Reinforcements: N" pattern string, with the waiting monsters' names
+on Backspace.
+
+## 3.11 Surrender Phase — DONE
 
 When monsters try to flee, a **three-choice** `ChoiceDialog` (decline / "?" explainer / accept). Three-choice dialogs have **no keyboard support** (only 2-choice dialogs do). `AUTO_FLEE` option auto-accepts.
 
-## 3.12 Transient Feedback Channels — NOT STARTED
+> **Coverage:** the phase announces itself ("Monsters offer to surrender") and the three-choice
+dialog reads and activates through the generic modal reader — verified live with a fleeing
+wolf: the prompt, no / ? / yes buttons, and the ?-explainer panel all spoke and worked by
+keyboard.
+
+## 3.12 Transient Feedback Channels — DONE
 
 - `AbilityHolder.showInfo(msg)` — the main error/notice banner: slides up from the bottom, waits ~0.5 s, leaves
 - `PopupHolder` (top-right): achievements, stat deltas, level-difficulty notes; 5 s auto-dismiss; right-click for detail
 - Speech bubbles and text wisps (flavor)
 - Death/damage animations, combat effect animations (`combatEffects/` — ~30 visual-only effect types)
+
+> **Coverage:** `AbilityHolder.showInfo` and `TargetingManager.showError` are instrumented
+(advice → `Dispatcher.transientText`, a bounded queue; the module's BannerWatcher drains,
+dedupes repeats, and speaks with interrupt — verified live: the previously-silent "Side does
+nothing" veto now reads). PopupHolder was already spoken by PopupWatcher. Bubbles, wisps, and
+combat-effect animations are flavor; their gameplay substance reads through the snapshot
+previews and applied-command announcements.
 
 ---
 

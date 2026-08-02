@@ -30,6 +30,7 @@ public class SndModule implements ModModule {
     private PhaseWatcher phases;
     private DiceWatcher dice;
     private TargetingWatcher targeting;
+    private BannerWatcher banners;
     private Object lastScreen;
     private boolean greeted;
 
@@ -48,6 +49,7 @@ public class SndModule implements ModModule {
         phases = new PhaseWatcher(h.speech());
         dice = new DiceWatcher(h.speech());
         targeting = new TargetingWatcher(h.speech());
+        banners = new BannerWatcher(h.speech());
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
@@ -82,6 +84,7 @@ public class SndModule implements ModModule {
         phases.tick();
         dice.tick();
         targeting.tick();
+        banners.tick();
     }
 
     // The game rebuilds its InputMultiplexer in Main.setupScale (resize,

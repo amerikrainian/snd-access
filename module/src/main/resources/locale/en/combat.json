@@ -24,5 +24,8 @@
   "phase.surrender": "Monsters offer to surrender",
   "phase.level_end": "Fight won",
   "phase.run_end": "Run over",
-  "turn": "Turn {turn}"
+  "run_summary": "Run summary",
+  "future_schedule": "Turn schedule",
+  "predicted_death_one": "a hero dies this turn",
+  "predicted_deaths": "{n} heroes die this turn"
 }

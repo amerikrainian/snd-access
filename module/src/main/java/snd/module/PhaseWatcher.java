@@ -96,7 +96,7 @@ final class PhaseWatcher {
         int turn = currentTurn();
         if (turn > 0 && turn != lastTurn) {
             lastTurn = turn;
-            sb.append(Loc.get("combat", "turn", "turn", turn)).append(", ");
+            sb.append(GameText.t("Turn " + turn)).append(", "); // the game's own pattern string
         }
         return sb.append(phrase).toString();
     }

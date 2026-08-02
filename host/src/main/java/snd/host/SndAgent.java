@@ -58,7 +58,33 @@ public final class SndAgent {
                                 .on(ElementMatchers.named("render").and(ElementMatchers.takesArguments(0))));
                     }
                 })
+                .type(ElementMatchers.named("com.tann.dice.gameplay.effect.targetable.ability.ui.AbilityHolder"))
+                .transform(new AgentBuilder.Transformer() {
+                    @Override
+                    public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder,
+                                                            TypeDescription typeDescription,
+                                                            ClassLoader classLoader,
+                                                            JavaModule module,
+                                                            java.security.ProtectionDomain protectionDomain) {
+                        return builder.visit(net.bytebuddy.asm.Advice.to(TransientTextAdvice.class)
+                                .on(ElementMatchers.named("showInfo")
+                                        .and(ElementMatchers.takesArgument(0, String.class))));
+                    }
+                })
+                .type(ElementMatchers.named("com.tann.dice.screens.dungeon.TargetingManager"))
+                .transform(new AgentBuilder.Transformer() {
+                    @Override
+                    public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder,
+                                                            TypeDescription typeDescription,
+                                                            ClassLoader classLoader,
+                                                            JavaModule module,
+                                                            java.security.ProtectionDomain protectionDomain) {
+                        return builder.visit(net.bytebuddy.asm.Advice.to(TransientTextAdvice.class)
+                                .on(ElementMatchers.named("showError")
+                                        .and(ElementMatchers.takesArgument(0, String.class))));
+                    }
+                })
                 .installOn(inst);
-        SndLog.info("frame-pump hook installed on com.tann.dice.Main.render");
+        SndLog.info("hooks installed: Main.render, AbilityHolder.showInfo, TargetingManager.showError");
     }
 }

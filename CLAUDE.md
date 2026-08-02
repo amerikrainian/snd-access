@@ -141,7 +141,9 @@ Permanent/reloadable split (verified end-to-end):
   an edge from a permanent class into the collectible loader and pins every old module in memory.
   Hooks are installed once by the host; a reload swaps one volatile reference.
 - Current hooks: `Main.render` → `Dispatcher.frame()` (the pump: drain jobs → poll frame-waits →
-  `module.tick()` → host frame hook). Transient-text hooks (banners, popups) come with phase 6.
+  `module.tick()` → host frame hook); `AbilityHolder.showInfo` + `TargetingManager.showError` →
+  `Dispatcher.transientText()` (a bounded queue the module's BannerWatcher drains and speaks —
+  the game's half-second banners and red error flashes).
 - The UI model going forward (phases 3+) is the **wotr-access immediate-mode graph** — screens
   declare nodes fresh from live game state each render, focus survives by ControlId identity.
   Port its engine tests as the spec; do not invent a retained-tree/signature design, and do not

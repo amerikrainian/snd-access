@@ -92,6 +92,32 @@ public final class Dispatcher {
         JOBS.add(job);
     }
 
+    // ---- transient text: banners and error flashes the game draws for
+    // ~half a second. Instrumented game methods (showInfo, showError) feed
+    // this queue from advice code — advice may reference only this class —
+    // and the module drains it each tick to speak. Bounded so a runaway
+    // caller can't hoard memory; overflow drops newest and logs. ----
+
+    private static final java.util.concurrent.ConcurrentLinkedQueue<String> TRANSIENT =
+            new java.util.concurrent.ConcurrentLinkedQueue<String>();
+    private static final int TRANSIENT_CAP = 32;
+
+    public static void transientText(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        if (TRANSIENT.size() >= TRANSIENT_CAP) {
+            SndLog.error("transient text queue full; dropping: " + text, null);
+            return;
+        }
+        TRANSIENT.add(text);
+    }
+
+    /** The oldest undrained transient line, or null. */
+    public static String pollTransientText() {
+        return TRANSIENT.poll();
+    }
+
     public static void addWait(String id, FrameWait wait) {
         WAITS.put(id, wait);
     }
