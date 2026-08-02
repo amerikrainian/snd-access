@@ -29,7 +29,8 @@ public class SndModule implements ModModule {
         this.host = h;
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());
-        screens.register(new TestScreen());
+        screens.register(new TitleFlowScreen());
+        screens.register(new GameModalScreen());
         input = new SndInput(screens, nav);
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
