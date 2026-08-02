@@ -143,6 +143,18 @@ public class GameModalScreen extends AccessScreen {
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
                         }
+                        if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.DieSidePanel) {
+                            // Die-net previews in dialogs (level-ups, sheets).
+                            label = snd.module.GameText.t(((com.tann.dice.screens.dungeon.panels.DieSidePanel) actor)
+                                    .side.getBaseEffect().describe());
+                        }
+                        if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel) {
+                            // A sheet's item slot: the item's name, or an empty slot.
+                            com.tann.dice.gameplay.content.item.Item item =
+                                    ((com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel) actor).item;
+                            label = item != null ? snd.module.GameText.t(item.getName())
+                                    : Loc.get("ui", "modal.empty_slot");
+                        }
                         return label != null ? label
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }

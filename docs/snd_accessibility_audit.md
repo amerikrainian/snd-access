@@ -278,7 +278,7 @@ column, so the applied announcement appends "defeated". Backspace reads the die 
 visible status icon's own trigger-panel description. Targeting arrows are 3.9; portraits and
 speech bubbles are flavor.
 
-## 3.5 Character Sheet (`EntPanelInventory`) — NOT STARTED
+## 3.5 Character Sheet (`EntPanelInventory`) — DONE
 
 The right-click panel for any hero or monster:
 
@@ -288,6 +288,14 @@ The right-click panel for any hero or monster:
 - Equipped items in the net's corner slots (right-click for item text)
 - Traits/passives as stacked explanation panels
 - For heroes dead last fight: skull icon (right-click explains the half-HP return rule)
+
+> **Coverage:** Backspace on any combatant reads the sheet as one utterance: name, level (heroes),
+hp/shield, defeated state with the game's own half-HP-return sentence, the six-side die net,
+equipped items (name + description), and each visible status. Dead heroes keep their place in
+the heroes stop (the greyed skull panel) with a "defeated" state; dead monsters vanish like
+their corpses. Dialogs that embed sheet pieces read too: DieSidePanels speak their side's base
+text and ItemHeroPanels their item (or "empty slot") in the modal reader. Per-side right-click
+detail beyond the side text and the cosmetic spinner/portrait are visual-only.
 
 ## 3.6 Abilities Bar and Mana — NOT STARTED
 

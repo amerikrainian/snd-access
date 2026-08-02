@@ -56,6 +56,7 @@
   "modal.dialog": "Dialog",
   "modal.book_stub": "Almanac book. A dedicated reader is coming; press Escape to close.",
   "modal.unlabeled": "unlabeled {type}",
+  "modal.empty_slot": "empty slot",
 
   "choice.header": "Choose",
   "choice.tier": "tier {tier}",

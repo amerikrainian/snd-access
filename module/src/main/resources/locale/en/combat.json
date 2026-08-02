@@ -14,6 +14,7 @@
   "dies": "dies this turn",
   "flees": "flees this turn",
   "defeated": "defeated",
+  "level": "level {n}",
 
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",
