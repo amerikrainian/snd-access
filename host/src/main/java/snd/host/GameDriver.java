@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -30,6 +31,8 @@ public final class GameDriver {
         VERBS.put("space", 62);
         VERBS.put("tab", 61);
         VERBS.put("backspace", 67);
+        VERBS.put("home", 3);
+        VERBS.put("end", 123);
         VERBS.put("z", 54);
         VERBS.put("r", 46);
         VERBS.put("i", 37);
@@ -38,8 +41,25 @@ public final class GameDriver {
         }
     }
 
-    /** Drives the game's own key path: Screen.mainKeyPress (what the stage listener calls). */
+    /**
+     * Drives the FULL input chain — the installed InputProcessor (our
+     * navigator's processor at the multiplexer head, then the game's stage) —
+     * exactly what a physical keypress reaches. "type:<text>" feeds keyTyped
+     * (the type-ahead path).
+     */
     public static String input(String verb) {
+        verb = verb.trim();
+        InputProcessor proc = Gdx.input.getInputProcessor();
+        if (proc == null) {
+            return "no input processor yet";
+        }
+        if (verb.startsWith("type:")) {
+            String text = verb.substring(5);
+            for (int i = 0; i < text.length(); i++) {
+                proc.keyTyped(text.charAt(i));
+            }
+            return "typed: " + text;
+        }
         Integer code;
         if (verb.startsWith("key:")) {
             try {
@@ -48,17 +68,14 @@ public final class GameDriver {
                 return "bad keycode: " + verb;
             }
         } else {
-            code = VERBS.get(verb.trim().toLowerCase());
+            code = VERBS.get(verb.toLowerCase());
         }
         if (code == null) {
-            return "unknown verb '" + verb + "' (use " + VERBS.keySet() + " or key:<code>)";
+            return "unknown verb '" + verb + "' (use " + VERBS.keySet() + ", type:<text>, or key:<code>)";
         }
-        com.tann.dice.screens.Screen screen = com.tann.dice.Main.getCurrentScreen();
-        if (screen == null) {
-            return "no screen yet";
-        }
-        screen.mainKeyPress(code);
-        return "ok: " + verb + " -> keycode " + code + " on " + screen.getClass().getSimpleName();
+        boolean consumed = proc.keyDown(code);
+        proc.keyUp(code);
+        return "ok: " + verb + " -> keycode " + code + " consumed=" + consumed;
     }
 
     public static String screenshot(String path) {
