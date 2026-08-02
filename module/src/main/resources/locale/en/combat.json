@@ -7,6 +7,13 @@
   "target_valid": "valid target",
   "deselected": "deselected",
   "applied": "{eff}, on {target}",
+  "used": "used",
+  "hp": "{hp} of {max} hp",
+  "incoming_damage": "incoming {n} damage",
+  "incoming_poison": "incoming {n} poison",
+  "dies": "dies this turn",
+  "flees": "flees this turn",
+  "defeated": "defeated",
 
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",

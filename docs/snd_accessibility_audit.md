@@ -255,7 +255,7 @@ push and no longer counts as a modal, so it can't steal navigation. End-turn con
 through the modal reader; monster nodes carry their locked intent as their value. Abilities land
 with 3.6, Undo with 3.8, arrow lines with 3.9.
 
-## 3.4 Hero / Monster Panels — NOT STARTED
+## 3.4 Hero / Monster Panels — DONE
 
 `screens/dungeon/panels/entPanel/EntPanelCombat.java` — the central readout, 84 px wide, one per combatant. Displays:
 
@@ -269,6 +269,14 @@ with 3.6, Undo with 3.8, arrow lines with 3.9.
 - **Portrait**, speech bubbles (flavor), floating text wisps
 
 Interaction: left-click = die-side action (lock / select / apply target); **right-click / long-press = full character sheet** (see 3.5). No hover behavior exists anywhere.
+
+> **Coverage:** each combatant node reads name, die face (locked/used state), "hp of max" +
+shield, and the pip-colour damage preview as text — incoming blockable damage, incoming poison,
+and the Future snapshot's death/flee prediction (HPHolder's own formulas over
+Present-vs-Future). A kill from a player command resolves in the Present and vanishes from the
+column, so the applied announcement appends "defeated". Backspace reads the die net plus each
+visible status icon's own trigger-panel description. Targeting arrows are 3.9; portraits and
+speech bubbles are flavor.
 
 ## 3.5 Character Sheet (`EntPanelInventory`) — NOT STARTED
 

@@ -9,6 +9,7 @@ import com.tann.dice.gameplay.content.ent.die.Die;
 import com.tann.dice.gameplay.content.ent.die.EntDie;
 import com.tann.dice.gameplay.content.ent.die.side.EntSide;
 import com.tann.dice.gameplay.effect.targetable.Targetable;
+import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.FightLog;
 import com.tann.dice.gameplay.phase.Phase;
 import com.tann.dice.gameplay.phase.PhaseManager;
@@ -115,11 +116,21 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        // The game's own word — the dark overlay/slide is the visual.
-                        return ent.isPlayer() && ent.getDie().getState().isLockedOrLocking()
-                                ? GameText.t("locked") : null;
+                        return dieUseState(ds, ent);
                     }
                 }, AnnouncementKinds.SELECTED),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return healthText(ds, ent);
+                    }
+                }, AnnouncementKinds.ENABLED),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return previewText(ds, ent);
+                    }
+                }, AnnouncementKinds.ENABLED),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
@@ -144,15 +155,94 @@ public class CombatScreen extends AccessScreen {
                 ds.targetingManager.clicked(ent, true);
             }
         };
-        // The die net — every side's calculated text, the keyboard stand-in
-        // for the right-click RollPanel.
+        // The die net plus active statuses — every side's calculated text and
+        // each buff/debuff's own panel description, the keyboard stand-in for
+        // the right-click RollPanel and the icon-only TriggerPanel.
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
-                host.speech().speak(dieNetText(ent), false);
+                String statuses = statusText(ds, ent);
+                host.speech().speak(
+                        statuses == null ? dieNetText(ent) : dieNetText(ent) + ". " + statuses,
+                        false);
             }
         };
         return vt;
+    }
+
+    // "locked" while rolling (the slide-to-panel visual); "used" while
+    // targeting (the dark overlay, its only visual cue).
+    private static String dieUseState(DungeonScreen ds, Ent ent) {
+        if (!ent.isPlayer()) {
+            return null;
+        }
+        if (PhaseManager.get().getPhase() instanceof TargetingPhase) {
+            return ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
+                    .getNumDiceUsedThisTurn(ent) > 0 ? Loc.get("combat", "used") : null;
+        }
+        return ent.getDie().getState().isLockedOrLocking() ? GameText.t("locked") : null;
+    }
+
+    // The HP pip grid and shield badge, as text: "8 of 10 hp, shield 2".
+    private static String healthText(DungeonScreen ds, Ent ent) {
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present == null) {
+            return null;
+        }
+        String text = Loc.get("combat", "hp", "hp", present.getHp(), "max", present.getMaxHp());
+        if (present.getShields() > 0) {
+            text += ", " + GameText.t("Shield") + " " + present.getShields();
+        }
+        return text;
+    }
+
+    // The damage preview the pips paint in colour: yellow = incoming
+    // blockable, green = incoming poison, the red flash = the Future
+    // snapshot's death (grey = flees).
+    private static String previewText(DungeonScreen ds, Ent ent) {
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
+        if (present == null || future == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        int incoming = present.getIncomingDamage();
+        if (incoming > 0) {
+            sb.append(Loc.get("combat", "incoming_damage", "n", incoming));
+        }
+        int poison = future.getPoisonDamageTaken(true) - present.getPoisonDamageTaken(true);
+        if (poison > 0) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(Loc.get("combat", "incoming_poison", "n", poison));
+        }
+        if (future.isDead() && !present.isDead()) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(Loc.get("combat", future.isFled() ? "flees" : "dies"));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // Each active buff/debuff's own description — the 5x5 icon grid's text.
+    private static String statusText(DungeonScreen ds, Ent ent) {
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (com.tann.dice.gameplay.trigger.personal.Personal p : present.getActivePersonals()) {
+            if (!p.hasImage()) {
+                continue; // invisible mechanics don't show on the panel either
+            }
+            if (sb.length() > 0) {
+                sb.append(". ");
+            }
+            sb.append(GameText.t(p.describeForTriggerPanel()));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     private static boolean isValidTarget(DungeonScreen ds, Ent ent) {

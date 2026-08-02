@@ -49,7 +49,7 @@ final class TargetingWatcher {
         if (applied) {
             Command last = commands.get(count - 1);
             if (last instanceof TargetableCommand) {
-                speech.speak(appliedText((TargetableCommand) last), false);
+                speech.speak(appliedText(ds, (TargetableCommand) last), false);
             }
         }
         lastCommandCount = count;
@@ -66,13 +66,21 @@ final class TargetingWatcher {
         }
     }
 
-    private static String appliedText(TargetableCommand command) {
+    private static String appliedText(DungeonScreen ds, TargetableCommand command) {
         String eff = GameText.t(command.targetable.getDerivedEffects().describe(false));
         if (command.target == null) {
             return eff;
         }
-        return Loc.get("combat", "applied",
+        String text = Loc.get("combat", "applied",
                 "eff", eff, "target", GameText.t(command.target.getName(true)));
+        // Player damage resolves in the Present immediately — a kill vanishes
+        // from the enemy column with only a death animation to show for it.
+        com.tann.dice.gameplay.fightLog.EntState after =
+                ds.getFightLog().getState(FightLog.Temporality.Present, command.target);
+        if (after != null && after.isDead()) {
+            text += ", " + Loc.get("combat", "defeated");
+        }
+        return text;
     }
 
     // FightLog keeps its command list private; reading it beats re-deriving
