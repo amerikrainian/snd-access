@@ -1,0 +1,10 @@
+// snd-core: engine-agnostic, permanent-loader code. No game, no libGDX, no
+// Byte Buddy, no JNA — anything here must be unit-testable off-game and must
+// compile to Java 8 bytecode (the shipped build runs on the game's bundled
+// OpenJ9 1.8 JRE).
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+compileJava.options.release = 8

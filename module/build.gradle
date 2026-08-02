@@ -1,0 +1,13 @@
+// snd-module: the reloadable side. The jar contains ONLY module classes — core
+// and the game resolve through the parent (app) classloader at runtime, which
+// is what keeps contract type identity stable across reloads. Entry class is
+// fixed by convention: snd.module.SndModule.
+def gameJar = "${gameDir}/dice.jar"
+
+dependencies {
+    implementation project(':core')
+    compileOnly files(gameJar)
+}
+compileJava.options.release = 8
+
+jar { archiveBaseName = 'snd-module' }

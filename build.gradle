@@ -1,0 +1,11 @@
+// Root build. The game jar location comes from the `gameDir` Gradle property
+// (gradle.properties has the default Steam path; override with -PgameDir=... or
+// a gitignored gradle.properties in GRADLE_USER_HOME).
+subprojects {
+    apply plugin: 'java'
+    repositories { mavenCentral() }
+    java {
+        toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    }
+    tasks.withType(Test).configureEach { useJUnitPlatform() }
+}

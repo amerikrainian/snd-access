@@ -1,0 +1,5 @@
+game/
+third_party/
+.gradle/
+build/
+*/build/

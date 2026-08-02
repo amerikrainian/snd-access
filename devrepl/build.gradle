@@ -1,0 +1,11 @@
+// snd-devrepl: the JShell-backed /eval implementation. Dev-only, never shipped
+// (jdk.jshell needs JDK 9+; the player build runs on the bundled Java 8 JRE).
+// The host discovers snd.devrepl.JShellEvaluator reflectively and degrades
+// gracefully when this jar is absent or the runtime is too old.
+dependencies {
+    implementation project(':core')
+}
+compileJava.options.release = 21
+compileJava.options.compilerArgs += ['--add-modules', 'jdk.jshell']
+
+jar { archiveBaseName = 'snd-devrepl' }
