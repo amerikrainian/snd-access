@@ -297,7 +297,7 @@ their corpses. Dialogs that embed sheet pieces read too: DieSidePanels speak the
 text and ItemHeroPanels their item (or "empty slot") in the modal reader. Per-side right-click
 detail beyond the side text and the cosmetic spinner/portrait are visual-only.
 
-## 3.6 Abilities Bar and Mana — NOT STARTED
+## 3.6 Abilities Bar and Mana — DONE
 
 `ability/ui/AbilityHolder` (bottom-center; hidden during enemy rolling, faded during rolling, active during targeting):
 
@@ -307,13 +307,26 @@ detail beyond the side text and the cosmetic spinner/portrait are visual-only.
 - Cast errors as transient banners: "Not enough mana", "All costs must be present on unused dice", "Can't use abilities from defeated heroes"
 - Keyboard: QWERTYUI select slots 0–7
 
+> **Coverage:** an abilities stop (present in rolling/targeting, like the bar): one node per card
+in `getByIndex` slot order — title, cost (spell mana via `getSpellCost`, tactic faces via
+`describeCost`), selected state, dead-caster state; activate runs `selectForCast` (the QWERTY
+path), Backspace reads the calculated effect. The mana store reads as the game's own "n/m mana
+stored" banner text. Cast-error banners speak via 3.12's channel. Verified live: the mana node
+with the game's words; ability cards use the same game paths and read whenever a caster exists.
+
 ## 3.7 Confirm Button Warnings — NOT STARTED
 
 `ConfirmButton` states: Done Rolling / End turn, pulsating when everything is used. When ending the turn would let **N heroes die**, the tick icon is replaced by **skull icons (one per predicted death) + a red border** — no text anywhere.
 
-## 3.8 Undo — NOT STARTED
+## 3.8 Undo — DONE
 
 Undo button (bottom-left, targeting phase): "Undo (n rolls)". Unlimited undo of player commands within the turn (`FightLog.undo`); when nothing is left to undo and rerolls remain, it rewinds to the rolling phase. Z key works. No redo, no undo-history display.
+
+> **Coverage:** an Undo node in the targeting buttons ("Undo" + "n rolls" when it would rewind,
+the game's own words), activating `requestUndo` — the Z path. A command revert speaks "Undo"
+from the watcher's command-count diff regardless of input path; the rewind-to-rolling case
+announces itself through the phase change ("Your roll"). Verified live: the rewind path and the
+button readout; Z falls through the navigator untouched.
 
 ## 3.9 Top Icon Button Row — NOT STARTED
 

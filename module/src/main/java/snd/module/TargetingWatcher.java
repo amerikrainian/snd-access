@@ -51,6 +51,9 @@ final class TargetingWatcher {
             if (last instanceof TargetableCommand) {
                 speech.speak(appliedText(ds, (TargetableCommand) last), false);
             }
+        } else if (lastCommandCount >= 0 && count < lastCommandCount) {
+            // The revert repaints previews silently otherwise.
+            speech.speak(GameText.t("Undo"), true);
         }
         lastCommandCount = count;
 

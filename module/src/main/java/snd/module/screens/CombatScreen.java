@@ -75,11 +75,124 @@ public class CombatScreen extends AccessScreen {
         buildEntityStop(b, ds, true);
         buildEntityStop(b, ds, false);
         Phase phase = PhaseManager.get().getPhase();
+        if (phase instanceof PlayerRollingPhase || phase instanceof TargetingPhase) {
+            buildAbilitiesStop(b, ds);
+        }
         if (phase instanceof PlayerRollingPhase) {
             buildButtons(b, ds, ds.doneRollingButton, true);
         } else if (phase instanceof TargetingPhase) {
             buildButtons(b, ds, ds.confirmButton, false);
         }
+    }
+
+    // ---- the ability bar: one node per spell/tactic card, in the bar's own
+    // QWERTY slot order, plus the mana store ----
+
+    private void buildAbilitiesStop(GraphBuilder b, final DungeonScreen ds) {
+        com.tann.dice.gameplay.fightLog.Snapshot present =
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+        java.util.List<com.tann.dice.gameplay.effect.targetable.ability.Ability> abilities =
+                new java.util.ArrayList<com.tann.dice.gameplay.effect.targetable.ability.Ability>();
+        for (int i = 0; i < 8; i++) {
+            com.tann.dice.gameplay.effect.targetable.ability.Ability a = ds.abilityHolder.getByIndex(i);
+            if (a != null) {
+                abilities.add(a);
+            }
+        }
+        boolean hasMana = present.getMaxMana() > 0 || present.getTotalMana() > 0;
+        if (abilities.isEmpty() && !hasMana) {
+            return;
+        }
+
+        b.beginStop("abilities").pushContext(
+                GameText.t("Abilities"), Loc.get("ui", "role.list"));
+        for (com.tann.dice.gameplay.effect.targetable.ability.Ability a : abilities) {
+            b.addItem(ControlId.referenced(a, CompositeKey.of("ability", a.getTitle())),
+                    abilityNode(ds, a));
+        }
+        if (hasMana) {
+            NodeVtable mana = new NodeVtable();
+            mana.controlType = ControlTypes.TEXT;
+            mana.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    // The pip strip's right-click banner, the game's own words.
+                    com.tann.dice.gameplay.fightLog.Snapshot now =
+                            ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+                    return GameText.t(now.getTotalMana() + "/" + now.getMaxMana() + " mana stored");
+                }
+            }, AnnouncementKinds.LABEL));
+            b.addItem(ControlId.structural(CompositeKey.of("abilities", "mana")), mana);
+        }
+        b.popContext();
+    }
+
+    private NodeVtable abilityNode(final DungeonScreen ds,
+            final com.tann.dice.gameplay.effect.targetable.ability.Ability a) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return GameText.t(a.getTitle());
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return costText(ds, a);
+                    }
+                }, AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return ds.targetingManager.getSelectedTargetable() == a
+                                ? Loc.get("ui", "state.selected") : null;
+                    }
+                }, AnnouncementKinds.SELECTED),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        // The card's skull overlay.
+                        com.tann.dice.gameplay.content.ent.Ent source = a.getSource();
+                        if (source == null) {
+                            return null;
+                        }
+                        EntState state = ds.getFightLog().getState(FightLog.Temporality.Present, source);
+                        return state != null && state.isDead()
+                                ? Loc.get("combat", "caster_defeated") : null;
+                    }
+                }, AnnouncementKinds.ENABLED));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                // The QWERTY-key path; cast errors surface as the game's banners.
+                ds.popAllMedium();
+                ds.abilityHolder.selectForCast(a);
+            }
+        };
+        vt.onSecondary = new Runnable() {
+            @Override
+            public void run() {
+                host.speech().speak(GameText.t(a.getDerivedEffects().describe(false)), false);
+            }
+        };
+        return vt;
+    }
+
+    // Mana for spells, required die faces for tactics — the cost strip.
+    private static String costText(DungeonScreen ds,
+            com.tann.dice.gameplay.effect.targetable.ability.Ability a) {
+        if (a instanceof com.tann.dice.gameplay.effect.targetable.ability.tactic.Tactic) {
+            return GameText.t(((com.tann.dice.gameplay.effect.targetable.ability.tactic.Tactic) a).describeCost());
+        }
+        if (a instanceof com.tann.dice.gameplay.effect.targetable.ability.spell.Spell) {
+            int cost = ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
+                    .getSpellCost((com.tann.dice.gameplay.effect.targetable.ability.spell.Spell) a);
+            return cost + " " + GameText.t(com.tann.dice.util.lang.Words.manaString());
+        }
+        return null;
     }
 
     // ---- the two combatant columns: one node per hero/monster ----
@@ -355,6 +468,42 @@ public class CombatScreen extends AccessScreen {
                 }
             };
             b.addItem(ControlId.structural(CompositeKey.of("buttons", "reroll")), reroll);
+        }
+
+        if (!rolling) {
+            // Undo (the Z key): reverts commands, and rewinds to the rolling
+            // phase when none are left and rerolls remain.
+            NodeVtable undo = new NodeVtable();
+            undo.controlType = ControlTypes.BUTTON;
+            undo.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return GameText.t("Undo");
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            // "(n rolls)" — shown when undoing rewinds to rolling.
+                            Phase p = PhaseManager.get().getPhase();
+                            if (!(p instanceof TargetingPhase) || ds.getFightLog().canUndo()) {
+                                return null;
+                            }
+                            int rolls = ((TargetingPhase) p).getUnusedRolls();
+                            if (rolls <= 0) {
+                                return null;
+                            }
+                            return GameText.t(rolls + " " + com.tann.dice.util.lang.Words.plural("roll", rolls));
+                        }
+                    }, AnnouncementKinds.VALUE));
+            undo.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    ds.requestUndo();
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("buttons", "undo")), undo);
         }
 
         NodeVtable confirm = new NodeVtable();

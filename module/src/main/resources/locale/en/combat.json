@@ -15,6 +15,7 @@
   "flees": "flees this turn",
   "defeated": "defeated",
   "level": "level {n}",
+  "caster_defeated": "caster defeated",
 
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",
