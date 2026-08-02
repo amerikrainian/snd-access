@@ -35,7 +35,7 @@ Slice & Dice is a libGDX game. Everything on screen is a scene2d `Actor` drawn i
 
 > **Hazard:** if the window is too small to compute a valid scale, the game draws `splash/resolution.png` **forever** (`Main.invalidScale`) — an image-only dead end with no text and no keyboard escape.
 
-## 1.2 Title Screen Layout — NOT STARTED
+## 1.2 Title Screen Layout — DONE
 
 `screens/titleScreen/TitleScreen.java`. Contents:
 
@@ -50,7 +50,11 @@ Slice & Dice is a libGDX game. Everything on screen is a scene2d `Actor` drawn i
 
 > **Note:** `TitleScreen.keyPress` contains only leftover dev-debug keys (C, D). There are **no gameplay hotkeys on the title screen**; everything is mouse-only. Clicking anywhere on the screen closes the mode drawer.
 
-## 1.3 Modes Drawer (`ModesPanel`) — NOT STARTED
+> **Coverage:** SnDAccess presents the title screen as three tab-stops — the mode list, the
+selected mode's card, and the system buttons — declared fresh each render from the live game
+model. The logo and background art are decorative and stay unread.
+
+## 1.3 Modes Drawer (`ModesPanel`) — DONE
 
 A slide-out drawer on the right edge, toggled by a small tab handle (icon only, `InputListener.touchDown`, no keyboard, no label).
 
@@ -60,7 +64,13 @@ A slide-out drawer on the right edge, toggled by a small tab handle (icon only, 
 - Folder modes (`cool/`, `creative/`, `cursed/`, `crappy/`…) replace the center card with a grid of contained-mode buttons; navigating back out is only via a back-arrow icon button in the left cluster
 - Demo build: the drawer instead shows a purchase pitch
 
-## 1.4 Left Icon Button Cluster — NOT STARTED
+> **Coverage:** every mode reads its **name**, whether it is **selected**, and whether it is
+**locked** — the visual drawer blanks locked names entirely, so the mod is strictly more
+informative here. Activating a locked mode opens the game's own unlock-requirement panel (for a
+locked folder, its first contained mode, matching the game's rule), which 1.6's reader speaks.
+The drawer's slide state is irrelevant to navigation: the list is always present in the graph.
+
+## 1.4 Left Icon Button Cluster — DONE
 
 All are unlabeled icon-only squares (`DungeonUtils.makeBasicButton`), mouse-click only:
 
@@ -72,7 +82,14 @@ All are unlabeled icon-only squares (`DungeonUtils.makeBasicButton`), mouse-clic
 6. **Version** (conditional) → new-version dialog
 7. **Back arrow** (conditional) → leave the current mode folder
 
-## 1.5 Mode Card (center) — NOT STARTED
+> **Coverage:** the cluster's icons are named rather than described by their art — Menu,
+Almanac, Language, Search, and the bypass-unlocks toggle — with the conditional ones appearing
+only when the game shows them. Language is a left/right chooser instead of the icon-then-modal
+flow, since the underlying option is a simple cycle. The back-out-of-folder control lives on the
+card, where the folder contents are. The new-version button is not surfaced: it reports a remote
+version check, not a game action.
+
+## 1.5 Mode Card (center) — DONE
 
 Built by `Mode.makeStartGameDisplay()` for the selected mode:
 
@@ -84,7 +101,14 @@ Built by `Mode.makeStartGameDisplay()` for the selected mode:
 - **Continue button** ("Continue (fight N, Difficulty)") appended when a save exists — this is the only load-game affordance in the game (one autosave slot per mode). Resumes immediately, no confirmation
 - Oversized cards get wrapped in a `ScrollPane` — mouse-wheel/drag only
 
-## 1.6 Mode Info Panel — NOT STARTED
+> **Coverage:** the card reads the mode's description lines, every difficulty (including the ones
+the game removes from the UI while locked, which read as "locked"), and the **win/loss record and
+streak folded onto each start button** — the visual UI hides that behind a right-click on a
+wreath sprite. Folder modes list their contained modes in place, with a back control. The
+Continue button appears whenever the mode has a save. Scroll panes are irrelevant: navigation is
+over the model, not the viewport.
+
+## 1.6 Mode Info Panel — DONE
 
 Opened by clicking the mode name/description (`Mode.showModeInfo()`), suppressed for brand-new players and creative modes:
 
@@ -94,11 +118,15 @@ Opened by clicking the mode name/description (`Mode.showModeInfo()`), suppressed
 - **Leaderboards** section (see Phase 10)
 - **Challenges** section: achievement icon tiles for mode-specific achievements (icons only; details on right-click)
 
+> **Coverage:** opened with the secondary key on any mode and read by the generic modal reader,
+so its text lines and buttons become nodes. The achievement tiles inside are icon-only in the
+game and read as unlabeled; naming them belongs with the achievements work (Phase 11).
+
 ---
 
 # Phase 2: Starting a Run
 
-## 2.1 Difficulty Selection — NOT STARTED
+## 2.1 Difficulty Selection — DONE
 
 `gameplay/battleTest/Difficulty.java` — seven difficulties, each a colored start button on the mode card:
 
@@ -114,7 +142,11 @@ Opened by clicking the mode name/description (`Mode.showModeInfo()`), suppressed
 
 Brutal/Hell also inject a "Beware!" message phase. Difficulty rules text (`getRules()`) is shown in the Book glossary, not on the buttons.
 
-## 2.2 Party Layout Chooser — NOT STARTED
+> **Coverage:** each difficulty is a start button carrying its record, and the **rules text is on
+the tooltip key** — so "what does Unfair actually do" is answerable without leaving the card.
+Locked difficulties are announced as locked rather than silently omitted.
+
+## 2.2 Party Layout Chooser — PARTIAL
 
 `GameStart.startWithPLTChoice` → "Choose party layout" panel (appears once the feature is unlocked, for modes that don't disable it):
 
@@ -122,17 +154,38 @@ Brutal/Hell also inject a "Beware!" message phase. Difficulty rules text (`getRu
 - Optional rarity line if `SHOW_RARITY` is on
 - Horizontally scrollable if needed; self-popping modal (click to dismiss)
 
-## 2.3 Overwrite Confirmation — NOT STARTED
+> **Coverage:** the picker is a pushed modal, so the generic modal reader lists its options, and
+each layout name is enriched with its **colour composition** read from `PartyLayoutType` (the
+visual card shows only coloured squares). PARTIAL because the picker is gated behind
+`Feature.PARTY_LAYOUT_CHOICE` and has not been exercised on an unlocked profile — the
+enrichment is code-complete but unverified live.
+
+## 2.3 Overwrite Confirmation — DONE
 
 If starting would clobber an in-progress save: `ChoiceDialog` "Warning, this will overwrite your in-progress game. Are you sure?" — 2-choice dialogs support Enter=accept / Backspace=decline (the only keyboard-capable dialog type).
 
-## 2.4 First-Run Tutorial Override — NOT STARTED
+> **Coverage:** read by the generic modal reader — the warning text and both buttons are nodes,
+so the choice is navigable rather than depending on the game's undiscoverable Enter/Backspace
+binding.
+
+## 2.4 First-Run Tutorial Override — N/A
 
 On a player's very first run, the difficulty click is silently redirected to a scripted starter fight (Fighter/Lazy/Thief/Defender/Defender vs 2 Wolves) via `TutorialManager.getTutOverride`.
 
-## 2.5 Starting Modifier Pick — NOT STARTED
+> **Coverage:** N/A — it has no UI of its own; it substitutes the fight a start button launches.
+The button is covered by 2.1 and the fight by Phase 3.
+
+## 2.5 Starting Modifier Pick — DONE
 
 The first fight opens with a difficulty-driven `ChoicePhase` (see 4.5): Easy/Normal/Hard = pick 1 of N; Heaven/Unfair/Brutal/Hell = point-buy to a target value. Digits 1–9 toggle options; everything else is mouse.
+
+> **Coverage:** the offer is drawn onto the dungeon screen rather than pushed as a modal, so it
+has its own screen. The screen announces the game's own header ("Choose a curse"), and each
+option reads its **name, type, tier and generated effect** — `Choosable.describe()` returns only
+the type word ("curse"), so identity and effect come from the underlying Modifier or Item.
+Choosing runs the phase's own path and the confirmation dialog reads through the modal reader.
+The same screen serves the between-fight offers in 4.5; point-buy offers still lack a
+running-total readout.
 
 ---
 
@@ -547,6 +600,10 @@ The Numbers stats page and leaderboard tables are parallel independent columns �
 
 ## 13.5 Transient, Timed Surfaces
 Bottom banners (~0.5 s), top-right popups (5 s), speech bubbles, flashes. No history/log exists anywhere. A screen reader needs interception at the emit points (`AbilityHolder.showInfo`, `PopupHolder.addText/addAchievement`, `Explanel` creation).
+
+> **Coverage (partial):** the top-right popup holder is polled each frame and every new popup is
+spoken once, so achievement and stat toasts are not missed. The in-combat bottom banner and the
+explanation panels are Phase 3/6 work.
 
 ## 13.6 Layout Volatility
 The title screen fully rebuilds on option/custom-mode changes; the top button row rebuilds every turn; portrait/landscape/width breakpoints change structure (and insert dummy tabs). Any focus/virtual-cursor model must be rebuilt from the model, not from actor identity.
