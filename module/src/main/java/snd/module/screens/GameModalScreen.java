@@ -16,6 +16,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.core.speech.TextFilter;
 import snd.module.GameUi;
 
 /**
@@ -80,6 +81,10 @@ public class GameModalScreen extends AccessScreen {
         if (actor == null || !actor.isVisible()) {
             return;
         }
+        if (actor instanceof com.tann.dice.util.Slider) {
+            b.addItem(actorId(actor), sliderFor((com.tann.dice.util.Slider) actor));
+            return;
+        }
         if (interactiveLeaf(actor)) {
             b.addItem(actorId(actor), buttonFor(actor));
             return;
@@ -130,13 +135,25 @@ public class GameModalScreen extends AccessScreen {
     private NodeVtable buttonFor(final Actor actor) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
-        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-            @Override
-            public String get() {
-                String label = GameUi.labelOf(actor);
-                return label != null ? label : "unlabeled " + actor.getClass().getSimpleName();
-            }
-        }, AnnouncementKinds.LABEL));
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        String label = GameUi.labelOf(actor);
+                        if (label == null) {
+                            label = GameUi.iconNameUnder(actor); // icon-only buttons
+                        }
+                        return label != null ? label : "unlabeled " + actor.getClass().getSimpleName();
+                    }
+                }, AnnouncementKinds.LABEL),
+                // Party-layout picker options: the visual squares' colour
+                // composition, resolved from the enum the label names.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return partyLayoutColours(GameUi.labelOf(actor));
+                    }
+                }, AnnouncementKinds.VALUE));
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
@@ -147,6 +164,65 @@ public class GameModalScreen extends AccessScreen {
             @Override
             public void run() {
                 GameUi.info(actor);
+            }
+        };
+        return vt;
+    }
+
+    // "Basic" (or "Basic, r: 0.1") → "orange, yellow, grey, red, blue" from
+    // PartyLayoutType; null for any label that isn't a layout name.
+    private static String partyLayoutColours(String label) {
+        if (label == null) {
+            return null;
+        }
+        String name = TextFilter.clean(label);
+        int comma = name.indexOf(',');
+        if (comma >= 0) {
+            name = name.substring(0, comma);
+        }
+        name = name.trim();
+        for (com.tann.dice.gameplay.content.ent.group.PartyLayoutType plt
+                : com.tann.dice.gameplay.content.ent.group.PartyLayoutType.values()) {
+            if (plt.name().equals(name)) {
+                StringBuilder sb = new StringBuilder();
+                for (com.tann.dice.gameplay.content.ent.type.HeroCol col : plt.getColsInstance()) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(col == null ? "random" : col.name());
+                }
+                return sb.length() > 0 ? sb.toString() : null;
+            }
+        }
+        return null;
+    }
+
+    private NodeVtable sliderFor(final com.tann.dice.util.Slider slider) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.SLIDER;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return GameUi.sliderTitle(slider);
+                    }
+                }, AnnouncementKinds.LABEL),
+                new NodeAnnouncement(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return GameUi.sliderPercent(slider) + " percent";
+                    }
+                }, true, AnnouncementKinds.VALUE));
+        vt.onAdjust = new NodeVtable.Adjust() {
+            @Override
+            public void adjust(int sign, boolean large) {
+                GameUi.sliderAdjust(slider, sign, large);
+            }
+        };
+        vt.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameUi.sliderPercent(slider) + " percent";
             }
         };
         return vt;

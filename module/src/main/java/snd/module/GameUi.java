@@ -166,6 +166,95 @@ public final class GameUi {
         return null;
     }
 
+    // ---- icon naming: the game's icon-only buttons, named by their texture ----
+
+    private static java.util.Map<Object, String> knownIcons;
+
+    private static java.util.Map<Object, String> knownIcons() {
+        if (knownIcons == null) {
+            java.util.Map<Object, String> m = new java.util.IdentityHashMap<Object, String>();
+            m.put(com.tann.dice.statics.Images.almanac, "Almanac");
+            m.put(com.tann.dice.statics.Images.cog, "Menu");
+            m.put(com.tann.dice.statics.Images.back, "Back");
+            m.put(com.tann.dice.statics.Images.globe, "Language");
+            m.put(com.tann.dice.statics.Images.padlock, "Locked");
+            m.put(com.tann.dice.statics.Images.searchIcon, "Search");
+            m.put(com.tann.dice.statics.Images.zoom2, "Expand");
+            m.put(com.tann.dice.statics.Images.singleDie, "Reroll");
+            m.put(com.tann.dice.statics.Images.reroll, "Reroll");
+            m.put(com.tann.dice.statics.Images.ui_crossAlmanac, "Close");
+            knownIcons = m;
+        }
+        return knownIcons;
+    }
+
+    /** The name of a known game icon under this actor, or null. */
+    public static String iconNameUnder(Actor actor) {
+        if (actor instanceof com.tann.dice.util.ImageActor) {
+            return knownIcons().get(((com.tann.dice.util.ImageActor) actor).tr);
+        }
+        if (actor instanceof Group) {
+            for (Actor child : ((Group) actor).getChildren()) {
+                String name = iconNameUnder(child);
+                if (name != null) {
+                    return name;
+                }
+            }
+        }
+        return null;
+    }
+
+    // ---- slider bridge: the game's Slider is drag-only; drive its own
+    // update path (private setValue + the slideAction that feeds the option
+    // and saves) so keyboard adjust behaves exactly like a drag ----
+
+    private static Field sliderTitleField;
+    private static Field sliderSlideActionField;
+    private static java.lang.reflect.Method sliderSetValue;
+
+    private static void initSliderReflection() throws Exception {
+        if (sliderSetValue == null) {
+            Class<?> cls = com.tann.dice.util.Slider.class;
+            sliderTitleField = cls.getDeclaredField("title");
+            sliderTitleField.setAccessible(true);
+            sliderSlideActionField = cls.getDeclaredField("slideAction");
+            sliderSlideActionField.setAccessible(true);
+            sliderSetValue = cls.getDeclaredMethod("setValue", float.class);
+            sliderSetValue.setAccessible(true);
+        }
+    }
+
+    public static String sliderTitle(com.tann.dice.util.Slider slider) {
+        try {
+            initSliderReflection();
+            Object title = sliderTitleField.get(slider);
+            return title != null ? title.toString() : "slider";
+        } catch (Throwable t) {
+            SndLog.error("slider title read failed", t);
+            return "slider";
+        }
+    }
+
+    /** 0..100, the spoken value. */
+    public static int sliderPercent(com.tann.dice.util.Slider slider) {
+        return Math.round(slider.getValue() * 100f);
+    }
+
+    public static void sliderAdjust(com.tann.dice.util.Slider slider, int sign, boolean large) {
+        try {
+            initSliderReflection();
+            float step = large ? 0.2f : 0.05f;
+            float value = Math.max(0f, Math.min(1f, slider.getValue() + sign * step));
+            sliderSetValue.invoke(slider, value);
+            Runnable slideAction = (Runnable) sliderSlideActionField.get(slider);
+            if (slideAction != null) {
+                slideAction.run(); // the game's own path: option value + save
+            }
+        } catch (Throwable t) {
+            SndLog.error("slider adjust failed", t);
+        }
+    }
+
     /** The (package-private) ModesPanel on the live title screen, or null. */
     public static com.tann.dice.screens.titleScreen.ModesPanel modesPanel() {
         try {

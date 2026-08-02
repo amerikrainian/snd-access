@@ -10,6 +10,7 @@ import snd.core.SndLog;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
+import snd.module.screens.ChoiceScreen;
 import snd.module.screens.GameModalScreen;
 import snd.module.screens.TitleFlowScreen;
 
@@ -23,6 +24,7 @@ public class SndModule implements ModModule {
     private GraphNavigator nav;
     private ScreenManager screens;
     private SndInput input;
+    private PopupWatcher popups;
     private Object lastScreen;
     private boolean greeted;
 
@@ -31,9 +33,11 @@ public class SndModule implements ModModule {
         this.host = h;
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());
-        screens.register(new TitleFlowScreen());
+        screens.register(new TitleFlowScreen(h));
+        screens.register(new ChoiceScreen());
         screens.register(new GameModalScreen());
         input = new SndInput(screens, nav);
+        popups = new PopupWatcher(h.speech());
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
             h.speech().speak("Module reloaded, generation " + h.generation(), true);
@@ -63,6 +67,7 @@ public class SndModule implements ModModule {
 
         reassertInput();
         screens.tick();
+        popups.tick();
     }
 
     // The game rebuilds its InputMultiplexer in Main.setupScale (resize,

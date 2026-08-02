@@ -39,6 +39,12 @@ import snd.module.GameUi;
  * own unlock-requirement panel, which the modal screen reads.
  */
 public class TitleFlowScreen extends AccessScreen {
+    private final snd.core.HostServices host;
+
+    public TitleFlowScreen(snd.core.HostServices host) {
+        this.host = host;
+    }
+
     @Override
     public String key() {
         return "title";
@@ -270,6 +276,17 @@ public class TitleFlowScreen extends AccessScreen {
                 }
             };
         }
+        // The difficulty's rules (the game shows these only in the almanac
+        // glossary) on the tooltip key.
+        if (cc instanceof DifficultyConfig) {
+            final DifficultyConfig dc = (DifficultyConfig) cc;
+            vt.onTooltip = new Runnable() {
+                @Override
+                public void run() {
+                    host.speech().speak(dc.getDifficulty().getRules(), false);
+                }
+            };
+        }
         return vt;
     }
 
@@ -291,7 +308,66 @@ public class TitleFlowScreen extends AccessScreen {
                         Book.openBook(true);
                     }
                 }));
+        b.addItem(ControlId.structural(CompositeKey.of("sys", "language")), languageChooser());
+        // The conditional members of the game's icon cluster.
+        if (com.tann.dice.Main.getSettings().isBypass()) {
+            b.addItem(ControlId.structural(CompositeKey.of("sys", "bypass")),
+                    systemButton("Unlocks bypassed", new Runnable() {
+                        @Override
+                        public void run() {
+                            GameUi.activate(com.tann.dice.gameplay.save.settings.option.OptionUtils
+                                    .makeLockButton());
+                        }
+                    }));
+        }
+        if (com.tann.dice.gameplay.save.settings.option.OptionLib.SEARCH_BUTT.c()) {
+            b.addItem(ControlId.structural(CompositeKey.of("sys", "search")),
+                    systemButton("Search", new Runnable() {
+                        @Override
+                        public void run() {
+                            com.tann.dice.screens.dungeon.panels.book.page.stuffPage.APIUtils.showSearch();
+                        }
+                    }));
+        }
         b.popContext();
+    }
+
+    // The game's globe button pushes a chooser; a left/right cycle over the
+    // same option is directer for keyboard use. Changing it reloads the
+    // translator and rebuilds the stage; our screens rebuild with it.
+    private NodeVtable languageChooser() {
+        final com.tann.dice.gameplay.save.settings.option.ChOption lang =
+                com.tann.dice.gameplay.save.settings.option.OptionLib.LANGUAGE;
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.CHOOSER;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return "Language";
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return lang.getOptions()[lang.c()];
+                    }
+                }, AnnouncementKinds.VALUE));
+        vt.onAdjust = new NodeVtable.Adjust() {
+            @Override
+            public void adjust(int sign, boolean large) {
+                String[] options = lang.getOptions();
+                int next = ((lang.c() + sign) % options.length + options.length) % options.length;
+                lang.setValue(next, true);
+            }
+        };
+        vt.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                return lang.getOptions()[lang.c()];
+            }
+        };
+        return vt;
     }
 
     private static NodeVtable systemButton(final String label, Runnable action) {
