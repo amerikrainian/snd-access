@@ -26,6 +26,7 @@ public class SndModule implements ModModule {
     private ScreenManager screens;
     private SndInput input;
     private PopupWatcher popups;
+    private PhaseWatcher phases;
     private Object lastScreen;
     private boolean greeted;
 
@@ -40,6 +41,7 @@ public class SndModule implements ModModule {
         screens.register(new GameModalScreen());
         input = new SndInput(screens, nav);
         popups = new PopupWatcher(h.speech());
+        phases = new PhaseWatcher(h.speech());
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
@@ -71,6 +73,7 @@ public class SndModule implements ModModule {
         reassertInput();
         screens.tick();
         popups.tick();
+        phases.tick();
     }
 
     // The game rebuilds its InputMultiplexer in Main.setupScale (resize,

@@ -1,0 +1,10 @@
+{
+  "phase.enemy_rolling": "Enemies rolling",
+  "phase.player_rolling": "Your roll",
+  "phase.targeting": "Targeting",
+  "phase.damage": "Enemy attacks",
+  "phase.surrender": "Monsters offer to surrender",
+  "phase.level_end": "Fight won",
+  "phase.run_end": "Run over",
+  "turn": "Turn {turn}"
+}

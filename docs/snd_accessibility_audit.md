@@ -193,7 +193,7 @@ running-total readout.
 
 `screens/dungeon/DungeonScreen.java` — the single screen hosting all fights. Layout (landscape): hero panel column on the left edge, monster panel column on the right edge, 3D dice tray in the center, ability/mana bar bottom-center, Reroll/Undo buttons bottom-left, Done Rolling/End Turn button bottom-right, icon button row top-center, tutorial box contextual, transient popups top-right. In portrait the columns compress and buttons stack.
 
-## 3.1 Turn Structure — NOT STARTED
+## 3.1 Turn Structure — DONE
 
 Phase-driven (`gameplay/phase/PhaseManager`, a phase stack; the current phase gates all input):
 
@@ -204,6 +204,13 @@ Phase-driven (`gameplay/phase/PhaseManager`, a phase stack; the current phase ga
 5. Back to 1, until victory (`LevelEndPhase`/`RunEndPhase`) or defeat (`RunEndPhase`).
 
 > **Hook:** the debug option `PHASE_DISPLAY` prints the current phase class name on screen — the phase is always programmatically knowable.
+
+> **Coverage:** `PhaseWatcher` polls `PhaseManager.get().getPhase()` per tick and speaks phase
+changes: the gameplay phases (enemies rolling / your roll / targeting / enemy attacks), surrender,
+fight won, run over. Fight ("Fight n/m") and turn stamps ride the first in-combat phase after
+their value changes — a fight's opening enemy roll can resolve beneath a ChoicePhase and never
+surface, so stamps are value-diffed, not phase-bound. Decision phases stay silent here (their own
+screens announce); unknown phases stay silent rather than reading class names.
 
 ## 3.2 Player Rolling Phase — NOT STARTED
 

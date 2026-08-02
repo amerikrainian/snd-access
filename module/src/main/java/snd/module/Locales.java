@@ -25,7 +25,7 @@ final class Locales {
     private Locales() {
     }
 
-    private static final String[] TABLES = {"ui"};
+    private static final String[] TABLES = {"ui", "combat"};
 
     /** Called once from module load, before anything speaks. */
     static void load() {
