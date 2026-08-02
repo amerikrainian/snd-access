@@ -15,6 +15,7 @@ import com.tann.dice.util.ui.TextWriter;
 import com.tann.dice.util.ui.standardButton.StandardButton;
 
 import snd.core.SndLog;
+import snd.core.loc.Loc;
 
 /**
  * Scene2d bridge utilities: read and drive the game's own actors. Activation
@@ -166,23 +167,25 @@ public final class GameUi {
         return null;
     }
 
-    // ---- icon naming: the game's icon-only buttons, named by their texture ----
+    // ---- icon naming: the game's icon-only buttons, named by their texture.
+    // The map holds locale KEYS; the word resolves at read time so it follows
+    // the live language. ----
 
     private static java.util.Map<Object, String> knownIcons;
 
     private static java.util.Map<Object, String> knownIcons() {
         if (knownIcons == null) {
             java.util.Map<Object, String> m = new java.util.IdentityHashMap<Object, String>();
-            m.put(com.tann.dice.statics.Images.almanac, "Almanac");
-            m.put(com.tann.dice.statics.Images.cog, "Menu");
-            m.put(com.tann.dice.statics.Images.back, "Back");
-            m.put(com.tann.dice.statics.Images.globe, "Language");
-            m.put(com.tann.dice.statics.Images.padlock, "Locked");
-            m.put(com.tann.dice.statics.Images.searchIcon, "Search");
-            m.put(com.tann.dice.statics.Images.zoom2, "Expand");
-            m.put(com.tann.dice.statics.Images.singleDie, "Reroll");
-            m.put(com.tann.dice.statics.Images.reroll, "Reroll");
-            m.put(com.tann.dice.statics.Images.ui_crossAlmanac, "Close");
+            m.put(com.tann.dice.statics.Images.almanac, "icon.almanac");
+            m.put(com.tann.dice.statics.Images.cog, "icon.menu");
+            m.put(com.tann.dice.statics.Images.back, "icon.back");
+            m.put(com.tann.dice.statics.Images.globe, "icon.language");
+            m.put(com.tann.dice.statics.Images.padlock, "icon.locked");
+            m.put(com.tann.dice.statics.Images.searchIcon, "icon.search");
+            m.put(com.tann.dice.statics.Images.zoom2, "icon.expand");
+            m.put(com.tann.dice.statics.Images.singleDie, "icon.reroll");
+            m.put(com.tann.dice.statics.Images.reroll, "icon.reroll");
+            m.put(com.tann.dice.statics.Images.ui_crossAlmanac, "icon.close");
             knownIcons = m;
         }
         return knownIcons;
@@ -191,7 +194,8 @@ public final class GameUi {
     /** The name of a known game icon under this actor, or null. */
     public static String iconNameUnder(Actor actor) {
         if (actor instanceof com.tann.dice.util.ImageActor) {
-            return knownIcons().get(((com.tann.dice.util.ImageActor) actor).tr);
+            String key = knownIcons().get(((com.tann.dice.util.ImageActor) actor).tr);
+            return key != null ? Loc.get("ui", key) : null;
         }
         if (actor instanceof Group) {
             for (Actor child : ((Group) actor).getChildren()) {
@@ -228,10 +232,10 @@ public final class GameUi {
         try {
             initSliderReflection();
             Object title = sliderTitleField.get(slider);
-            return title != null ? title.toString() : "slider";
+            return title != null ? title.toString() : Loc.get("ui", "role.slider");
         } catch (Throwable t) {
             SndLog.error("slider title read failed", t);
-            return "slider";
+            return Loc.get("ui", "role.slider");
         }
     }
 

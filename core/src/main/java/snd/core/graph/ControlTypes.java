@@ -5,11 +5,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import snd.core.loc.Loc;
+
 /**
  * The control-type registry. One registry serves the whole mod — UI and any
  * world layer — so the per-type/per-kind announcement settings (a later phase)
- * have a single home. Role words are plain English for now; they route through
- * the strings/localization layer when it lands.
+ * have a single home. Role words resolve through {@link Loc} ("ui" table,
+ * "role.&lt;key&gt;") at announce time, so they follow the live language.
  */
 public final class ControlTypes {
     private ControlTypes() {
@@ -22,15 +24,16 @@ public final class ControlTypes {
             AnnouncementKinds.POSITION,
     };
 
-    private static ControlType make(String key, final String roleWord) {
-        Supplier<List<NodeAnnouncement>> common = roleWord == null ? null
+    private static ControlType make(String key, boolean spoken) {
+        final String roleKey = "role." + key;
+        Supplier<List<NodeAnnouncement>> common = !spoken ? null
                 : new Supplier<List<NodeAnnouncement>>() {
                     @Override
                     public List<NodeAnnouncement> get() {
                         return Collections.singletonList(NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
                             public String get() {
-                                return roleWord;
+                                return Loc.get("ui", roleKey);
                             }
                         }, AnnouncementKinds.ROLE));
                     }
@@ -38,15 +41,15 @@ public final class ControlTypes {
         return new ControlType(key, STANDARD_ORDER, common);
     }
 
-    public static final ControlType BUTTON = make("button", "button");
-    public static final ControlType TOGGLE = make("toggle", "toggle");
-    public static final ControlType SLIDER = make("slider", "slider");
-    public static final ControlType RADIO = make("radio_button", "radio button");
-    public static final ControlType TAB = make("tab", "tab");
-    public static final ControlType GROUP = make("group", "group");
-    public static final ControlType TEXT = make("text", null);
+    public static final ControlType BUTTON = make("button", true);
+    public static final ControlType TOGGLE = make("toggle", true);
+    public static final ControlType SLIDER = make("slider", true);
+    public static final ControlType RADIO = make("radio_button", true);
+    public static final ControlType TAB = make("tab", true);
+    public static final ControlType GROUP = make("group", true);
+    public static final ControlType TEXT = make("text", false);
     /** A cycle-through-options control (left/right changes the value). */
-    public static final ControlType CHOOSER = make("chooser", "chooser");
+    public static final ControlType CHOOSER = make("chooser", true);
 
     public static final List<ControlType> ALL = Arrays.asList(
             BUTTON, TOGGLE, SLIDER, RADIO, TAB, GROUP, TEXT, CHOOSER);

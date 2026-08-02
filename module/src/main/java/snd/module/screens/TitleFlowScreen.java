@@ -18,6 +18,7 @@ import com.tann.dice.screens.titleScreen.ModesPanel;
 import com.tann.dice.screens.titleScreen.TitleScreen;
 
 import snd.core.SndLog;
+import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -26,6 +27,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.module.GameText;
 import snd.module.GameUi;
 
 /**
@@ -70,7 +72,7 @@ public class TitleFlowScreen extends AccessScreen {
     // ---- stop 1: the mode list (the drawer, with locked names restored) ----
 
     private void buildModesStop(GraphBuilder b, Mode selected) {
-        b.beginStop("modes").pushContext("Modes", "list");
+        b.beginStop("modes").pushContext(Loc.get("ui", "title.modes"), Loc.get("ui", "role.list"));
         for (Mode m : Mode.getPlayableModes()) {
             if (m.skipFromMainList()) {
                 continue;
@@ -92,19 +94,19 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return m.getName();
+                        return GameText.t(m.getName());
                     }
                 }, AnnouncementKinds.LABEL),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return selected ? "selected" : null;
+                        return selected ? Loc.get("ui", "state.selected") : null;
                     }
                 }, AnnouncementKinds.SELECTED),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return locked ? "locked" : null;
+                        return locked ? Loc.get("ui", "state.locked") : null;
                     }
                 }, AnnouncementKinds.ENABLED));
         vt.onActivate = new Runnable() {
@@ -139,7 +141,8 @@ public class TitleFlowScreen extends AccessScreen {
     // ---- stop 2: the selected mode's card ----
 
     private void buildCardStop(GraphBuilder b, final Mode mode) {
-        b.beginStop("card").pushContext(mode.getName() + " mode");
+        b.beginStop("card").pushContext(
+                Loc.get("ui", "title.mode_context", "mode", GameText.t(mode.getName())));
 
         if (mode.getParent() != null) {
             NodeVtable back = new NodeVtable();
@@ -147,7 +150,7 @@ public class TitleFlowScreen extends AccessScreen {
             back.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return "Back to " + mode.getParent().getName();
+                    return Loc.get("ui", "title.back_to", "mode", GameText.t(mode.getParent().getName()));
                 }
             }, AnnouncementKinds.LABEL));
             back.onActivate = new Runnable() {
@@ -171,7 +174,7 @@ public class TitleFlowScreen extends AccessScreen {
                 vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return line;
+                        return GameText.t(line);
                     }
                 }, AnnouncementKinds.LABEL));
                 b.addItem(ControlId.structural(CompositeKey.of("card", "desc", i)), vt);
@@ -209,7 +212,7 @@ public class TitleFlowScreen extends AccessScreen {
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return "Continue saved run";
+                    return Loc.get("ui", "title.continue");
                 }
             }, AnnouncementKinds.LABEL));
             vt.onActivate = new Runnable() {
@@ -242,7 +245,7 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return "Start " + startLabel(cc);
+                        return Loc.get("ui", "title.start", "name", GameText.t(startLabel(cc)));
                     }
                 }, AnnouncementKinds.LABEL),
                 // The record the sighted UI hides behind a right-click wreath.
@@ -254,10 +257,11 @@ public class TitleFlowScreen extends AccessScreen {
                         if (wins == 0 && losses == 0) {
                             return null;
                         }
-                        String text = wins + " wins in " + (wins + losses) + " runs";
+                        String text = Loc.get("ui", "title.record",
+                                "wins", wins, "runs", wins + losses);
                         int streak = cc.getStreak(false);
                         if (streak > 0) {
-                            text += ", streak " + streak;
+                            text += ", " + Loc.get("ui", "title.streak", "streak", streak);
                         }
                         return text;
                     }
@@ -265,7 +269,7 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return locked ? "locked" : null;
+                        return locked ? Loc.get("ui", "state.locked") : null;
                     }
                 }, AnnouncementKinds.ENABLED));
         if (!locked) {
@@ -283,7 +287,7 @@ public class TitleFlowScreen extends AccessScreen {
             vt.onTooltip = new Runnable() {
                 @Override
                 public void run() {
-                    host.speech().speak(dc.getDifficulty().getRules(), false);
+                    host.speech().speak(GameText.t(dc.getDifficulty().getRules()), false);
                 }
             };
         }
@@ -293,16 +297,16 @@ public class TitleFlowScreen extends AccessScreen {
     // ---- stop 3: system buttons (the icon-only left cluster, with names) ----
 
     private void buildSystemStop(GraphBuilder b) {
-        b.beginStop("system").pushContext("System");
+        b.beginStop("system").pushContext(Loc.get("ui", "sys.context"));
         b.addItem(ControlId.structural(CompositeKey.of("sys", "menu")),
-                systemButton("Menu", new Runnable() {
+                systemButton(Loc.get("ui", "sys.menu"), new Runnable() {
                     @Override
                     public void run() {
                         DungeonUtils.showCogMenu();
                     }
                 }));
         b.addItem(ControlId.structural(CompositeKey.of("sys", "almanac")),
-                systemButton("Almanac", new Runnable() {
+                systemButton(Loc.get("ui", "sys.almanac"), new Runnable() {
                     @Override
                     public void run() {
                         Book.openBook(true);
@@ -312,7 +316,7 @@ public class TitleFlowScreen extends AccessScreen {
         // The conditional members of the game's icon cluster.
         if (com.tann.dice.Main.getSettings().isBypass()) {
             b.addItem(ControlId.structural(CompositeKey.of("sys", "bypass")),
-                    systemButton("Unlocks bypassed", new Runnable() {
+                    systemButton(Loc.get("ui", "sys.bypass"), new Runnable() {
                         @Override
                         public void run() {
                             GameUi.activate(com.tann.dice.gameplay.save.settings.option.OptionUtils
@@ -322,7 +326,7 @@ public class TitleFlowScreen extends AccessScreen {
         }
         if (com.tann.dice.gameplay.save.settings.option.OptionLib.SEARCH_BUTT.c()) {
             b.addItem(ControlId.structural(CompositeKey.of("sys", "search")),
-                    systemButton("Search", new Runnable() {
+                    systemButton(Loc.get("ui", "sys.search"), new Runnable() {
                         @Override
                         public void run() {
                             com.tann.dice.screens.dungeon.panels.book.page.stuffPage.APIUtils.showSearch();
@@ -344,7 +348,7 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return "Language";
+                        return Loc.get("ui", "sys.language");
                     }
                 }, AnnouncementKinds.LABEL),
                 NodeAnnouncement.kinded(new Supplier<String>() {

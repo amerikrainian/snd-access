@@ -39,14 +39,14 @@ final class PopupWatcher {
             if (texts.isEmpty()) {
                 continue;
             }
-            StringBuilder sb = new StringBuilder("Notification: ");
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < texts.size(); i++) {
                 if (i > 0) {
                     sb.append(", ");
                 }
                 sb.append(texts.get(i));
             }
-            speech.speak(sb.toString(), false);
+            speech.speak(snd.core.loc.Loc.get("ui", "notification", "text", sb), false);
         }
     }
 }

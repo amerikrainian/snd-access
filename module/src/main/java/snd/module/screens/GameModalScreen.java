@@ -9,6 +9,7 @@ import com.tann.dice.screens.dungeon.panels.book.Book;
 import com.tann.dice.util.ui.TextWriter;
 import com.tann.dice.util.ui.standardButton.StandardButton;
 
+import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.ControlId;
 import snd.core.graph.ControlTypes;
@@ -55,12 +56,11 @@ public class GameModalScreen extends AccessScreen {
         if (modal instanceof Book) {
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
-            vt.announcements = Arrays.asList(NodeAnnouncement.of(
-                    "Almanac book. A dedicated reader is coming; press Escape to close."));
+            vt.announcements = Arrays.asList(NodeAnnouncement.of(Loc.get("ui", "modal.book_stub")));
             b.addItem(actorId(modal), vt);
             return;
         }
-        b.pushContext("Dialog");
+        b.pushContext(Loc.get("ui", "modal.dialog"));
         emit(b, modal);
         b.popContext();
     }
@@ -143,7 +143,8 @@ public class GameModalScreen extends AccessScreen {
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
                         }
-                        return label != null ? label : "unlabeled " + actor.getClass().getSimpleName();
+                        return label != null ? label
+                                : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }
                 }, AnnouncementKinds.LABEL),
                 // Party-layout picker options: the visual squares' colour
@@ -189,7 +190,7 @@ public class GameModalScreen extends AccessScreen {
                     if (sb.length() > 0) {
                         sb.append(", ");
                     }
-                    sb.append(col == null ? "random" : col.name());
+                    sb.append(col == null ? Loc.get("ui", "value.random") : col.name());
                 }
                 return sb.length() > 0 ? sb.toString() : null;
             }
@@ -210,7 +211,7 @@ public class GameModalScreen extends AccessScreen {
                 new NodeAnnouncement(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return GameUi.sliderPercent(slider) + " percent";
+                        return Loc.get("ui", "value.percent", "value", GameUi.sliderPercent(slider));
                     }
                 }, true, AnnouncementKinds.VALUE));
         vt.onAdjust = new NodeVtable.Adjust() {
@@ -222,7 +223,7 @@ public class GameModalScreen extends AccessScreen {
         vt.stateText = new Supplier<String>() {
             @Override
             public String get() {
-                return GameUi.sliderPercent(slider) + " percent";
+                return Loc.get("ui", "value.percent", "value", GameUi.sliderPercent(slider));
             }
         };
         return vt;

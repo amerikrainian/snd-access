@@ -52,7 +52,7 @@ public final class GraphNavigator {
         search.onNoMatch = new Consumer<String>() {
             @Override
             public void accept(String text) {
-                speak("no match for " + text, true);
+                speak(snd.core.loc.Loc.get("ui", "nav.no_match", "text", text), true);
             }
         };
     }
@@ -277,7 +277,7 @@ public final class GraphNavigator {
                 return true;
             } else if (action == NavAction.CANCEL) {
                 clearSearch();
-                speak("search cleared", true);
+                speak(snd.core.loc.Loc.get("ui", "nav.search_cleared"), true);
                 return true;
             } else {
                 clearSearch();
@@ -333,7 +333,7 @@ public final class GraphNavigator {
                     graph.tooltip();
                     return true;
                 }
-                speak("no details", false);
+                speak(snd.core.loc.Loc.get("ui", "nav.no_details"), false);
                 return true;
             }
             case CANCEL:
@@ -371,7 +371,7 @@ public final class GraphNavigator {
                     speakFocusedState();
                     return true;
                 case EMPTY_GROUP:
-                    speak("no details", true);
+                    speak(snd.core.loc.Loc.get("ui", "nav.no_details"), true);
                     return true;
                 case DESCENDED:
                 case ASCENDED:

@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputProcessor;
 import snd.core.HostServices;
 import snd.core.ModModule;
 import snd.core.SndLog;
+import snd.core.loc.Loc;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
@@ -31,6 +32,7 @@ public class SndModule implements ModModule {
     @Override
     public void load(HostServices h) {
         this.host = h;
+        Locales.load(); // before anything speaks
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());
         screens.register(new TitleFlowScreen(h));
@@ -40,7 +42,7 @@ public class SndModule implements ModModule {
         popups = new PopupWatcher(h.speech());
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
-            h.speech().speak("Module reloaded, generation " + h.generation(), true);
+            h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
         }
     }
 
@@ -55,9 +57,10 @@ public class SndModule implements ModModule {
         if (screen == null) {
             return;
         }
+        Locales.tick(); // follow the game's live language option
         if (!greeted) {
             greeted = true;
-            host.speech().speak("Slice and Dice access loaded", false);
+            host.speech().speak(Loc.get("ui", "greeting"), false);
         }
         if (screen != lastScreen) {
             boolean first = lastScreen == null;
@@ -129,7 +132,7 @@ public class SndModule implements ModModule {
         return null;
     }
 
-    /** "TitleScreen" -> "Title Screen". */
+    /** The screen's locale name when one exists, else "TitleScreen" -> "Title Screen". */
     private static String spokenName(Object screen) {
         String simple = screen.getClass().getSimpleName();
         StringBuilder sb = new StringBuilder();
@@ -140,6 +143,6 @@ public class SndModule implements ModModule {
             }
             sb.append(c);
         }
-        return sb.toString();
+        return Loc.getOrDefault("ui", "screen." + simple, sb.toString());
     }
 }

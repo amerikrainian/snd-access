@@ -82,6 +82,11 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   `?settle=MS` tunes, default 250) — act-then-listen in one request.
   **JShell cannot see module-loader types** (game + core + host only); module internals are
   reached via `ModModule.devCommand` (the `/gui` path) or by adding a devCommand verb.
+  **The GL context is NOT current in eval bodies**: JShell's local engine runs each snippet on a
+  per-invocation worker thread (the render thread waits on it — game state is safe to touch, but
+  any code that triggers GL work hard-aborts the JVM; `OptionLib.LANGUAGE.setValue` →
+  `Main.setupScale` is a known case). Wrap such calls in `snd.core.Dispatcher.post(...)` so they
+  run on a real render frame, or drive them via `/input`.
 - `POST /reload` — rebuild-and-swap the module from its freshly built jar, no restart. Responds
   with the reload status plus the full `/module` readout.
 - `GET /module` — module class, **load generation**, module jar mtime/age, last reload status,
@@ -120,8 +125,9 @@ Permanent/reloadable split (verified end-to-end):
 
 - **`core`** (permanent, app loader) — engine-agnostic: the `ModModule`/`HostServices` contracts,
   the **`Dispatcher`** (static fan-out the instrumented game methods call; owns the job queue,
-  frame waits, and the module reference), `SpeechPipeline` + `TextFilter`, `LineLog`, the /wait
-  `Bridge`. If code decides what words the user hears, it belongs here, unit-tested.
+  frame waits, and the module reference), `SpeechPipeline` + `TextFilter`, **`Loc`** (the mod's
+  own strings, resolved from flat JSON tables), `LineLog`, the /wait `Bridge`. If code decides
+  what words the user hears, it belongs here, unit-tested.
 - **`host`** (permanent) — only what can never reload: `SndAgent` premain + Byte Buddy hook
   install, `PrismBackend` (native handle), `ModuleLoader`, `DevServer`, `GameDriver` (the host's
   few direct game touches). Keep it minimal; every line here costs a restart to change.
@@ -157,6 +163,13 @@ Permanent/reloadable split (verified end-to-end):
 - Text through `TextFilter` (it strips the game's `[green]`/`[cu]`/`[n]` markup); game strings
   come from the game (all localizable text is in `lang/en.json` keys via `Main.t()`) — reuse
   them, don't hardcode English copies of game text.
+- **Two localization channels, don't cross them.** The mod's OWN strings (role words, glue
+  phrases) resolve through `Loc` ("ui" table, `module/src/main/resources/locale/<lang>/`;
+  English is the always-loaded fallback, and the module follows the game's live language by
+  per-frame poll — `Locales.tick`). GAME text read from the model (`Mode.getName()`, item and
+  side descriptions) is English source the game translates at display time — route it through
+  `GameText.t` (= the game's `Main.t`) before speaking. Actor text (`TextWriter.text`) is
+  already translated at set time; never bridge it twice.
 - Only commit when asked. Gitignored: `game/`, `third_party/`, Gradle build dirs.
 
 ## Gotchas

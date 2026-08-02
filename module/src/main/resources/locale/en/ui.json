@@ -1,0 +1,63 @@
+{
+  "role.button": "button",
+  "role.toggle": "toggle",
+  "role.slider": "slider",
+  "role.radio_button": "radio button",
+  "role.tab": "tab",
+  "role.group": "group",
+  "role.chooser": "chooser",
+  "role.list": "list",
+
+  "state.expanded": "expanded",
+  "state.collapsed": "collapsed",
+  "state.selected": "selected",
+  "state.locked": "locked",
+
+  "position": "{index} of {count}",
+  "greeting": "Slice and Dice access loaded",
+  "module_reloaded": "Module reloaded, generation {generation}",
+  "notification": "Notification: {text}",
+
+  "nav.no_match": "no match for {text}",
+  "nav.search_cleared": "search cleared",
+  "nav.no_details": "no details",
+
+  "screen.TitleScreen": "Title Screen",
+  "screen.DungeonScreen": "Dungeon Screen",
+
+  "value.percent": "{value} percent",
+  "value.random": "random",
+
+  "title.modes": "Modes",
+  "title.mode_context": "{mode} mode",
+  "title.back_to": "Back to {mode}",
+  "title.continue": "Continue saved run",
+  "title.start": "Start {name}",
+  "title.record": "{wins} wins in {runs} runs",
+  "title.streak": "streak {streak}",
+
+  "sys.context": "System",
+  "sys.menu": "Menu",
+  "sys.almanac": "Almanac",
+  "sys.language": "Language",
+  "sys.bypass": "Unlocks bypassed",
+  "sys.search": "Search",
+
+  "icon.almanac": "Almanac",
+  "icon.menu": "Menu",
+  "icon.back": "Back",
+  "icon.language": "Language",
+  "icon.locked": "Locked",
+  "icon.search": "Search",
+  "icon.expand": "Expand",
+  "icon.reroll": "Reroll",
+  "icon.close": "Close",
+
+  "modal.dialog": "Dialog",
+  "modal.book_stub": "Almanac book. A dedicated reader is coming; press Escape to close.",
+  "modal.unlabeled": "unlabeled {type}",
+
+  "choice.header": "Choose",
+  "choice.tier": "tier {tier}",
+  "choice.unreadable": "unreadable option"
+}

@@ -12,6 +12,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choi
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
 
 import snd.core.SndLog;
+import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -20,6 +21,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.module.GameText;
 
 /**
  * The reward/decision offer (ChoicePhase): the starting difficulty modifier
@@ -74,13 +76,13 @@ public class ChoiceScreen extends AccessScreen {
             try {
                 String description = type.getDescription(options);
                 if (description != null && !description.trim().isEmpty()) {
-                    return description;
+                    return GameText.t(description);
                 }
             } catch (Throwable t) {
                 SndLog.error("ChoiceType.getDescription failed", t);
             }
         }
-        return "Choose";
+        return Loc.get("ui", "choice.header");
     }
 
     @Override
@@ -109,7 +111,7 @@ public class ChoiceScreen extends AccessScreen {
                         public String get() {
                             String type = safeDescribe(option);
                             int tier = option.getTier();
-                            String tierText = tier == 0 ? null : "tier " + tier;
+                            String tierText = tier == 0 ? null : Loc.get("ui", "choice.tier", "tier", tier);
                             if (type == null) {
                                 return tierText;
                             }
@@ -139,10 +141,10 @@ public class ChoiceScreen extends AccessScreen {
     private static String nameOf(Choosable option) {
         try {
             if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
-                return ((com.tann.dice.gameplay.modifier.Modifier) option).getName();
+                return GameText.t(((com.tann.dice.gameplay.modifier.Modifier) option).getName());
             }
             if (option instanceof com.tann.dice.gameplay.content.item.Item) {
-                return ((com.tann.dice.gameplay.content.item.Item) option).getName();
+                return GameText.t(((com.tann.dice.gameplay.content.item.Item) option).getName());
             }
             String save = option.getSaveString();
             if (save != null && !save.trim().isEmpty()) {
@@ -151,17 +153,17 @@ public class ChoiceScreen extends AccessScreen {
             return safeDescribe(option);
         } catch (Throwable t) {
             SndLog.error("failed to name a choice option", t);
-            return "unreadable option";
+            return Loc.get("ui", "choice.unreadable");
         }
     }
 
     private static String effectOf(Choosable option) {
         try {
             if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
-                return ((com.tann.dice.gameplay.modifier.Modifier) option).getFullDescription();
+                return GameText.t(((com.tann.dice.gameplay.modifier.Modifier) option).getFullDescription());
             }
             if (option instanceof com.tann.dice.gameplay.content.item.Item) {
-                return ((com.tann.dice.gameplay.content.item.Item) option).getDescription();
+                return GameText.t(((com.tann.dice.gameplay.content.item.Item) option).getDescription());
             }
             return null;
         } catch (Throwable t) {
@@ -172,7 +174,7 @@ public class ChoiceScreen extends AccessScreen {
 
     private static String safeDescribe(Choosable option) {
         try {
-            return option.describe();
+            return GameText.t(option.describe());
         } catch (Throwable t) {
             SndLog.error("Choosable.describe failed", t);
             return null;

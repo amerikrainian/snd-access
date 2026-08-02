@@ -18,6 +18,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GraphNavigatorTest {
+    // The navigator's own wording comes from Loc; install the English lines
+    // the assertions read.
+    @org.junit.jupiter.api.BeforeEach
+    void installWording() {
+        java.util.Map<String, String> ui = new java.util.HashMap<String, String>();
+        ui.put("nav.no_match", "no match for {text}");
+        ui.put("nav.search_cleared", "search cleared");
+        ui.put("nav.no_details", "no details");
+        java.util.Map<String, java.util.Map<String, String>> tables =
+                new java.util.HashMap<String, java.util.Map<String, String>>();
+        tables.put("ui", ui);
+        snd.core.loc.Loc.installFallback(tables);
+        snd.core.loc.Loc.install(snd.core.loc.Loc.FALLBACK_LANGUAGE,
+                java.util.Collections.<String, java.util.Map<String, String>>emptyMap());
+    }
+
     static final class Capture {
         final SpeechPipeline pipeline = new SpeechPipeline();
         final List<String> lines = new ArrayList<String>();
