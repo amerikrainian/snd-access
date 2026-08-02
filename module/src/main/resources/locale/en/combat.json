@@ -1,8 +1,12 @@
 {
   "heroes": "Heroes",
+  "enemies": "Enemies",
   "die_rolling": "rolling",
   "confirm": "Confirm",
   "unlocked": "unlocked",
+  "target_valid": "valid target",
+  "deselected": "deselected",
+  "applied": "{eff}, on {target}",
 
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",

@@ -232,7 +232,7 @@ reads the full die net. The game's 1–9/R/Space keys fall through untouched (th
 leaves its details key unconsumed when the focused node has no details). Vetoed lock banners land
 with 3.12's transient-text channel; the double-click tray line-up is visual-only.
 
-## 3.3 Targeting Phase — NOT STARTED
+## 3.3 Targeting Phase — DONE
 
 `screens/dungeon/TargetingManager.java`. The core loop: select a targetable (a hero's rolled side, or an ability), then click a target.
 
@@ -243,6 +243,17 @@ with 3.12's transient-text channel; the double-click tray line-up is visual-only
 - **Clicking a monster's die face** shows its attack explanation + targeting arrows to its victims
 - **Keyboard**: digits select hero dice; with a selection, digits target entity N (Shift+digit targets the opposite side); QWERTYUI select ability slots 0–7; Z = undo; Tab (hold) = show targeting arrows; Space/Enter = end turn
 - **End Turn confirmation**: if dice/mana/tactics would be wasted, a `ChoiceDialog` lists the reasons ("N usable dice remaining", "You can only keep N mana", "Usable tactic(s): …"). Mandatory-use dice hard-block with a banner instead
+
+> **Coverage:** the targeting loop mirrors the sighted flow with no virtual popups: select a die
+(digit, click, or Enter on the hero — all `targetingManager.clicked`), then arrow/tab to a
+creature and Enter to apply. `TargetingWatcher` speaks state changes from any input path —
+selection reads the calculated effect ("Shield 2, selected"), every applied command reads
+"effect, on target" straight from the FightLog's own command list, deselection says so. The
+border-highlight validity reads as a "valid target" state on each creature node; a vetoed apply
+speaks the game's own reason (`getInvalidTargetReason`). The Explanel is a blockerless "light"
+push and no longer counts as a modal, so it can't steal navigation. End-turn confirmation reads
+through the modal reader; monster nodes carry their locked intent as their value. Abilities land
+with 3.6, Undo with 3.8, arrow lines with 3.9.
 
 ## 3.4 Hero / Monster Panels — NOT STARTED
 
