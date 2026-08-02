@@ -1,4 +1,4 @@
-package snd.module;
+package snd.module.screens;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +26,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.module.GameUi;
 
 /**
  * The title screen: mode selection, the selected mode's card (description,
@@ -37,7 +38,7 @@ import snd.core.nav.AccessScreen;
  * locked state (the visual UI blanks them); activating one opens the game's
  * own unlock-requirement panel, which the modal screen reads.
  */
-class TitleFlowScreen extends AccessScreen {
+public class TitleFlowScreen extends AccessScreen {
     @Override
     public String key() {
         return "title";

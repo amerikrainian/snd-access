@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.badlogic.gdx.utils.Array;
 import com.tann.dice.screens.Screen;
 import com.tann.dice.util.Pair;
 import com.tann.dice.util.listener.TannListener;
@@ -22,12 +21,12 @@ import snd.core.SndLog;
  * goes through the game's listeners (TannListener.action — the exact code a
  * mouse click runs), so behavior can never diverge from the real UI.
  */
-final class GameUi {
+public final class GameUi {
     private GameUi() {
     }
 
     /** The top pushed modal actor of the current game screen, or null. */
-    static Actor topModal() {
+    public static Actor topModal() {
         com.badlogic.gdx.scenes.scene2d.Actor top = null;
         Screen screen;
         try {
@@ -57,7 +56,7 @@ final class GameUi {
      * (the game's own handler), else a synthesized touchDown/touchUp pair for
      * plain InputListeners.
      */
-    static boolean activate(Actor actor) {
+    public static boolean activate(Actor actor) {
         if (actor == null) {
             return false;
         }
@@ -71,7 +70,7 @@ final class GameUi {
     }
 
     /** Right-click equivalent: the game's info() surface (details panels). */
-    static boolean info(Actor actor) {
+    public static boolean info(Actor actor) {
         if (actor == null) {
             return false;
         }
@@ -83,7 +82,7 @@ final class GameUi {
         return false;
     }
 
-    static boolean hasTannListener(Actor actor) {
+    public static boolean hasTannListener(Actor actor) {
         return !gestureListeners(actor).isEmpty();
     }
 
@@ -124,7 +123,7 @@ final class GameUi {
     }
 
     /** All raw TextWriter texts under an actor, in child order. */
-    static List<String> textsUnder(Actor actor) {
+    public static List<String> textsUnder(Actor actor) {
         List<String> texts = new ArrayList<String>();
         collectTexts(actor, texts);
         return texts;
@@ -146,7 +145,7 @@ final class GameUi {
     }
 
     /** A button-ish actor's label: its own text, else its TextWriters joined. */
-    static String labelOf(Actor actor) {
+    public static String labelOf(Actor actor) {
         if (actor instanceof StandardButton) {
             String text = ((StandardButton) actor).getText();
             if (text != null && !text.trim().isEmpty()) {
@@ -168,7 +167,7 @@ final class GameUi {
     }
 
     /** The (package-private) ModesPanel on the live title screen, or null. */
-    static com.tann.dice.screens.titleScreen.ModesPanel modesPanel() {
+    public static com.tann.dice.screens.titleScreen.ModesPanel modesPanel() {
         try {
             Screen screen = com.tann.dice.Main.getCurrentScreen();
             if (!(screen instanceof com.tann.dice.screens.titleScreen.TitleScreen)) {
@@ -193,12 +192,4 @@ final class GameUi {
         return modesPanelFieldCache;
     }
 
-    /** Non-null, game-markup-preserving array helper for gdx Array iteration. */
-    static <T> List<T> toList(Array<T> array) {
-        List<T> list = new ArrayList<T>(array.size);
-        for (T t : array) {
-            list.add(t);
-        }
-        return list;
-    }
 }

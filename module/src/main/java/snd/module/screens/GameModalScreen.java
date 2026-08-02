@@ -1,4 +1,4 @@
-package snd.module;
+package snd.module.screens;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -16,6 +16,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.module.GameUi;
 
 /**
  * A generic reader for the game's pushed modals — choice dialogs, the cog
@@ -28,7 +29,7 @@ import snd.core.nav.AccessScreen;
  * Screens with dedicated readers (the Book, for now a placeholder) are
  * special-cased above this generic floor.
  */
-class GameModalScreen extends AccessScreen {
+public class GameModalScreen extends AccessScreen {
     @Override
     public String key() {
         return "game-modal";
