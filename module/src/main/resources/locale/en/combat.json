@@ -1,4 +1,9 @@
 {
+  "heroes": "Heroes",
+  "die_rolling": "rolling",
+  "confirm": "Confirm",
+  "unlocked": "unlocked",
+
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",
   "phase.targeting": "Targeting",

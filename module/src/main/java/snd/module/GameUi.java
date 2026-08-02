@@ -208,6 +208,28 @@ public final class GameUi {
         return null;
     }
 
+    // ---- confirm button: its state enum owns the game's "Done Rolling" /
+    // "End turn" text in a package-private field; read it reflectively so the
+    // spoken label is exactly the game's, translated ----
+
+    private static Field confirmTextField;
+
+    public static String confirmLabel(com.tann.dice.screens.dungeon.panels.ConfirmButton button) {
+        try {
+            if (confirmTextField == null) {
+                Field f = com.tann.dice.screens.dungeon.panels.ConfirmButton.ConfirmState.class
+                        .getDeclaredField("confirmText");
+                f.setAccessible(true);
+                confirmTextField = f;
+            }
+            String text = (String) confirmTextField.get(button.getConfirmState());
+            return text != null ? com.tann.dice.Main.t(text) : null;
+        } catch (Throwable t) {
+            SndLog.error("confirm label read failed", t);
+            return null;
+        }
+    }
+
     // ---- slider bridge: the game's Slider is drag-only; drive its own
     // update path (private setValue + the slideAction that feeds the option
     // and saves) so keyboard adjust behaves exactly like a drag ----

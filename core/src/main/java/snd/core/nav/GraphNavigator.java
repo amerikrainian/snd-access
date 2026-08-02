@@ -333,8 +333,9 @@ public final class GraphNavigator {
                     graph.tooltip();
                     return true;
                 }
-                speak(snd.core.loc.Loc.get("ui", "nav.no_details"), false);
-                return true;
+                // Unconsumed so the key reaches the game — in combat this key
+                // is the game's own confirm.
+                return false;
             }
             case CANCEL:
             default:

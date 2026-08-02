@@ -212,7 +212,7 @@ their value changes — a fight's opening enemy roll can resolve beneath a Choic
 surface, so stamps are value-diffed, not phase-bound. Decision phases stay silent here (their own
 screens announce); unknown phases stay silent rather than reading class names.
 
-## 3.2 Player Rolling Phase — NOT STARTED
+## 3.2 Player Rolling Phase — DONE
 
 - Hero dice tumble physically in the 3D tray. Clicking a die (< 220 ms press) toggles lock (`EntDie.toggleLock`); locked dice slide onto their hero's panel
 - **Right-click / long-press a die** → floating panel (`RollPanel`): the die's full net + current-side explanation, plus a highlight on the owner's panel. Mouse-position anchored
@@ -222,6 +222,15 @@ screens announce); unknown phases stay silent rather than reading class names.
 - Lock-restriction vetoes (from curses etc.) surface as a transient bottom banner + error sound
 - Keyboard: **1–9** lock/unlock hero N's die, **R** rolls, **Space/Enter** confirms. There is **no keyboard path to an individual physical die's info**
 - Unspent rerolls carry into targeting (can be "un-rolled" back via Undo)
+
+> **Coverage:** `CombatScreen` (heroes stop: name, rolled side's calculated text, locked state;
+buttons stop: Reroll with the n/max counter, the confirm button's own state text read
+reflectively) + `DiceWatcher` (when the last tumbling die settles, each rolled die reads its
+landed side followed by "Reroll n/max"; lock toggles speak "name locked/unlocked" from any input
+path). Activating a hero runs `targetingManager.clicked` — the game's digit route — and Backspace
+reads the full die net. The game's 1–9/R/Space keys fall through untouched (the navigator now
+leaves its details key unconsumed when the focused node has no details). Vetoed lock banners land
+with 3.12's transient-text channel; the double-click tray line-up is visual-only.
 
 ## 3.3 Targeting Phase — NOT STARTED
 
