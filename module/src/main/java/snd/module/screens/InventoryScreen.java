@@ -181,6 +181,30 @@ public class InventoryScreen extends AccessScreen {
                 };
                 b.addItem(ControlId.structural(CompositeKey.of("inv-slot", hi, si)), slotNode);
             }
+
+            NodeVtable rename = new NodeVtable();
+            rename.controlType = ControlTypes.BUTTON;
+            rename.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return Loc.get("ui", "inv.rename");
+                }
+            }, AnnouncementKinds.LABEL));
+            rename.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    // The title-bar click: opens the game's text input, which
+                    // TextEntryWatcher then speaks.
+                    com.badlogic.gdx.scenes.scene2d.Actor target =
+                            GameUi.heroRenameTarget(hero.getDiePanel());
+                    if (target == null) {
+                        host.speech().speak(Loc.get("ui", "inv.rename_unavailable"), true);
+                        return;
+                    }
+                    GameUi.activate(target);
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("inv-rename", hi)), rename);
             b.endRow();
         }
         b.popContext();

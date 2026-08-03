@@ -290,6 +290,34 @@ public final class GameUi {
         }
     }
 
+    // ---- hero rename: the title-bar group of a hero's inventory panel
+    // carries the game's rename listener (opens its text input). It's the
+    // panel's only plain-Group direct child with a TannListener besides the
+    // portrait (which only gains one in Wish mode) ----
+
+    private static Field portraitGroupField;
+
+    public static Actor heroRenameTarget(com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory panel) {
+        try {
+            if (portraitGroupField == null) {
+                Field f = com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory.class
+                        .getDeclaredField("portraitGroup");
+                f.setAccessible(true);
+                portraitGroupField = f;
+            }
+            Object portrait = portraitGroupField.get(panel);
+            for (Actor child : panel.getChildren()) {
+                if (child != portrait && child instanceof Group && hasTannListener(child)) {
+                    return child;
+                }
+            }
+            return null;
+        } catch (Throwable t) {
+            SndLog.error("hero rename target lookup failed", t);
+            return null;
+        }
+    }
+
     /** The (package-private) ModesPanel on the live title screen, or null. */
     public static com.tann.dice.screens.titleScreen.ModesPanel modesPanel() {
         try {

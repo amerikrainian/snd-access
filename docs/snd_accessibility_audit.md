@@ -483,7 +483,7 @@ real tap, not just the first — buttons whose handler is added after constructi
 challenge accept/decline) were silently inert before. The challenge's on-accept reveal is a
 pushed modal (generic reader); Space/Enter/Backspace game keys keep working underneath.
 
-## 4.7 Inventory / Equip Screen (`PartyManagementPanel`) — PARTIAL
+## 4.7 Inventory / Equip Screen (`PartyManagementPanel`) — DONE
 
 The party equipment screen (from Level End's Inventory button, or **I**):
 
@@ -504,8 +504,13 @@ the bag list exactly as the drag path does at pickup. Hero rows speak name/level
 character sheet on activate or Backspace; slots speak their item or "empty"; bag items speak
 name, tier, held/new/force-equip glows, and description (the zoom list's content, in place).
 Randomize and Done drive the panel's own R/Enter key routes. Verified live: equip from bag,
-pick-up from slot, unequip to bag, re-equip, close, focus restore. PARTIAL: hero **rename**
-(title-bar click → native text input) is not exposed.
+pick-up from slot, unequip to bag, re-equip, close, focus restore. Each hero row ends in a
+**Rename** button that fires the game's own title-bar listener; the game's in-stage text input
+(it is NOT a native dialog) is covered generally — while a `TextInput` holds keyboard focus,
+`SndInput` passes every key through to the field (typing, caret keys, Enter submit, Escape
+cancel) and `TextEntryWatcher` announces the field on focus and echoes edits (typed chars,
+pastes, deletions). The same coverage serves every other text input in the game (scenario
+names, custom-mode saves).
 
 ---
 

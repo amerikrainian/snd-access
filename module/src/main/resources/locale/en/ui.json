@@ -105,5 +105,12 @@
   "inv.unequipped": "{item} returned to the bag",
   "inv.cannot_use": "{hero} cannot use {item}",
   "inv.done": "Done",
-  "inv.randomize": "Randomize equipment"
+  "inv.randomize": "Randomize equipment",
+  "inv.rename": "Rename",
+  "inv.rename_unavailable": "rename not available",
+
+  "textentry.open": "text entry, {title}",
+  "textentry.blank": "blank",
+  "textentry.space": "space",
+  "textentry.deleted": "deleted {text}"
 }
