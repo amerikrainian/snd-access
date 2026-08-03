@@ -10,18 +10,18 @@ options, leaderboards — is navigable by keyboard and spoken through
 The mod adds a virtual cursor over the game's own UI. The game's native hotkeys
 (digits 1–9, R reroll, Z undo, I inventory, Escape) keep working.
 
-| Key | Action |
-|---|---|
-| Arrow keys | Move between controls (rows/columns, table cells) |
-| Tab / Shift+Tab | Next / previous group (heroes, enemies, buttons, content…) |
-| Ctrl+Up / Ctrl+Down | Previous / next region within a group |
-| Home / End | First / last control |
-| Enter | Activate (left-click equivalent) |
-| Backspace | Details (right-click equivalent: character sheets, item text, delete/detail actions) |
-| Shift+Backspace | Extra info (keyword rules in combat, difficulty rules) |
-| Left / Right on sliders and choosers | Adjust the value |
-| Any letters | Type-ahead search within the current group |
-| Escape | Game's own back/close (cancels type-ahead first if one is active) |
+| Key                                  | Action                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------ |
+| Arrow keys                           | Move between controls (rows/columns, table cells)                                    |
+| Tab / Shift+Tab                      | Next / previous group (heroes, enemies, buttons, content…)                           |
+| Ctrl+Up / Ctrl+Down                  | Previous / next region within a group                                                |
+| Home / End                           | First / last control                                                                 |
+| Enter                                | Activate (left-click equivalent)                                                     |
+| Backspace                            | Details (right-click equivalent: character sheets, item text, delete/detail actions) |
+| Shift+Backspace                      | Extra info (keyword rules in combat, difficulty rules)                               |
+| Left / Right on sliders and choosers | Adjust the value                                                                     |
+| Any letters                          | Type-ahead search within the current group                                           |
+| Escape                               | Game's own back/close (cancels type-ahead first if one is active)                    |
 
 In text inputs (rename, scenario names, modifier search) the keyboard goes to the field:
 typing echoes, Backspace deletes, Enter submits, Escape cancels.
@@ -66,8 +66,7 @@ Never enabled in a player deploy.
 
 Modules: `core` (engine-agnostic navigation/speech, unit-tested), `host` (the `-javaagent`:
 hooks, Prism, module loader — game-blind), `module` (all feature code, hot-reloadable),
-`devrepl` (JShell, dev only). See `CLAUDE.md` for architecture rules and
-`docs/snd_accessibility_audit.md` for the per-screen coverage inventory.
+`devrepl` (JShell, dev only).
 
 ## Releasing
 
