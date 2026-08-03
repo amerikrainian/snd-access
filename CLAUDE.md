@@ -40,8 +40,8 @@ The game is a dice-battler roguelike: 2 real screens (title, dungeon) plus a dee
 - `game/assets/` — `lang/en.json` (every UI string, flat key→value), `guide/`, `misc/`.
 - Regenerate after a game update: extract `dice.jar` with `jar -xf`, then
   `java -jar third_party/vineflower.jar --only=com/tann --folder <classes> game/src`.
-- `third_party/` is gitignored (vineflower.jar, prism.dll+h). If missing, prism.dll can be copied
-  from `../NonVisualCalculus/third_party/prism/` or `../wotr-access/vendor/`.
+- `third_party/prism/` (prism.dll+h, LICENSES) is COMMITTED — players must not need to fetch it.
+  The rest of `third_party/` (vineflower.jar) stays gitignored.
 
 ## Build & deploy
 

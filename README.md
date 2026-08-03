@@ -29,19 +29,18 @@ typing echoes, Backspace deletes, Enter submits, Escape cancels.
 ## Installing (players)
 
 1. Install the game via Steam.
-2. Get `prism.dll` (and `prism.h`) from the [Prism releases](https://github.com/ethindp/prism)
-   and place them in `third_party/prism/`.
-3. Run `scripts/deploy.ps1`. It builds, stages the mod into
+2. Run `scripts/deploy.ps1`. It builds, stages the mod (including the vendored
+   [Prism](https://github.com/ethindp/prism) speech library) into
    `<game>\mods\snd-access\`, and patches `SliceAndDice.json` so the game's own launcher
    loads it (original kept as `SliceAndDice.json.bak`).
-4. Launch the game normally. To uninstall: copy the `.bak` back over `SliceAndDice.json`.
+3. Launch the game normally. To uninstall: copy the `.bak` back over `SliceAndDice.json`.
 
 If the game is not in the default Steam location, pass `-GameDir <path>` to the script.
 
 ## Building / developing
 
 Requirements: JDK 21, Gradle, the game installed (`dice.jar` is compiled against directly —
-no reflection layer), `third_party/prism/prism.dll`.
+no reflection layer). Prism is vendored in `third_party/prism/` (MPL-2.0; licenses included).
 
 ```
 gradle build            # all modules + core unit tests
@@ -68,3 +67,5 @@ hooks, Prism, module loader — game-blind), `module` (all feature code, hot-rel
 ## Notes
 
 - Dev launches share the real save data; the mod never writes save state itself.
+- Prism is redistributed under its licenses (MPL-2.0 and dependencies — see
+  `third_party/prism/LICENSES/`). Nothing from the game itself is redistributed.

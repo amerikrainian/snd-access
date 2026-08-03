@@ -1,5 +1,6 @@
 game/
-third_party/
+third_party/*
+!third_party/prism/
 .gradle/
 build/
 */build/
