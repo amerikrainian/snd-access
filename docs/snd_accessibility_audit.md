@@ -691,7 +691,7 @@ panels (rules + every side using the keyword — verified live on bloodlust); mo
 and pin search controls are ordinary buttons. Seen counts read as text. Type-ahead searches
 within the content stop, so typing a hero/keyword name jumps straight to it.
 
-## 7.3 Stuff Page — NOT STARTED
+## 7.3 Stuff Page — DONE
 
 7 tabs:
 
@@ -702,6 +702,15 @@ within the content stop, so typing a hero/keyword name jumps straight to it.
 - **Graph** — locked behind 20 challenges: plots side-value curves; series identified only by hash-colors and icons; add/remove sides via popup; no data table
 - **Patch** — patch-notes text blobs per version (pure text)
 - **Numbers** — lifetime stats rendered as **two parallel columns of separate actors** (name column + value column; association is purely spatial) + a "Reset Stats" button with confirmation
+
+> **Coverage:** Numbers is rebuilt model-side — each stat reads as one "name value" line from
+the same merged-stats data the columns render, plus the tab's own Reset Stats button (its
+confirmation dialog rides the modal reader). The other tabs read through the content walk,
+verified live: Jukebox (volume slider adjustable with percent readout, live current-track
+text, transport buttons, per-song checkbox rows with checked state), Credits, Patch notes,
+Online's leaderboard mode buttons. Options is 8.2's dedicated section. The Graph tab is locked
+behind 20 challenges on this profile — unverified; its hash-colour series would need a data
+table if it ever matters.
 
 ---
 

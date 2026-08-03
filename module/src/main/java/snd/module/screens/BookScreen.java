@@ -97,16 +97,81 @@ public class BookScreen extends AccessScreen {
     }
 
     // The current tab's content. The generic actor walk covers the mostly-
-    // textual pages; tabs whose visuals don't read get model-driven builders
-    // (registered by the specific page handlers as they land).
+    // textual pages; tabs whose visuals don't read get model-driven builders.
     private void buildContent(GraphBuilder b, BookPage page) {
         Actor content = contentPanel(page);
         if (content == null) {
             return;
         }
         b.pushContext(Loc.get("ui", "book.content"), null, false);
-        ActorNodes.emit(b, content);
+        Object tab = focusedTabIdentifier(page);
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Numbers) {
+            buildNumbers(b, content);
+        } else {
+            ActorNodes.emit(b, content);
+        }
         b.popContext();
+    }
+
+    // The lifetime-stats tab renders name and value as two parallel columns
+    // of separate actors (association purely spatial); rebuild each line from
+    // the same merged-stats data, then the tab's own Reset Stats button.
+    private void buildNumbers(GraphBuilder b, Actor content) {
+        try {
+            java.util.Map<String, com.tann.dice.gameplay.progress.stats.stat.Stat> merged =
+                    com.tann.dice.Main.self().masterStats.createMergedStats();
+            for (int side = 0; side < 2; side++) {
+                java.util.List<com.tann.dice.gameplay.progress.stats.stat.Stat> stats =
+                        new java.util.ArrayList<com.tann.dice.gameplay.progress.stats.stat.Stat>();
+                for (com.tann.dice.gameplay.progress.stats.stat.Stat stat : merged.values()) {
+                    if (stat.showInAlmanac(side)) {
+                        stats.add(stat);
+                    }
+                }
+                Collections.sort(stats,
+                        new java.util.Comparator<com.tann.dice.gameplay.progress.stats.stat.Stat>() {
+                            @Override
+                            public int compare(com.tann.dice.gameplay.progress.stats.stat.Stat a,
+                                    com.tann.dice.gameplay.progress.stats.stat.Stat b) {
+                                return a.getOrder() - b.getOrder();
+                            }
+                        });
+                for (final com.tann.dice.gameplay.progress.stats.stat.Stat stat : stats) {
+                    b.addLabel(ControlId.referenced(stat, CompositeKey.of("book-stat", stat.getName())),
+                            new Supplier<String>() {
+                                @Override
+                                public String get() {
+                                    return snd.module.GameText.t(stat.getNameForDisplay()) + " "
+                                            + snd.module.GameText.t(stat.getValueForDisplay());
+                                }
+                            });
+                }
+            }
+        } catch (Throwable t) {
+            SndLog.error("numbers page build failed", t);
+        }
+
+        final com.tann.dice.util.ui.standardButton.StandardButton reset =
+                content instanceof com.badlogic.gdx.scenes.scene2d.Group
+                        ? GameUi.findButtonByText((com.badlogic.gdx.scenes.scene2d.Group) content, "Reset Stats")
+                        : null;
+        if (reset != null) {
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameUi.labelOf(reset);
+                }
+            }, AnnouncementKinds.LABEL));
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.activate(reset); // its own confirm dialog follows
+                }
+            };
+            b.addItem(ControlId.referenced(reset, "book-reset-stats"), vt);
+        }
     }
 
     private NodeVtable tabNode(final TopTab tab) {
