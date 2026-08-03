@@ -179,6 +179,19 @@ public class CombatScreen extends AccessScreen {
                 host.speech().speak(GameText.t(a.getDerivedEffects().describe(false)), false);
             }
         };
+        vt.onTooltip = new Runnable() {
+            @Override
+            public void run() {
+                String rules;
+                try {
+                    rules = keywordRules(a.getDerivedEffects().getKeywords());
+                } catch (Throwable t) {
+                    snd.core.SndLog.error("ability keyword rules failed", t);
+                    rules = Loc.get("combat", "no_keywords");
+                }
+                host.speech().speak(rules, false);
+            }
+        };
         return vt;
     }
 
@@ -318,7 +331,46 @@ public class CombatScreen extends AccessScreen {
                 host.speech().speak(sheetText(ds, ent), false);
             }
         };
+        // The current side's keyword rules — the game shows these only in
+        // the almanac glossary or the right-click explanation panel.
+        vt.onTooltip = new Runnable() {
+            @Override
+            public void run() {
+                host.speech().speak(sideKeywordRules(ent), false);
+            }
+        };
         return vt;
+    }
+
+    // "bloodlust: +1 pip for each damaged enemy" for every keyword on the
+    // rolled side's calculated effect.
+    static String sideKeywordRules(Ent ent) {
+        try {
+            EntSide side = ent.getDie().getCurrentSide();
+            if (side == null) {
+                return Loc.get("combat", "no_keywords");
+            }
+            return keywordRules(side.findState(FightLog.Temporality.Present, ent)
+                    .getCalculatedEffect().getKeywords());
+        } catch (Throwable t) {
+            snd.core.SndLog.error("side keyword rules failed", t);
+            return Loc.get("combat", "no_keywords");
+        }
+    }
+
+    static String keywordRules(java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return Loc.get("combat", "no_keywords");
+        }
+        StringBuilder sb = new StringBuilder();
+        for (com.tann.dice.gameplay.effect.eff.keyword.Keyword keyword : keywords) {
+            if (sb.length() > 0) {
+                sb.append(". ");
+            }
+            sb.append(GameText.t(keyword.getColourTaggedString()))
+                    .append(": ").append(GameText.t(keyword.getRules()));
+        }
+        return sb.toString();
     }
 
     static String sheetText(DungeonScreen ds, Ent ent) {
@@ -626,6 +678,31 @@ public class CombatScreen extends AccessScreen {
                             com.tann.dice.screens.dungeon.panels.book.page.stuffPage.APIUtils.showSearch();
                         }
                     }));
+        }
+        // The optional HUD timer/clock text, otherwise unreachable.
+        if (com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_TIMER.c()
+                || com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_CLOCK.c()) {
+            b.addLabel(ControlId.structural(CompositeKey.of("sys", "time")),
+                    new java.util.function.Supplier<String>() {
+                        @Override
+                        public String get() {
+                            StringBuilder sb = new StringBuilder();
+                            if (com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_TIMER.c()) {
+                                sb.append(Loc.get("combat", "timer", "time",
+                                        com.tann.dice.util.Tann.parseSeconds(
+                                                ds.getDungeonContext().getTimeTakenSeconds(), false)));
+                            }
+                            if (com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_CLOCK.c()) {
+                                if (sb.length() > 0) {
+                                    sb.append(", ");
+                                }
+                                sb.append(Loc.get("combat", "clock", "time",
+                                        new java.text.SimpleDateFormat("HH:mm")
+                                                .format(new java.util.Date())));
+                            }
+                            return sb.toString();
+                        }
+                    });
         }
     }
 
