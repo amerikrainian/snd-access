@@ -641,7 +641,16 @@ The most complex non-combat UI, embedded in the title screen:
 
 > **Critical:** while the Book is open, `Book.keyPress` + `Screen.genericKeyPress` **swallow every key except ESC** — the entire keyboard is inert. All tab switching is clicking; content scrolling is mouse-wheel only; tab focus state is a color swap. Portrait layout even inserts inert dummy filler tabs labelled "x".
 
-## 7.1 Help Page — NOT STARTED
+> **Coverage (foundation):** `BookScreen` replaces the old placeholder stub. The key-swallowing
+is moot — our processor sits ahead of the Book's, so navigation, type-ahead, and Escape all
+work. Three Tab-stops: the page tabs, the focused page's sub-tabs (both with selected state,
+activating through each TopTab's own listener so sounds, highlights, and last-page memory
+behave), and the current tab's content — walked from the page's scroll panel, so mouse-only
+scrolling is irrelevant to reading. Fixed along the way: a ScrollPane's built-in gesture
+listener no longer makes it an "interactive leaf" that swallowed its children into one node
+(`GameUi.hasTannListener` now means actual TannListeners).
+
+## 7.1 Help Page — DONE
 
 8 tabs: **Basics, Dice, Rolling, Combat, Abilities, Tips, Advanced, Glossary.** Content is bulleted text snippets — the most screen-reader-friendly content in the game — but several embed image-only diagrams:
 
@@ -651,6 +660,13 @@ The most complex non-combat UI, embedded in the title screen:
 - Tips tab: the desktop hotkey list (see Phase 12)
 - Glossary: term definitions + unlocked difficulty rules
 - Basics tab: also holds the **"Reset Tutorial"** button
+
+> **Coverage:** the snippets are TextWriters the content walk reads line by line (verified live:
+Basics, Dice, Abilities). The image diagrams all ship their own text equivalents, which read
+while the images drop as decoration: the die-position diagram's L/M/T/B/r/R legend, the HP-bar
+legend's per-row labels ("8/10 hp", "2 incoming damage", "1 incoming poison"), and the tactic
+cost icons' text explanations (tactics are still locked on the dev profile, so that grid is
+pattern-verified only). Reset Tutorial and the youtuber/Discord links are ordinary buttons.
 
 ## 7.2 Ledger Page — NOT STARTED
 

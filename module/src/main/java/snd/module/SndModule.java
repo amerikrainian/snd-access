@@ -11,6 +11,7 @@ import snd.core.loc.Loc;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
+import snd.module.screens.BookScreen;
 import snd.module.screens.ChoiceScreen;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.DialogPhaseScreen;
@@ -55,6 +56,7 @@ public class SndModule implements ModModule {
         screens.register(new InventoryScreen(h));
         screens.register(new PauseRecoveryScreen());
         screens.register(new RunEndStatsScreen());
+        screens.register(new BookScreen(h));
         input = new SndInput(screens, nav);
         popups = new PopupWatcher(h.speech());
         phases = new PhaseWatcher(h.speech());

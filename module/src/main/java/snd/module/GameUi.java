@@ -96,8 +96,15 @@ public final class GameUi {
         return handled;
     }
 
+    // Specifically the game's own listener type: plain ActorGestureListeners
+    // (a ScrollPane's built-in scroll handling) are not activation surfaces.
     public static boolean hasTannListener(Actor actor) {
-        return !gestureListeners(actor).isEmpty();
+        for (ActorGestureListener l : gestureListeners(actor)) {
+            if (l instanceof TannListener) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<ActorGestureListener> gestureListeners(Actor actor) {
