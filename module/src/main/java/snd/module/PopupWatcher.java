@@ -46,7 +46,37 @@ final class PopupWatcher {
                 }
                 sb.append(texts.get(i));
             }
+            // Achievement toasts show only the name; the description hides
+            // behind right-click on a 5-second timer. Append it.
+            String description = achievementDescription(texts);
+            if (description != null) {
+                sb.append(", ").append(description);
+            }
             speech.speak(snd.core.loc.Loc.get("ui", "notification", "text", sb), false);
         }
+    }
+
+    // A toast text matching a known achievement name identifies an unlock toast.
+    private static String achievementDescription(List<String> texts) {
+        try {
+            for (com.tann.dice.gameplay.progress.chievo.Achievement achievement : allAchievements()) {
+                for (String text : texts) {
+                    if (achievement.getName().equals(snd.core.speech.TextFilter.clean(text))) {
+                        return GameText.t(achievement.getDescription());
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            snd.core.SndLog.error("achievement toast lookup failed", t);
+        }
+        return null;
+    }
+
+    private static List<com.tann.dice.gameplay.progress.chievo.Achievement> allAchievements() {
+        List<com.tann.dice.gameplay.progress.chievo.Achievement> all =
+                new java.util.ArrayList<com.tann.dice.gameplay.progress.chievo.Achievement>(
+                        com.tann.dice.gameplay.progress.chievo.AchLib.getChallenges());
+        all.addAll(com.tann.dice.gameplay.progress.chievo.AchLib.getSecrets());
+        return all;
     }
 }

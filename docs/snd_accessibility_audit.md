@@ -810,7 +810,7 @@ submit panel's name field is the covered in-game text input — actual submissio
 
 ---
 
-# Phase 11: Achievements and Unlocks — NOT STARTED
+# Phase 11: Achievements and Unlocks — DONE
 
 `gameplay/progress/` — achievements gate modes, difficulties, hero colors, options, features (party layout, events, tactics…):
 
@@ -819,6 +819,19 @@ submit panel's name field is the covered in-game text input — actual submissio
 - The Book's Unlock tab is the management surface (see 7.2)
 - "Bypass unlocks" option unlocks everything while still allowing achievement earning
 - Locked content is variously: blanked (mode names), removed (difficulties), padlocked (options), or dimmed (keywords)
+
+> **Coverage:** completion toasts already rode the popup watcher; they now also speak the
+achievement's description (the toast shows only the name, with detail behind right-click on a
+5-second timer) — verified live by showing a real toast through the holder's own
+`addAchievement` ("Notification: Gambler-pick, Choose Gambler twice"). Locked-content
+presentation is covered where it appears: modes list by name with a "locked" state and open
+the game's unlock-requirement panel on activation, options read as the padlock with the
+requirement on Backspace, ledger tiles read "Locked", and the Unlock tab (7.2) is the
+management surface with bypass-unlocks a normal toggle (8.2). The title-screen
+unlock-announcement modals are ordinary pushed modals (pattern-covered; untriggerable live
+without permanently earning an achievement). Residual nuance: the keyword tab's dimmed
+"not yet encountered" section reads identically to the encountered one — the buttons work,
+but the dim overlay's meaning isn't spoken.
 
 ---
 
