@@ -624,7 +624,7 @@ and its copy-state dialog were already readable via the modal reader. Fixed here
 `GameUi.info` now fires every gesture listener like a real right-click (the first-listener bug
 `activate` had), which the scenario delete path exposed.
 
-## 6.4 Custom Mode Editor — NOT STARTED
+## 6.4 Custom Mode Editor — DONE
 
 The most complex non-combat UI, embedded in the title screen:
 
@@ -632,6 +632,15 @@ The most complex non-combat UI, embedded in the title screen:
 - Buttons: add (search dialog), +rng, view-all, clear (no confirmation!), copy, paste (left = replace, **right-click = append**), save (text input), load (left-click load, **right-click delete**)
 - "options" / "api" / "resources" links under the description
 - **Every edit rebuilds the entire title screen** (only scroll position survives)
+
+> **Coverage:** the modifier list reads as rows — name plus full description with a remove
+button (and move-up when the rearrange option is on) driving the editor's own routes; the
+full-title rebuild is immaterial since the card rebuilds from the model each frame. The
+add/search dialog (a covered in-game text input), add-random, view-all, clear (no confirm,
+matching the game), copy, paste (Enter replaces, Backspace appends — the button's own
+action/info split), and preset save/load run the editor's own button runnables; the
+options/api/resources links read for every mode. Verified live under bypass-unlocks:
+add-random → row read → removed; the search dialog announced as text entry.
 
 ---
 
@@ -708,9 +717,10 @@ the same merged-stats data the columns render, plus the tab's own Reset Stats bu
 confirmation dialog rides the modal reader). The other tabs read through the content walk,
 verified live: Jukebox (volume slider adjustable with percent readout, live current-track
 text, transport buttons, per-song checkbox rows with checked state), Credits, Patch notes,
-Online's leaderboard mode buttons. Options is 8.2's dedicated section. The Graph tab is locked
-behind 20 challenges on this profile — unverified; its hash-colour series would need a data
-table if it ever matters.
+Online's leaderboard mode buttons. Options is 8.2's dedicated section. The Graph tab (locked
+behind 20 challenges; tested under bypass-unlocks) pairs the plot with a GraphSheet **data
+table** — one row per plotted side with its calculated value at each pip count — and its
+series icons and add-side popup entries are named from a texture-to-side map.
 
 ---
 
@@ -894,9 +904,15 @@ The Numbers stats page and leaderboard tables are parallel independent columns �
 ## 13.5 Transient, Timed Surfaces
 Bottom banners (~0.5 s), top-right popups (5 s), speech bubbles, flashes. No history/log exists anywhere. A screen reader needs interception at the emit points (`AbilityHolder.showInfo`, `PopupHolder.addText/addAchievement`, `Explanel` creation).
 
-> **Coverage (partial):** the top-right popup holder is polled each frame and every new popup is
-spoken once, so achievement and stat toasts are not missed. The in-combat bottom banner and the
-explanation panels are Phase 3/6 work.
+> **Coverage:** the top-right popup holder is polled each frame and every new popup spoken
+once (achievement and clipboard toasts included). The bottom banner and targeting red-flash
+are hooked (`AbilityHolder.showInfo`, `TargetingManager.showError`), and so now are the
+remaining written channels: per-panel combat text ("Lazy: dodged", "immune", "petrified") via
+`EntPanelCombat.addMessage`, hero/monster chatter via `addSpeechBubble`, and ability-bar wisps
+(mana gains, discards, the save-loaded notice) via `AbilityHolder.addWisp` — each spoken with
+the owning entity's name where one exists. Enemy attack damage itself has no written form
+(hp pips only), so per the visual-only rule it is not narrated; the panel readouts carry the
+result.
 
 ## 13.6 Layout Volatility
 The title screen fully rebuilds on option/custom-mode changes; the top button row rebuilds every turn; portrait/landscape/width breakpoints change structure (and insert dummy tabs). Any focus/virtual-cursor model must be rebuilt from the model, not from actor identity.
