@@ -735,7 +735,7 @@ radio state (checked/unchecked via the checkbox labeler), the UI-size steppers r
 remaps). Sliders adjust with Left/Right and speak percent. Flee/Quit verified live earlier;
 nav buttons open the Book's pages. Escape closes throughout.
 
-## 8.2 Options Screen — NOT STARTED
+## 8.2 Options Screen — DONE
 
 Book → stuff → Options (`OptionsMenu`). Header hint: "(right-click a checkbox to learn what it does)". Two columns: Gameplay+Modding+Music left, UI right. Locked options render as a padlock + "locked" (right-click → unlock requirement).
 
@@ -753,6 +753,17 @@ Book → stuff → Options (`OptionsMenu`). Header hint: "(right-click a checkbo
 - Hidden/debug categories exist (FPS counter, phase display, render modes…)
 
 > **Accessibility-relevant absences:** no text-size option (only whole-UI integer scaling), no narration/TTS, no screen-shake/motion toggle beyond hide-spinners/roll-speed, no colorblind support beyond poison pips, no keyboard remapping.
+
+> **Coverage:** built from the option registry (`OptionUtils.EscBopType` → `Option`) rather
+than the pointer-only widgets, inside the Book's content stop. BOptions are toggles speaking
+checked/unchecked with the right-click-only description read on focus; ChOptions are choosers
+cycling with Left/Right; FlOptions are sliders adjusting in 5%/20% steps with percent
+readout. Every change goes through the option's own `setValue(manual)`, so warning dialogs,
+saves, and title-screen rebuilds behave exactly as a click; toggles play the game's own
+pip/pop. Locked options read as "locked" like the sighted padlock, with the unlock
+requirement on Backspace. The tab's Reset All and display/sound buttons are driven directly.
+Verified live: toggle round-trip (show timer), chooser round-trip (roll speed 1x→1.5x→1x),
+descriptions spoken.
 
 ---
 

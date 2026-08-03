@@ -107,10 +107,232 @@ public class BookScreen extends AccessScreen {
         Object tab = focusedTabIdentifier(page);
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Numbers) {
             buildNumbers(b, content);
+        } else if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Options) {
+            buildOptions(b, content);
         } else {
             ActorNodes.emit(b, content);
         }
         b.popContext();
+    }
+
+    // The options screen, from the option registry rather than its pointer-
+    // only widgets: checkboxes become toggles, radio rows become choosers,
+    // sliders adjust with Left/Right — every value change through the
+    // option's own setValue, so warning dialogs, saves, and rebuild side
+    // effects behave exactly as a click. Locked options read as the padlock
+    // the sighted player sees, with the unlock requirement on Backspace.
+    private void buildOptions(GraphBuilder b, Actor content) {
+        for (com.tann.dice.gameplay.save.settings.option.OptionUtils.EscBopType category
+                : com.tann.dice.gameplay.save.settings.option.OptionUtils.EscBopType.values()) {
+            if (!category.shownInOptions) {
+                continue;
+            }
+            b.pushContext(snd.module.GameText.t(category.toString()), Loc.get("ui", "role.group"));
+            for (final com.tann.dice.gameplay.save.settings.option.Option option : category.getOptions()) {
+                if (!option.isValid() || option.isDebug()) {
+                    continue;
+                }
+                ControlId id = ControlId.referenced(option,
+                        CompositeKey.of("book-option", option.getName()));
+                if (com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(option)) {
+                    NodeVtable vt = new NodeVtable();
+                    vt.controlType = ControlTypes.TEXT;
+                    vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return Loc.get("ui", "state.locked");
+                        }
+                    }, AnnouncementKinds.LABEL));
+                    vt.onSecondary = new Runnable() {
+                        @Override
+                        public void run() {
+                            com.tann.dice.gameplay.progress.chievo.AchLib.showUnlockFor(option);
+                        }
+                    };
+                    b.addItem(id, vt);
+                } else if (option instanceof com.tann.dice.gameplay.save.settings.option.BOption) {
+                    b.addItem(id, boolOptionNode(
+                            (com.tann.dice.gameplay.save.settings.option.BOption) option));
+                } else if (option instanceof com.tann.dice.gameplay.save.settings.option.ChOption) {
+                    b.addItem(id, choiceOptionNode(
+                            (com.tann.dice.gameplay.save.settings.option.ChOption) option));
+                } else if (option instanceof com.tann.dice.gameplay.save.settings.option.FlOption) {
+                    b.addItem(id, sliderOptionNode(
+                            (com.tann.dice.gameplay.save.settings.option.FlOption) option));
+                } else {
+                    b.addLabel(id, new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return snd.module.GameText.t(option.getName());
+                        }
+                    });
+                }
+            }
+            b.popContext();
+        }
+
+        // The tab's own buttons: Reset All (confirm dialog) and the Music
+        // section's display/sound shortcut into the cog menu.
+        if (content instanceof com.badlogic.gdx.scenes.scene2d.Group) {
+            com.badlogic.gdx.scenes.scene2d.Group root = (com.badlogic.gdx.scenes.scene2d.Group) content;
+            addFoundButton(b, root, "display/sound", "book-opt-cog");
+            addFoundButton(b, root, "Reset All", "book-opt-reset");
+        }
+    }
+
+    private void addFoundButton(GraphBuilder b, com.badlogic.gdx.scenes.scene2d.Group root,
+            String text, Object key) {
+        final com.tann.dice.util.ui.standardButton.StandardButton button =
+                GameUi.findButtonByText(root, text);
+        if (button == null) {
+            return;
+        }
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameUi.labelOf(button);
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                GameUi.activate(button);
+            }
+        };
+        b.addItem(ControlId.referenced(button, key), vt);
+    }
+
+    private NodeVtable boolOptionNode(final com.tann.dice.gameplay.save.settings.option.BOption option) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.TOGGLE;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return snd.module.GameText.t(option.getName());
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", option.c() ? "state.checked" : "state.unchecked");
+                    }
+                }, AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return optionDescription(option);
+                    }
+                }, AnnouncementKinds.TOOLTIP));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                boolean on = !option.c();
+                com.tann.dice.statics.sound.Sounds.playSound(on
+                        ? com.tann.dice.statics.sound.Sounds.pip
+                        : com.tann.dice.statics.sound.Sounds.pop);
+                option.setValue(on, true); // warning dialogs ride manualSelectAction
+            }
+        };
+        vt.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", option.c() ? "state.checked" : "state.unchecked");
+            }
+        };
+        return vt;
+    }
+
+    private NodeVtable choiceOptionNode(final com.tann.dice.gameplay.save.settings.option.ChOption option) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.CHOOSER;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return snd.module.GameText.t(option.getName());
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return snd.module.GameText.t(option.getOptions()[option.c()]);
+                    }
+                }, AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return optionDescription(option);
+                    }
+                }, AnnouncementKinds.TOOLTIP));
+        vt.onAdjust = new NodeVtable.Adjust() {
+            @Override
+            public void adjust(int sign, boolean large) {
+                String[] values = option.getOptions();
+                int next = ((option.c() + sign) % values.length + values.length) % values.length;
+                option.setValue(next, true);
+            }
+        };
+        vt.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                return snd.module.GameText.t(option.getOptions()[option.c()]);
+            }
+        };
+        return vt;
+    }
+
+    private NodeVtable sliderOptionNode(final com.tann.dice.gameplay.save.settings.option.FlOption option) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.SLIDER;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return snd.module.GameText.t(option.getName());
+                    }
+                }, AnnouncementKinds.LABEL),
+                new NodeAnnouncement(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", "value.percent", "value", Math.round(option.getVal() * 100f));
+                    }
+                }, true, AnnouncementKinds.VALUE));
+        vt.onAdjust = new NodeVtable.Adjust() {
+            @Override
+            public void adjust(int sign, boolean large) {
+                float step = large ? 0.2f : 0.05f;
+                float value = Math.max(0f, Math.min(1f, option.getVal() + sign * step));
+                option.setValue(value, true);
+            }
+        };
+        vt.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", "value.percent", "value", Math.round(option.getVal() * 100f));
+            }
+        };
+        return vt;
+    }
+
+    // The right-click-only option description, straight off the model.
+    private static Field optionDescField;
+
+    private static String optionDescription(com.tann.dice.gameplay.save.settings.option.Option option) {
+        try {
+            if (optionDescField == null) {
+                optionDescField = com.tann.dice.gameplay.save.settings.option.Option.class
+                        .getDeclaredField("desc");
+                optionDescField.setAccessible(true);
+            }
+            String desc = (String) optionDescField.get(option);
+            return desc != null ? snd.module.GameText.t(desc) : null;
+        } catch (Throwable t) {
+            SndLog.error("option description read failed", t);
+            return null;
+        }
     }
 
     // The lifetime-stats tab renders name and value as two parallel columns
