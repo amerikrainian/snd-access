@@ -29,13 +29,18 @@ typing echoes, Backspace deletes, Enter submits, Escape cancels.
 ## Installing (players)
 
 1. Install the game via Steam.
-2. Run `scripts/deploy.ps1`. It builds, stages the mod (including the vendored
-   [Prism](https://github.com/ethindp/prism) speech library) into
+2. Download `SnDAccessInstaller.exe` from the
+   [latest release](https://github.com/amerikrainian/snd-access/releases/latest) and run it.
+   It finds the Steam install, downloads the newest mod version, stages it into
    `<game>\mods\snd-access\`, and patches `SliceAndDice.json` so the game's own launcher
-   loads it (original kept as `SliceAndDice.json.bak`).
-3. Launch the game normally. To uninstall: copy the `.bak` back over `SliceAndDice.json`.
+   loads the mod (the original is backed up and restored on uninstall). The same window
+   handles updates, repair, and uninstall; run it with `--cli` for a console interface.
+3. Launch the game normally.
 
-If the game is not in the default Steam location, pass `-GameDir <path>` to the script.
+Installing from source instead: run `scripts/deploy.ps1`. It builds, stages the mod
+(including the vendored [Prism](https://github.com/ethindp/prism) speech library), and
+patches `SliceAndDice.json` (original kept as `SliceAndDice.json.bak`; copy it back to
+uninstall). If the game is not in the default Steam location, pass `-GameDir <path>`.
 
 ## Building / developing
 
@@ -63,6 +68,20 @@ Modules: `core` (engine-agnostic navigation/speech, unit-tested), `host` (the `-
 hooks, Prism, module loader — game-blind), `module` (all feature code, hot-reloadable),
 `devrepl` (JShell, dev only). See `CLAUDE.md` for architecture rules and
 `docs/snd_accessibility_audit.md` for the per-screen coverage inventory.
+
+## Releasing
+
+The installer (`installer/`, Rust + wxWidgets; needs cargo, libclang, and ninja) is
+adapted from Rashad Naqeeb's Non-Visual Calculus installer — see
+`installer/ATTRIBUTION.md`. To cut a release:
+
+1. Bump `modVersion` in `gradle.properties` and add the matching `## VX.Y.Z` section
+   to `CHANGELOG.md` (it becomes the release notes the installer shows players).
+2. `scripts/build-release.ps1` — builds and stages `releases/SnDAccess-vX.Y.Z.zip`.
+3. `scripts/build-installer.ps1` — builds `releases/SnDAccessInstaller.exe`
+   (`scripts/test-installer.ps1` runs its unit tests).
+4. Commit, tag `vX.Y.Z`, push the tag, then `scripts/create-release.ps1 vX.Y.Z` to
+   publish the GitHub release with both assets.
 
 ## Notes
 
