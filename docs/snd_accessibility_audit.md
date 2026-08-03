@@ -716,7 +716,7 @@ table if it ever matters.
 
 # Phase 8: Cog / Esc Menu and Settings
 
-## 8.1 Cog Menu — NOT STARTED
+## 8.1 Cog Menu — DONE
 
 `EscMenuUtils.makeFullEscMenu()` — opened by ESC or the cog button, anywhere:
 
@@ -726,6 +726,14 @@ table if it ever matters.
 4. **Misc**: bug report, "Save" (a joke button — explains autosave), **Flee** (in-run; the abandon-run action), **Quit** (in-run: save+exit to title) / **Exit** (title: quit-game dialog — the game's only quit affordance)
 
 ESC closes it (`BasicKeyCatch` passes only ESC through).
+
+> **Coverage:** the menu is a pushed modal the generic reader already covered; this pass named
+its shorthand: the screen-mode buttons read "windowed / fullscreen / fullscreen 2" with their
+radio state (checked/unchecked via the checkbox labeler), the UI-size steppers read
+"decrease / increase" around the current adjustment value, and the jukebox transport reads
+"skip back / skip forward / next song" (an exact-whole-label glyph map, so ordinary text never
+remaps). Sliders adjust with Left/Right and speak percent. Flee/Quit verified live earlier;
+nav buttons open the Book's pages. Escape closes throughout.
 
 ## 8.2 Options Screen — NOT STARTED
 

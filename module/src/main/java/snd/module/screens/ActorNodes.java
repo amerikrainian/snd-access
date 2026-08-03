@@ -108,7 +108,7 @@ final class ActorNodes {
                         // glyphs ("H5") that would win the text search.
                         String label = achievementTileName(actor);
                         if (label == null) {
-                            label = GameUi.labelOf(actor);
+                            label = crypticButtonName(GameUi.labelOf(actor));
                         }
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
@@ -201,6 +201,35 @@ final class ActorNodes {
             }
         }
         return null;
+    }
+
+    // The game's shorthand button glyphs, named: the cog menu's screen modes
+    // and UI-size steppers, the jukebox transport. Exact whole-label matches
+    // only, so ordinary text never remaps.
+    private static String crypticButtonName(String label) {
+        if (label == null) {
+            return null;
+        }
+        String clean = TextFilter.clean(label).trim();
+        String key = null;
+        if ("w".equals(clean)) {
+            key = "glyph.windowed";
+        } else if ("fs".equals(clean)) {
+            key = "glyph.fullscreen";
+        } else if ("fs2".equals(clean)) {
+            key = "glyph.fullscreen2";
+        } else if ("-".equals(clean)) {
+            key = "glyph.decrease";
+        } else if ("+".equals(clean)) {
+            key = "glyph.increase";
+        } else if ("<-".equals(clean)) {
+            key = "glyph.skip_back";
+        } else if (">".equals(clean)) {
+            key = "glyph.skip_forward";
+        } else if ("->".equals(clean)) {
+            key = "glyph.next_song";
+        }
+        return key != null ? Loc.get("ui", key) : label;
     }
 
     private static java.lang.reflect.Field monsterTypeField;
