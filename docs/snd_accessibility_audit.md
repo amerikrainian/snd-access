@@ -788,7 +788,7 @@ mid-combat play. Reset Tutorial reads via the help page (7.1).
 
 ---
 
-# Phase 10: Leaderboards — NOT STARTED
+# Phase 10: Leaderboards — DONE
 
 Book → stuff → Online (`gameplay/leaderboard/`, server at tann.fun):
 
@@ -796,6 +796,17 @@ Book → stuff → Online (`gameplay/leaderboard/`, server at tann.fun):
 - Board table: rank / name / score / date / platform as **five independent parallel columns** (rows associated only by vertical position); your row tinted pink; ranks 1–3 color-coded
 - Paging buttons; loading/failure states as text
 - **Submit Highscore** panel: name text-input (10 chars), submit button, embedded scrollable board; errors as dialogs
+
+> **Coverage:** wherever a `LeaderboardDisplay` appears (the Online tab, the submit panel's
+embed), the actor walk swaps in a GraphSheet table built from the board's model: rows are
+"#rank name" (yours marked "your score") with score / submitted / platform cells — Up/Down
+preserves the column, Left/Right speaks the destination column's header, type-ahead matches
+player names from any cell. Verified live against the real server (Classic Hard streak:
+"#1 Gaius → score, 130-streak → submitted, 6 months ago → platform, iOS → #2 RedFoxPuck,
+android"). While loading or failed the display's own state text reads verbatim; paging
+controls emit as buttons; board group and board-picker dialogs ride the modal reader. The
+submit panel's name field is the covered in-game text input — actual submission untested
+(it would post a real score).
 
 ---
 

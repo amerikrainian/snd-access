@@ -50,6 +50,11 @@ final class ActorNodes {
             b.addItem(actorId(actor), sliderFor((com.tann.dice.util.Slider) actor));
             return;
         }
+        if (actor instanceof com.tann.dice.gameplay.leaderboard.LeaderboardDisplay) {
+            // Five parallel columns re-paired as a table (GraphSheet).
+            LeaderboardNodes.emit(b, (com.tann.dice.gameplay.leaderboard.LeaderboardDisplay) actor);
+            return;
+        }
         if (interactiveLeaf(actor)) {
             b.addItem(actorId(actor), buttonFor(actor));
             return;
@@ -74,6 +79,13 @@ final class ActorNodes {
             for (Actor child : ((Group) actor).getChildren()) {
                 emit(b, child);
             }
+        }
+    }
+
+    /** Walk an actor's children without re-dispatching on the actor itself. */
+    static void emitChildren(GraphBuilder b, Group group) {
+        for (Actor child : group.getChildren()) {
+            emit(b, child);
         }
     }
 

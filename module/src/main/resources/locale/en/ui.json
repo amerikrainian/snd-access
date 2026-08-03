@@ -87,6 +87,8 @@
   "tutorial.close": "Tutorial options",
   "tutorial.complete": "quest complete: {quest}",
 
+  "board.you": "your score",
+
   "choice.header": "Choose",
   "choice.tier": "tier {tier}",
   "choice.unreadable": "unreadable option",
