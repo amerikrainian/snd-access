@@ -41,6 +41,17 @@
   "party.reroll": "Reroll party",
   "paste.scenario": "stored scenario",
 
+  "custom.remove": "remove",
+  "custom.move_up": "move up",
+  "custom.add": "Add modifier",
+  "custom.add_random": "Add random modifier",
+  "custom.view_all": "View all modifiers",
+  "custom.clear": "Clear all modifiers",
+  "custom.copy": "Copy modifiers",
+  "custom.paste": "Paste modifiers, Backspace appends",
+  "custom.save": "Save preset",
+  "custom.load": "Load preset",
+
   "sys.context": "System",
   "sys.menu": "Menu",
   "sys.almanac": "Almanac",

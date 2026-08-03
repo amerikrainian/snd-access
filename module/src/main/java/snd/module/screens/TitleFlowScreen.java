@@ -196,9 +196,215 @@ public class TitleFlowScreen extends AccessScreen {
             if (mode instanceof com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode) {
                 buildChoosePartySelectors(b, (com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode) mode);
             }
+            if (mode instanceof com.tann.dice.gameplay.mode.creative.custom.CustomMode) {
+                buildCustomEditor(b, (com.tann.dice.gameplay.mode.creative.custom.CustomMode) mode);
+            }
             buildStartButtons(b, mode);
         }
+        buildExtraDescLinks(b, mode);
         b.popContext();
+    }
+
+    // The "options"/"api"/"resources" links some modes hang under their
+    // description; the maker returns fresh self-contained buttons.
+    private void buildExtraDescLinks(GraphBuilder b, Mode mode) {
+        List<com.badlogic.gdx.scenes.scene2d.Actor> links;
+        try {
+            java.lang.reflect.Method maker = null;
+            for (Class<?> cls = mode.getClass(); cls != null && maker == null; cls = cls.getSuperclass()) {
+                try {
+                    maker = cls.getDeclaredMethod("extraDescActors");
+                } catch (NoSuchMethodException ignored) {
+                    // keep climbing
+                }
+            }
+            if (maker == null) {
+                return;
+            }
+            maker.setAccessible(true);
+            links = (List<com.badlogic.gdx.scenes.scene2d.Actor>) maker.invoke(mode);
+        } catch (Throwable t) {
+            SndLog.error("extraDescActors failed for " + mode.getName(), t);
+            return;
+        }
+        if (links == null) {
+            return;
+        }
+        for (int i = 0; i < links.size(); i++) {
+            final com.badlogic.gdx.scenes.scene2d.Actor link = links.get(i);
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    String label = GameUi.labelOf(link);
+                    return label != null ? label : Loc.get("ui", "title.unavailable");
+                }
+            }, AnnouncementKinds.LABEL));
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.activate(link);
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("card", "desclink", i)), vt);
+        }
+    }
+
+    // ---- Custom mode: the modifier editor ----
+
+    private static final java.util.Map<String, java.lang.reflect.Method> customMethods =
+            new java.util.HashMap<String, java.lang.reflect.Method>();
+
+    private static java.lang.reflect.Method customMethod(String name, Class<?>... params)
+            throws Exception {
+        java.lang.reflect.Method method = customMethods.get(name);
+        if (method == null) {
+            method = com.tann.dice.gameplay.mode.creative.custom.CustomMode.class
+                    .getDeclaredMethod(name, params);
+            method.setAccessible(true);
+            customMethods.put(name, method);
+        }
+        return method;
+    }
+
+    // A fresh instance of one of the editor's own buttons: their runnables
+    // are self-contained (search dialogs, clipboard, presets).
+    private com.badlogic.gdx.scenes.scene2d.Actor customButton(
+            com.tann.dice.gameplay.mode.creative.custom.CustomMode mode, String maker) {
+        try {
+            return (com.badlogic.gdx.scenes.scene2d.Actor) customMethod(maker).invoke(mode);
+        } catch (Throwable t) {
+            SndLog.error("custom editor " + maker + " failed", t);
+            return null;
+        }
+    }
+
+    private void addCustomAction(GraphBuilder b,
+            final com.tann.dice.gameplay.mode.creative.custom.CustomMode mode,
+            final String maker, final String locKey, final boolean withSecondary) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", locKey);
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                GameUi.activate(customButton(mode, maker));
+            }
+        };
+        if (withSecondary) {
+            vt.onSecondary = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.info(customButton(mode, maker));
+                }
+            };
+        }
+        b.addItem(ControlId.structural(CompositeKey.of("card", "custom", maker)), vt);
+    }
+
+    private void buildCustomEditor(GraphBuilder b,
+            final com.tann.dice.gameplay.mode.creative.custom.CustomMode mode) {
+        final List<com.tann.dice.gameplay.modifier.Modifier> modifiers =
+                com.tann.dice.gameplay.mode.creative.custom.CustomMode.getCustomModifiers();
+        boolean rearrange = com.tann.dice.gameplay.save.settings.option.OptionLib.CUSTOM_REARRANGE.c();
+
+        for (int i = 0; i < modifiers.size(); i++) {
+            final com.tann.dice.gameplay.modifier.Modifier modifier = modifiers.get(i);
+            final int index = i;
+            b.startRow("custom-mod");
+
+            NodeVtable row = new NodeVtable();
+            row.controlType = ControlTypes.TEXT;
+            row.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return GameText.t(modifier.getName());
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return GameText.t(modifier.getFullDescription());
+                        }
+                    }, AnnouncementKinds.TOOLTIP));
+            b.addItem(ControlId.referenced(modifier, CompositeKey.of("custom-mod", i)), row);
+
+            NodeVtable remove = new NodeVtable();
+            remove.controlType = ControlTypes.BUTTON;
+            remove.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return Loc.get("ui", "custom.remove");
+                }
+            }, AnnouncementKinds.LABEL));
+            remove.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // The minus button's own route.
+                        customMethod("removeModifier", int.class).invoke(mode, index);
+                    } catch (Throwable t) {
+                        SndLog.error("modifier remove failed", t);
+                    }
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("custom-remove", i)), remove);
+
+            if (rearrange && i > 0) {
+                NodeVtable up = new NodeVtable();
+                up.controlType = ControlTypes.BUTTON;
+                up.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", "custom.move_up");
+                    }
+                }, AnnouncementKinds.LABEL));
+                up.onActivate = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            // The up arrow's own route.
+                            List<com.tann.dice.gameplay.modifier.Modifier> list =
+                                    com.tann.dice.gameplay.mode.creative.custom.CustomMode.getCustomModifiers();
+                            if (index > 0 && index < list.size()) {
+                                list.add(index - 1, list.remove(index));
+                                customMethod("saveAndRefresh", List.class).invoke(mode, list);
+                            }
+                        } catch (Throwable t) {
+                            SndLog.error("modifier move failed", t);
+                        }
+                    }
+                };
+                b.addItem(ControlId.structural(CompositeKey.of("custom-up", i)), up);
+            }
+            b.endRow();
+        }
+
+        addCustomAction(b, mode, "makePlus", "custom.add", false);
+        addCustomAction(b, mode, "makePlusRand", "custom.add_random", false);
+        if (modifiers.size() > 2) {
+            addCustomAction(b, mode, "makeMag", "custom.view_all", false);
+        }
+        addCustomAction(b, mode, "makeReset", "custom.clear", false);
+        if (!modifiers.isEmpty()) {
+            addCustomAction(b, mode, "makeCopy", "custom.copy", false);
+        }
+        // Paste replaces on Enter, appends on Backspace — the button's own
+        // action/info split.
+        addCustomAction(b, mode, "makePaste", "custom.paste", true);
+        if (!modifiers.isEmpty()) {
+            addCustomAction(b, mode, "makeSave", "custom.save", false);
+        }
+        if (!com.tann.dice.Main.getSettings().getCustomPresets().isEmpty()) {
+            addCustomAction(b, mode, "makeLoad", "custom.load", false);
+        }
     }
 
     // ---- Choose-Party: the five portrait slots + the reroll die ----
@@ -496,15 +702,25 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return Loc.get("ui", "title.start", "name", GameText.t(startLabel(cc)));
+                        String name = startLabel(cc);
+                        // Difficulty-less configs would read "Start Start".
+                        return "Start".equals(name) ? GameText.t("Start")
+                                : Loc.get("ui", "title.start", "name", GameText.t(name));
                     }
                 }, AnnouncementKinds.LABEL),
                 // The record the sighted UI hides behind a right-click wreath.
+                // Stat-less modes (custom, paste) have no record to read.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        int wins = cc.getWins();
-                        int losses = cc.getLosses();
+                        int wins;
+                        int losses;
+                        try {
+                            wins = cc.getWins();
+                            losses = cc.getLosses();
+                        } catch (Throwable t) {
+                            return null;
+                        }
                         if (wins == 0 && losses == 0) {
                             return null;
                         }
