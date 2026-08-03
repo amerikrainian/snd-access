@@ -1,0 +1,85 @@
+use std::fs;
+use std::path::Path;
+
+use super::install::ensure_writable;
+use super::launcher;
+use super::manifest::InstallManifest;
+use super::paths;
+
+pub fn uninstall(game_dir: &Path, manifest: &InstallManifest) -> Result<(), String> {
+    for rel in manifest.installed_files.iter().rev() {
+        let path = game_dir.join(rel);
+        if path.exists() {
+            ensure_writable(&path)?;
+            fs::remove_file(&path)
+                .map_err(|e| format!("Failed to remove {}: {e}", path.display()))?;
+        }
+        remove_empty_parents(game_dir, path.parent());
+    }
+
+    for (target_rel, backup_rel) in &manifest.backups {
+        let backup = game_dir.join(backup_rel);
+        if !backup.exists() {
+            continue;
+        }
+        let target = game_dir.join(target_rel);
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Failed to create restore parent: {e}"))?;
+        }
+        fs::copy(&backup, &target)
+            .map_err(|e| format!("Failed to restore {}: {e}", target.display()))?;
+        ensure_writable(&backup)?;
+        fs::remove_file(&backup)
+            .map_err(|e| format!("Failed to remove backup {}: {e}", backup.display()))?;
+        remove_empty_parents(game_dir, backup.parent());
+    }
+
+    // Restoring the launcher backup already reverted the vmArgs; this catches a
+    // missing backup, where a still-patched json would point the shim at the
+    // just-removed agent jar and the game could no longer start.
+    launcher::unpatch(game_dir)?;
+
+    let manifest_path = paths::manifest_path(game_dir);
+    if manifest_path.exists() {
+        ensure_writable(&manifest_path)?;
+        fs::remove_file(&manifest_path)
+            .map_err(|e| format!("Failed to remove manifest: {e}"))?;
+    }
+    remove_empty_parents(game_dir, manifest_path.parent());
+
+    // The mod zip can carry directory entries with no files in them. The
+    // manifest records files only, so the walks above never visit such a dir;
+    // sweep the mod-owned tree for leftover empty dirs.
+    remove_empty_dirs(&game_dir.join("mods"));
+    Ok(())
+}
+
+/// Remove `root` and everything below it that is an empty directory, deepest first. A dir
+/// holding any file survives, so this can never delete data.
+fn remove_empty_dirs(root: &Path) {
+    if !root.is_dir() {
+        return;
+    }
+    if let Ok(entries) = fs::read_dir(root) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                remove_empty_dirs(&path);
+            }
+        }
+    }
+    let _ = fs::remove_dir(root);
+}
+
+pub(crate) fn remove_empty_parents(game_dir: &Path, mut current: Option<&Path>) {
+    while let Some(dir) = current {
+        if dir == game_dir {
+            break;
+        }
+        match fs::remove_dir(dir) {
+            Ok(_) => current = dir.parent(),
+            Err(_) => break,
+        }
+    }
+}

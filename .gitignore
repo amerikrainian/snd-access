@@ -4,3 +4,5 @@ third_party/*
 .gradle/
 build/
 */build/
+releases/
+installer/target/
