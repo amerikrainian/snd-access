@@ -84,7 +84,40 @@ public final class SndAgent {
                                         .and(ElementMatchers.takesArgument(0, String.class))));
                     }
                 })
+                // Combat state text ("dodged", "immune") and chatter over the
+                // entity panels — the panel's entity names the speaker.
+                .type(ElementMatchers.named("com.tann.dice.screens.dungeon.panels.entPanel.EntPanelCombat"))
+                .transform(new AgentBuilder.Transformer() {
+                    @Override
+                    public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder,
+                                                            TypeDescription typeDescription,
+                                                            ClassLoader classLoader,
+                                                            JavaModule module,
+                                                            java.security.ProtectionDomain protectionDomain) {
+                        return builder.visit(net.bytebuddy.asm.Advice.to(EntTextAdvice.class)
+                                .on(ElementMatchers.named("addMessage").or(ElementMatchers.named("addSpeechBubble"))
+                                        .and(ElementMatchers.takesArgument(0, String.class))));
+                    }
+                })
+                // Ability-bar wisps: mana gains, discards, the save-loaded
+                // notice. The 2-arg core only (the 1-arg overload delegates).
+                .type(ElementMatchers.named("com.tann.dice.gameplay.effect.targetable.ability.ui.AbilityHolder"))
+                .transform(new AgentBuilder.Transformer() {
+                    @Override
+                    public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder,
+                                                            TypeDescription typeDescription,
+                                                            ClassLoader classLoader,
+                                                            JavaModule module,
+                                                            java.security.ProtectionDomain protectionDomain) {
+                        return builder.visit(net.bytebuddy.asm.Advice.to(TransientTextAdvice.class)
+                                .on(ElementMatchers.named("addWisp")
+                                        .and(ElementMatchers.takesArguments(String.class, float.class))));
+                    }
+                })
                 .installOn(inst);
-        SndLog.info("hooks installed: Main.render, AbilityHolder.showInfo, TargetingManager.showError");
+        // The clipboard-copied toast needs no hook: it lands in the popup
+        // holder the module already watches.
+        SndLog.info("hooks installed: Main.render, AbilityHolder.showInfo+addWisp, "
+                + "TargetingManager.showError, EntPanelCombat.addMessage+addSpeechBubble");
     }
 }

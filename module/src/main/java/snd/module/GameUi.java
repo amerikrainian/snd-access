@@ -31,8 +31,9 @@ public final class GameUi {
      * blocker-backed pushes count: a null InputBlocker marks a "light" push —
      * inspection popups like the targeting Explanel that float over a still-
      * interactive screen — and reading those as modals would steal navigation
-     * from the screen beneath. (The InventoryPanel is the one blockerless
-     * push that IS a real panel; it gets its own screen when equip lands.)
+     * from the screen beneath. Exception: a light-pushed ChoiceDialog IS a
+     * real question (the end-turn confirmation ships blockerless) and must
+     * read.
      */
     public static Actor topModal() {
         com.badlogic.gdx.scenes.scene2d.Actor top = null;
@@ -47,7 +48,8 @@ public final class GameUi {
         }
         List<Pair<Actor, ?>> stack = castStack(screen.modalStack);
         for (Pair<Actor, ?> pair : stack) {
-            if (pair.a != null && pair.a.getStage() != null && pair.b != null) {
+            if (pair.a != null && pair.a.getStage() != null
+                    && (pair.b != null || pair.a instanceof com.tann.dice.util.ui.choice.ChoiceDialog)) {
                 top = pair.a;
             }
         }
