@@ -79,6 +79,8 @@
   "book.content": "content",
   "book.achieved": "achieved",
   "book.not_achieved": "not achieved",
+  "book.value_table": "Side values",
+  "book.pips_col": "{n} pips",
 
   "state.checked": "checked",
   "state.unchecked": "unchecked",

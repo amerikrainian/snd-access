@@ -109,10 +109,101 @@ public class BookScreen extends AccessScreen {
             buildNumbers(b, content);
         } else if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Options) {
             buildOptions(b, content);
+        } else if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Graph) {
+            ActorNodes.emit(b, content); // series icons (named), add/remove
+            buildGraphTable(b, content);
         } else {
             ActorNodes.emit(b, content);
         }
         b.popContext();
+    }
+
+    // The side-value curves, as numbers: the plot identifies series only by
+    // hash colours; this table gives each plotted side its calculated value
+    // per pip count (the same computation the curves draw for the strongest
+    // reference hero).
+    private void buildGraphTable(GraphBuilder b, Actor content) {
+        List<com.tann.dice.gameplay.content.ent.die.side.EntSide> sides =
+                new java.util.ArrayList<com.tann.dice.gameplay.content.ent.die.side.EntSide>();
+        collectSides(content, sides);
+        if (sides.isEmpty()) {
+            return;
+        }
+        final com.tann.dice.gameplay.content.ent.type.EntType reference;
+        try {
+            reference = com.tann.dice.gameplay.content.ent.type.lib.HeroTypeUtils.byName("veteran");
+        } catch (Throwable t) {
+            SndLog.error("graph reference hero missing", t);
+            return;
+        }
+        int maxPips = 6;
+        String[] headers = new String[maxPips - 1];
+        for (int pip = 2; pip <= maxPips; pip++) {
+            headers[pip - 2] = Loc.get("ui", "book.pips_col", "n", pip);
+        }
+        snd.core.graph.GraphSheet sheet = new snd.core.graph.GraphSheet(b, "graphtab");
+        sheet.region(Loc.get("ui", "book.value_table"), headers);
+        for (final com.tann.dice.gameplay.content.ent.die.side.EntSide side : sides) {
+            NodeVtable primary = new NodeVtable();
+            primary.controlType = ControlTypes.TEXT;
+            primary.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return snd.module.GameText.t(side.getBaseEffect().describe());
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return Loc.get("ui", "book.pips_col", "n", 1) + " "
+                                    + graphValue(side, 1, reference);
+                        }
+                    }, AnnouncementKinds.VALUE));
+            Supplier<String>[] cells = makeCells(side, reference, maxPips);
+            sheet.row(primary, side, cells);
+        }
+        sheet.finish();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Supplier<String>[] makeCells(final com.tann.dice.gameplay.content.ent.die.side.EntSide side,
+            final com.tann.dice.gameplay.content.ent.type.EntType reference, int maxPips) {
+        Supplier<String>[] cells = new Supplier[maxPips - 1];
+        for (int pip = 2; pip <= maxPips; pip++) {
+            final int p = pip;
+            cells[pip - 2] = new Supplier<String>() {
+                @Override
+                public String get() {
+                    return graphValue(side, p, reference);
+                }
+            };
+        }
+        return cells;
+    }
+
+    private static String graphValue(com.tann.dice.gameplay.content.ent.die.side.EntSide side,
+            int pips, com.tann.dice.gameplay.content.ent.type.EntType reference) {
+        try {
+            return String.format(java.util.Locale.US, "%.1f",
+                    side.withValue(pips).getEffectTier(reference));
+        } catch (Throwable t) {
+            SndLog.error("graph value failed", t);
+            return "?";
+        }
+    }
+
+    private static void collectSides(Actor actor,
+            List<com.tann.dice.gameplay.content.ent.die.side.EntSide> out) {
+        com.tann.dice.gameplay.content.ent.die.side.EntSide side = ActorNodes.sideOf(actor);
+        if (side != null && !out.contains(side)) {
+            out.add(side);
+        }
+        if (actor instanceof com.badlogic.gdx.scenes.scene2d.Group) {
+            for (Actor child : ((com.badlogic.gdx.scenes.scene2d.Group) actor).getChildren()) {
+                collectSides(child, out);
+            }
+        }
     }
 
     // The options screen, from the option registry rather than its pointer-

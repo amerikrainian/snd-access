@@ -357,6 +357,12 @@ final class ActorNodes {
     private static java.util.Map<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide> sidesByTexture;
 
     private static String sideIconName(Actor actor) {
+        com.tann.dice.gameplay.content.ent.die.side.EntSide side = sideOf(actor);
+        return side != null ? GameText.t(side.getBaseEffect().describe()) : null;
+    }
+
+    /** The die side an ImageActor displays, or null. */
+    static com.tann.dice.gameplay.content.ent.die.side.EntSide sideOf(Actor actor) {
         if (!(actor instanceof com.tann.dice.util.ImageActor)) {
             return null;
         }
@@ -370,11 +376,9 @@ final class ActorNodes {
                 }
                 sidesByTexture = map;
             }
-            com.tann.dice.gameplay.content.ent.die.side.EntSide side =
-                    sidesByTexture.get(((com.tann.dice.util.ImageActor) actor).tr);
-            return side != null ? GameText.t(side.getBaseEffect().describe()) : null;
+            return sidesByTexture.get(((com.tann.dice.util.ImageActor) actor).tr);
         } catch (Throwable t) {
-            snd.core.SndLog.error("side icon name failed", t);
+            snd.core.SndLog.error("side icon lookup failed", t);
             return null;
         }
     }
