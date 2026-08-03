@@ -588,17 +588,41 @@ locked in the dev demo build.
 
 > **Note:** there is no daily/weekly challenge and no numeric seed entry anywhere; the closest is Paste mode's clipboard strings.
 
-## 6.1 Choose-Party Hero Selection — NOT STARTED
+## 6.1 Choose-Party Hero Selection — DONE
 
 The only party-building UI: five 25×28 portrait slots (no name text). Left-click a slot → picker grid of every unlocked tier-1 hero grouped by color row; right-click a hero → die panel. Reroll-die icon randomizes all five.
 
-## 6.2 Nightmare Run Picker — NOT STARTED
+> **Coverage:** the title card gains five "hero slot n" nodes reading the selectors' live hero
+names, activating each slot's own listener (the picker — a pushed modal whose portrait-only
+tiles are named via the ledger-tile labeling; choosing updates the slot and speaks it) with
+the die panel on Backspace. A "Reroll party" node runs the reroll-die's listener body and
+speaks the new five-hero party. Verified live under bypass-unlocks (the mode is
+progression-locked on this profile).
+
+## 6.2 Nightmare Run Picker — DONE
 
 "Choose Party" button → scrollable list of eligible past victories (each row clickable), or an explanatory "No usable runs found…" text. Eligibility criteria are listed as text.
 
-## 6.3 Paste Mode — NOT STARTED
+> **Coverage:** Nightmare's card (which replaces the generic start buttons — those would have
+mis-started the mode) shows its own "Choose Party" node driving the mode's picker dialog; the
+pushed picker reads through the modal reader — run rows as labeled buttons when victories
+exist, the full "No usable runs found…" criteria text otherwise (the state verified live; this
+profile has no eligible victories). The mode's Continue node appears when a nightmare save
+exists.
+
+## 6.3 Paste Mode — DONE
 
 "Paste!" (clipboard → run), "Store" (native text input names a scenario), stored-scenario buttons (left-click play, **right-click delete** with confirm), plus built-in puzzle scenarios. Clipboard errors appear as dialogs. The cog menu gains a "Copy" button in-run (copy state at start-of-level or now).
+
+> **Coverage:** the Paste card reads Paste!/Store (driven by locating the game's own inline
+buttons by text), the stored/built-in scenarios as named rows (play on Enter via the mode's
+public start entry, the delete-confirm dialog on Backspace), and Continue when a paste save
+exists. Verified live: the "Failed to load fight from clipboard" and "invalid scenario paste"
+error dialogs read, and "Delete ludii?" opens and cancels. The Store flow's scenario-title
+prompt is the covered in-game text input, NOT a native dialog. The in-run cog "Copy" button
+and its copy-state dialog were already readable via the modal reader. Fixed here:
+`GameUi.info` now fires every gesture listener like a real right-click (the first-listener bug
+`activate` had), which the scenario delete path exposed.
 
 ## 6.4 Custom Mode Editor — NOT STARTED
 

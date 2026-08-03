@@ -186,10 +186,249 @@ public class TitleFlowScreen extends AccessScreen {
                 b.addItem(ControlId.referenced(child, CompositeKey.of("card", "child", child.getName())),
                         modeButton(child, false));
             }
+        } else if (mode instanceof com.tann.dice.gameplay.mode.general.nightmare.NightmareMode) {
+            // Nightmare replaces the start buttons with its run picker.
+            buildNightmareCard(b, (com.tann.dice.gameplay.mode.general.nightmare.NightmareMode) mode);
+        } else if (mode instanceof com.tann.dice.gameplay.mode.creative.pastey.PasteMode) {
+            // Paste replaces them with clipboard actions + stored scenarios.
+            buildPasteCard(b, (com.tann.dice.gameplay.mode.creative.pastey.PasteMode) mode);
         } else {
+            if (mode instanceof com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode) {
+                buildChoosePartySelectors(b, (com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode) mode);
+            }
             buildStartButtons(b, mode);
         }
         b.popContext();
+    }
+
+    // ---- Choose-Party: the five portrait slots + the reroll die ----
+
+    private static java.lang.reflect.Field selectorsField;
+    private static java.lang.reflect.Method refreshHeroesMethod;
+
+    @SuppressWarnings("unchecked")
+    private void buildChoosePartySelectors(GraphBuilder b,
+            final com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode mode) {
+        List<com.tann.dice.gameplay.mode.chooseParty.HeroSelector> selectors;
+        try {
+            if (selectorsField == null) {
+                selectorsField = com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode.class
+                        .getDeclaredField("selectors");
+                selectorsField.setAccessible(true);
+            }
+            selectors = (List<com.tann.dice.gameplay.mode.chooseParty.HeroSelector>) selectorsField.get(mode);
+        } catch (Throwable t) {
+            SndLog.error("failed to read ChoosePartyMode.selectors", t);
+            return;
+        }
+        if (selectors == null || selectors.isEmpty()) {
+            return; // the card hasn't built its selector actors yet
+        }
+
+        final List<com.tann.dice.gameplay.mode.chooseParty.HeroSelector> live = selectors;
+        b.startRow("party-slots");
+        for (int i = 0; i < live.size(); i++) {
+            final com.tann.dice.gameplay.mode.chooseParty.HeroSelector selector = live.get(i);
+            final int slot = i;
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return Loc.get("ui", "party.slot", "n", slot + 1);
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return GameText.t(selector.getType().getName(true));
+                        }
+                    }, AnnouncementKinds.VALUE));
+            // The slot's own listeners: click opens the picker grid (a pushed
+            // modal of named hero tiles), right-click the die panel.
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.activate(selector);
+                }
+            };
+            vt.onSecondary = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.info(selector);
+                }
+            };
+            b.addItem(ControlId.referenced(selector, CompositeKey.of("party-slot", i)), vt);
+        }
+        b.endRow();
+
+        NodeVtable reroll = new NodeVtable();
+        reroll.controlType = ControlTypes.BUTTON;
+        reroll.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", "party.reroll");
+            }
+        }, AnnouncementKinds.LABEL));
+        reroll.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                // The reroll die's listener body (the actor itself is built
+                // inline with no field to reach).
+                try {
+                    com.tann.dice.statics.sound.Sounds.playSound(com.tann.dice.statics.sound.Sounds.clacks);
+                    for (com.tann.dice.gameplay.mode.chooseParty.HeroSelector hs : live) {
+                        hs.setToRandomHeroType();
+                    }
+                    if (refreshHeroesMethod == null) {
+                        refreshHeroesMethod = com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode.class
+                                .getDeclaredMethod("refreshHeroes");
+                        refreshHeroesMethod.setAccessible(true);
+                    }
+                    refreshHeroesMethod.invoke(mode);
+                } catch (Throwable t) {
+                    SndLog.error("party reroll failed", t);
+                }
+            }
+        };
+        reroll.stateText = new Supplier<String>() {
+            @Override
+            public String get() {
+                StringBuilder sb = new StringBuilder();
+                for (com.tann.dice.gameplay.mode.chooseParty.HeroSelector hs : live) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(GameText.t(hs.getType().getName(true)));
+                }
+                return sb.toString();
+            }
+        };
+        b.addItem(ControlId.structural(CompositeKey.of("card", "party-reroll")), reroll);
+    }
+
+    // ---- Nightmare: the past-victory run picker ----
+
+    private static java.lang.reflect.Method showSelectionDialogMethod;
+
+    private void buildNightmareCard(GraphBuilder b,
+            final com.tann.dice.gameplay.mode.general.nightmare.NightmareMode mode) {
+        NodeVtable choose = new NodeVtable();
+        choose.controlType = ControlTypes.BUTTON;
+        choose.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameText.t("Choose Party");
+            }
+        }, AnnouncementKinds.LABEL));
+        choose.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (showSelectionDialogMethod == null) {
+                        showSelectionDialogMethod =
+                                com.tann.dice.gameplay.mode.general.nightmare.NightmareMode.class
+                                        .getDeclaredMethod("showSelectionDialog");
+                        showSelectionDialogMethod.setAccessible(true);
+                    }
+                    showSelectionDialogMethod.invoke(mode); // the picker: a pushed modal
+                } catch (Throwable t) {
+                    SndLog.error("nightmare picker failed", t);
+                }
+            }
+        };
+        b.addItem(ControlId.structural(CompositeKey.of("card", "nightmare-pick")), choose);
+        buildContinue(b, mode);
+    }
+
+    // ---- Paste: clipboard actions + the stored-scenario list ----
+
+    private void buildPasteCard(GraphBuilder b,
+            final com.tann.dice.gameplay.mode.creative.pastey.PasteMode mode) {
+        b.addItem(ControlId.structural(CompositeKey.of("card", "paste-go")),
+                cardButtonByText("Paste!"));
+        b.addItem(ControlId.structural(CompositeKey.of("card", "paste-store")),
+                cardButtonByText("Store"));
+
+        List<com.tann.dice.gameplay.mode.creative.pastey.Scenario> scenarios =
+                com.tann.dice.Main.getSettings().getScenarios();
+        for (int i = 0; i < scenarios.size(); i++) {
+            final com.tann.dice.gameplay.mode.creative.pastey.Scenario scenario = scenarios.get(i);
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return scenario.getTitle();
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return Loc.get("ui", "paste.scenario");
+                        }
+                    }, AnnouncementKinds.VALUE));
+            // Play: the same public entry the row's listener calls. Delete
+            // (with its confirm dialog) lives on the row's info listener.
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    com.tann.dice.gameplay.mode.creative.pastey.PasteMode.attemptToStartFromString(
+                            scenario.getContent(),
+                            new com.tann.dice.gameplay.mode.creative.pastey.PasteConfig());
+                }
+            };
+            vt.onSecondary = new Runnable() {
+                @Override
+                public void run() {
+                    com.tann.dice.util.ui.standardButton.StandardButton button =
+                            findCardButton(scenario.getTitle());
+                    if (button == null) {
+                        host.speech().speak(Loc.get("ui", "title.unavailable"), true);
+                        return;
+                    }
+                    GameUi.info(button); // the game's delete-confirm dialog
+                }
+            };
+            b.addItem(ControlId.referenced(scenario, CompositeKey.of("card", "scenario", i)), vt);
+        }
+        buildContinue(b, mode);
+    }
+
+    // A card button the game builds inline (no field): found by its visible
+    // text, activated through its own listener.
+    private NodeVtable cardButtonByText(final String text) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameText.t(text);
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                com.tann.dice.util.ui.standardButton.StandardButton button = findCardButton(text);
+                if (button == null) {
+                    SndLog.error("card button not found: " + text, null);
+                    host.speech().speak(Loc.get("ui", "title.unavailable"), true);
+                    return;
+                }
+                GameUi.activate(button);
+            }
+        };
+        return vt;
+    }
+
+    private static com.tann.dice.util.ui.standardButton.StandardButton findCardButton(String cleanText) {
+        com.tann.dice.screens.Screen screen = com.tann.dice.Main.getCurrentScreen();
+        if (!(screen instanceof TitleScreen)) {
+            return null;
+        }
+        return GameUi.findButtonByText((TitleScreen) screen, cleanText);
     }
 
     private void buildStartButtons(GraphBuilder b, Mode mode) {
@@ -204,30 +443,42 @@ public class TitleFlowScreen extends AccessScreen {
             b.addItem(ControlId.referenced(cc, CompositeKey.of("card", "start", startLabel(cc))),
                     startButton(cc));
         }
-        // The mode's single autosave slot: one Continue node when it exists.
-        if (!configs.isEmpty() && configs.get(0).hasSave()) {
-            final ContextConfig first = configs.get(0);
-            NodeVtable vt = new NodeVtable();
-            vt.controlType = ControlTypes.BUTTON;
-            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-                @Override
-                public String get() {
-                    return Loc.get("ui", "title.continue");
-                }
-            }, AnnouncementKinds.LABEL));
-            vt.onActivate = new Runnable() {
-                @Override
-                public void run() {
-                    SaveState save = SaveState.load(first.getGeneralSaveKey());
-                    if (save != null) {
-                        save.start();
-                    } else {
-                        SndLog.error("failed to load save for " + first.getGeneralSaveKey(), null);
-                    }
-                }
-            };
-            b.addItem(ControlId.structural(CompositeKey.of("card", "continue")), vt);
+        buildContinue(b, mode);
+    }
+
+    // The mode's single autosave slot: one Continue node when it exists.
+    private void buildContinue(GraphBuilder b, Mode mode) {
+        List<ContextConfig> configs;
+        try {
+            configs = mode.getConfigs();
+        } catch (Throwable t) {
+            SndLog.error("getConfigs failed for " + mode.getName(), t);
+            return;
         }
+        if (configs.isEmpty() || !configs.get(0).hasSave()) {
+            return;
+        }
+        final ContextConfig first = configs.get(0);
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", "title.continue");
+            }
+        }, AnnouncementKinds.LABEL));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                SaveState save = SaveState.load(first.getGeneralSaveKey());
+                if (save != null) {
+                    save.start();
+                } else {
+                    SndLog.error("failed to load save for " + first.getGeneralSaveKey(), null);
+                }
+            }
+        };
+        b.addItem(ControlId.structural(CompositeKey.of("card", "continue")), vt);
     }
 
     private static String startLabel(ContextConfig cc) {

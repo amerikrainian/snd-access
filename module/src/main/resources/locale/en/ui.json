@@ -35,6 +35,11 @@
   "title.start": "Start {name}",
   "title.record": "{wins} wins in {runs} runs",
   "title.streak": "streak {streak}",
+  "title.unavailable": "not available",
+
+  "party.slot": "hero slot {n}",
+  "party.reroll": "Reroll party",
+  "paste.scenario": "stored scenario",
 
   "sys.context": "System",
   "sys.menu": "Menu",

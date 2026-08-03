@@ -79,17 +79,21 @@ public final class GameUi {
         return any || fireClick(actor);
     }
 
-    /** Right-click equivalent: the game's info() surface (details panels). */
+    /**
+     * Right-click equivalent: the game's info() surface (details panels), on
+     * EVERY gesture listener — like a real right-click reaches them all.
+     */
     public static boolean info(Actor actor) {
         if (actor == null) {
             return false;
         }
+        boolean handled = false;
         for (ActorGestureListener l : gestureListeners(actor)) {
             if (l instanceof TannListener) {
-                return ((TannListener) l).info(1, actor.getWidth() / 2f, actor.getHeight() / 2f);
+                handled |= ((TannListener) l).info(1, actor.getWidth() / 2f, actor.getHeight() / 2f);
             }
         }
-        return false;
+        return handled;
     }
 
     public static boolean hasTannListener(Actor actor) {
@@ -288,6 +292,31 @@ public final class GameUi {
         } catch (Throwable t) {
             SndLog.error("slider adjust failed", t);
         }
+    }
+
+    /**
+     * Depth-first search for a StandardButton whose cleaned text matches —
+     * for driving card buttons the game builds inline without keeping fields
+     * (Paste!/Store, stored scenarios). Null when absent; callers speak the
+     * failure.
+     */
+    public static StandardButton findButtonByText(Group root, String needle) {
+        String clean = snd.core.speech.TextFilter.clean(needle);
+        for (Actor child : root.getChildren()) {
+            if (child instanceof StandardButton) {
+                String text = ((StandardButton) child).getText();
+                if (text != null && snd.core.speech.TextFilter.clean(text).equalsIgnoreCase(clean)) {
+                    return (StandardButton) child;
+                }
+            }
+            if (child instanceof Group) {
+                StandardButton found = findButtonByText((Group) child, needle);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     // ---- hero rename: the title-bar group of a hero's inventory panel
