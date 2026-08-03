@@ -228,8 +228,8 @@ buttons stop: Reroll with the n/max counter, the confirm button's own state text
 reflectively) + `DiceWatcher` (when the last tumbling die settles, each rolled die reads its
 landed side followed by "Reroll n/max"; lock toggles speak "name locked/unlocked" from any input
 path). Activating a hero runs `targetingManager.clicked` — the game's digit route — and Backspace
-reads the full die net. The game's 1–9/R/Space keys fall through untouched (the navigator now
-leaves its details key unconsumed when the focused node has no details). Vetoed lock banners land
+reads the full die net. The game's 1–9/R/Space keys fall through untouched (extra
+info rides Shift+Backspace, so the navigator claims no game key). Vetoed lock banners land
 with 3.12's transient-text channel; the double-click tray line-up is visual-only.
 
 ## 3.3 Targeting Phase — DONE

@@ -18,7 +18,7 @@ The mod adds a virtual cursor over the game's own UI. The game's native hotkeys
 | Home / End | First / last control |
 | Enter | Activate (left-click equivalent) |
 | Backspace | Details (right-click equivalent: character sheets, item text, delete/detail actions) |
-| Space | Extra info (keyword rules in combat, difficulty rules) |
+| Shift+Backspace | Extra info (keyword rules in combat, difficulty rules) |
 | Left / Right on sliders and choosers | Adjust the value |
 | Any letters | Type-ahead search within the current group |
 | Escape | Game's own back/close (cancels type-ahead first if one is active) |

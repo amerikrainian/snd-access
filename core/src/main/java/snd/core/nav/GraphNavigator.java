@@ -331,11 +331,10 @@ public final class GraphNavigator {
                 }
                 if (node.vtable.onTooltip != null) {
                     graph.tooltip();
-                    return true;
                 }
-                // Unconsumed so the key reaches the game — in combat this key
-                // is the game's own confirm.
-                return false;
+                // Consumed like SECONDARY: the game reads this physical key as
+                // dialog decline/OK, which an info probe must never fire.
+                return true;
             }
             case CANCEL:
             default:

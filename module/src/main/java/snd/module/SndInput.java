@@ -72,10 +72,7 @@ final class SndInput implements InputProcessor {
                 action = NavAction.ACTIVATE;
                 break;
             case 67: // BACKSPACE
-                action = NavAction.SECONDARY;
-                break;
-            case 62: // SPACE
-                action = NavAction.TOOLTIP;
+                action = shift ? NavAction.TOOLTIP : NavAction.SECONDARY;
                 break;
             case 111: // ESCAPE — consumed only when a live search needs cancelling
                 action = NavAction.CANCEL;
