@@ -104,7 +104,12 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        String label = GameUi.labelOf(actor);
+                        // Model label first: some achievement icons are text
+                        // glyphs ("H5") that would win the text search.
+                        String label = achievementTileName(actor);
+                        if (label == null) {
+                            label = GameUi.labelOf(actor);
+                        }
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
                         }
@@ -121,18 +126,30 @@ final class ActorNodes {
                                     : Loc.get("ui", "modal.empty_slot");
                         }
                         if (label == null) {
-                            label = monsterTileName(actor); // challenge dialogs' monster tiles
+                            label = monsterTileName(actor); // portrait-only ledger tiles
+                        }
+                        if (label == null) {
+                            label = itemTileName(actor);
                         }
                         return label != null ? label
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }
                 }, AnnouncementKinds.LABEL),
-                // Item/modifier cards (ConcisePanel) draw their effect text as
-                // side views; read it from the model instead.
+                // Checkbox rows (options, jukebox songs): the box's state.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return choosableEffect(actor);
+                        return checkboxState(actor);
+                    }
+                }, AnnouncementKinds.VALUE),
+                // Item/modifier cards (ConcisePanel) draw their effect text as
+                // side views; achievements hide theirs behind right-click.
+                // Read both from the model instead.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        String effect = choosableEffect(actor);
+                        return effect != null ? effect : achievementDescription(actor);
                     }
                 }, AnnouncementKinds.TOOLTIP),
                 // Party-layout picker options: the visual squares' colour
@@ -217,6 +234,89 @@ final class ActorNodes {
             snd.core.SndLog.error("ledger tile name failed", t);
             return null;
         }
+    }
+
+    private static java.lang.reflect.Field itemTileField;
+
+    // Item ledger tiles show only the item's art (locked ones a padlock the
+    // icon naming already catches).
+    private static String itemTileName(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView)) {
+            return null;
+        }
+        try {
+            if (itemTileField == null) {
+                itemTileField = com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView.class
+                        .getDeclaredField("item");
+                itemTileField.setAccessible(true);
+            }
+            com.tann.dice.gameplay.content.item.Item item =
+                    (com.tann.dice.gameplay.content.item.Item) itemTileField.get(actor);
+            return item != null ? GameText.t(item.getName(true)) : null;
+        } catch (Throwable t) {
+            snd.core.SndLog.error("item tile name failed", t);
+            return null;
+        }
+    }
+
+    private static java.lang.reflect.Field achievementField;
+
+    private static com.tann.dice.gameplay.progress.chievo.Achievement achievementOf(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.AchievementIconView)) {
+            return null;
+        }
+        try {
+            if (achievementField == null) {
+                achievementField = com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.AchievementIconView.class
+                        .getDeclaredField("achievement");
+                achievementField.setAccessible(true);
+            }
+            return (com.tann.dice.gameplay.progress.chievo.Achievement) achievementField.get(actor);
+        } catch (Throwable t) {
+            snd.core.SndLog.error("achievement tile read failed", t);
+            return null;
+        }
+    }
+
+    // Achievement tiles are 18x18 icons whose detail is right-click-only;
+    // speak the name, completion state, and description outright.
+    private static String achievementTileName(Actor actor) {
+        com.tann.dice.gameplay.progress.chievo.Achievement achievement = achievementOf(actor);
+        if (achievement == null) {
+            return null;
+        }
+        return GameText.t(achievement.getName()) + ", "
+                + Loc.get("ui", achievement.isAchieved() ? "book.achieved" : "book.not_achieved");
+    }
+
+    private static String achievementDescription(Actor actor) {
+        com.tann.dice.gameplay.progress.chievo.Achievement achievement = achievementOf(actor);
+        // The right-click detail's own text, gating rule included.
+        return achievement != null ? GameText.t(achievement.getExplanelDescription()) : null;
+    }
+
+    // A Checkbox draws its own tick state; find one under the row.
+    private static String checkboxState(Actor actor) {
+        com.tann.dice.util.ui.Checkbox box = findCheckbox(actor);
+        if (box == null) {
+            return null;
+        }
+        return Loc.get("ui", box.isOn() ? "state.checked" : "state.unchecked");
+    }
+
+    private static com.tann.dice.util.ui.Checkbox findCheckbox(Actor actor) {
+        if (actor instanceof com.tann.dice.util.ui.Checkbox) {
+            return (com.tann.dice.util.ui.Checkbox) actor;
+        }
+        if (actor instanceof Group) {
+            for (Actor child : ((Group) actor).getChildren()) {
+                com.tann.dice.util.ui.Checkbox found = findCheckbox(child);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static java.lang.reflect.Field choosableField;

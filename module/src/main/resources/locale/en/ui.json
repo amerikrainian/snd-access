@@ -66,6 +66,11 @@
   "book.pages": "Almanac pages",
   "book.tabs": "{page} tabs",
   "book.content": "content",
+  "book.achieved": "achieved",
+  "book.not_achieved": "not achieved",
+
+  "state.checked": "checked",
+  "state.unchecked": "unchecked",
 
   "choice.header": "Choose",
   "choice.tier": "tier {tier}",

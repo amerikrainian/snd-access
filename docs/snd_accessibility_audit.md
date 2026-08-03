@@ -668,7 +668,7 @@ legend's per-row labels ("8/10 hp", "2 incoming damage", "1 incoming poison"), a
 cost icons' text explanations (tactics are still locked on the dev profile, so that grid is
 pattern-verified only). Reset Tutorial and the youtuber/Discord links are ordinary buttons.
 
-## 7.2 Ledger Page — NOT STARTED
+## 7.2 Ledger Page — DONE
 
 8 tabs. The collection/reference database:
 
@@ -680,6 +680,16 @@ pattern-verified only). Reset Tutorial and the youtuber/Discord links are ordina
 - **Pin** — pin heroes/items/etc. by name/description search, paste lists, clear; pinned entries get X-buttons
 - **Unlock** — achievements: "achieved/all" counts, rows of 18×18 icon tiles (**detail on right-click only; left-click does nothing**), 5 suggested incomplete challenges, secrets section, copy/load-achievements buttons, bypass-unlocks checkbox
 - **TextMod** — modding API documentation sub-pages (info/api/api-2/search) with single-letter generator buttons
+
+> **Coverage:** the content walk plus model labelers. Hero/monster tiles speak their names,
+locked ones speak "Locked" like the sighted padlock (right-click detail = Backspace); item
+tiles are named from their `Item`; achievement tiles speak name, achieved/not-achieved, and
+the right-click-only detail text outright ("winner, not achieved, Complete any mode") —
+including glyph-icon achievements whose text glyph would otherwise win the label. Checkbox
+rows (bypass-unlocks and kin) speak checked/unchecked. Keyword buttons open their full detail
+panels (rules + every side using the keyword — verified live on bloodlust); modifier filters
+and pin search controls are ordinary buttons. Seen counts read as text. Type-ahead searches
+within the content stop, so typing a hero/keyword name jumps straight to it.
 
 ## 7.3 Stuff Page — NOT STARTED
 
