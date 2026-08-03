@@ -13,7 +13,11 @@ import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
 import snd.module.screens.ChoiceScreen;
 import snd.module.screens.CombatScreen;
+import snd.module.screens.DialogPhaseScreen;
 import snd.module.screens.GameModalScreen;
+import snd.module.screens.InventoryScreen;
+import snd.module.screens.LevelEndScreen;
+import snd.module.screens.PauseRecoveryScreen;
 import snd.module.screens.TitleFlowScreen;
 
 /**
@@ -41,9 +45,13 @@ public class SndModule implements ModModule {
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());
         screens.register(new TitleFlowScreen(h));
-        screens.register(new ChoiceScreen());
+        screens.register(new ChoiceScreen(h));
         screens.register(new GameModalScreen());
         screens.register(new CombatScreen(h));
+        screens.register(new LevelEndScreen(h));
+        screens.register(new DialogPhaseScreen());
+        screens.register(new InventoryScreen(h));
+        screens.register(new PauseRecoveryScreen());
         input = new SndInput(screens, nav);
         popups = new PopupWatcher(h.speech());
         phases = new PhaseWatcher(h.speech());

@@ -320,7 +320,7 @@ public class CombatScreen extends AccessScreen {
         return vt;
     }
 
-    private static String sheetText(DungeonScreen ds, Ent ent) {
+    static String sheetText(DungeonScreen ds, Ent ent) {
         StringBuilder sb = new StringBuilder(GameText.t(ent.getName(true)));
         if (ent instanceof com.tann.dice.gameplay.content.ent.Hero) {
             sb.append(", ").append(Loc.get("combat", "level", "n",

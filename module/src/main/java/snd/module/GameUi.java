@@ -60,21 +60,23 @@ public final class GameUi {
     }
 
     /**
-     * Left-click the actor the way the game does: TannListener.action first
-     * (the game's own handler), else a synthesized touchDown/touchUp pair for
-     * plain InputListeners.
+     * Left-click the actor the way the game does: TannListener.action on
+     * EVERY gesture listener (a real tap reaches them all — StandardButtons
+     * carry an internal runnable listener plus any added handler), else a
+     * synthesized touchDown/touchUp pair for plain InputListeners.
      */
     public static boolean activate(Actor actor) {
         if (actor == null) {
             return false;
         }
+        boolean any = false;
         for (com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener l : gestureListeners(actor)) {
             if (l instanceof TannListener) {
+                any = true;
                 ((TannListener) l).action(0, 0, actor.getWidth() / 2f, actor.getHeight() / 2f);
-                return true;
             }
         }
-        return fireClick(actor);
+        return any || fireClick(actor);
     }
 
     /** Right-click equivalent: the game's info() surface (details panels). */

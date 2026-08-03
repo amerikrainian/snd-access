@@ -386,7 +386,7 @@ previews and applied-command announcements.
 
 # Phase 4: Between Fights
 
-## 4.1 Level End Hub (`LevelEndPanel`) — NOT STARTED
+## 4.1 Level End Hub (`LevelEndPanel`) — DONE
 
 Slides in after each won fight:
 
@@ -396,19 +396,49 @@ Slides in after each won fight:
 - **Continue** button; refusal reasons appear as text *below* the panel ("You must choose all rewards…", "Some items must be equipped…"); an "unequipped items" confirmation dialog can also appear
 - Keyboard: digits start reward phase N, **I** = inventory, **Enter** = continue (Space is *not* bound here)
 
-## 4.2 Minimap — NOT STARTED
+> **Coverage:** `LevelEndScreen`. The icon-only reward buttons speak real names — a ChoicePhase
+speaks the game's own offer header ("Choose an item"), `PhaseGeneratorTransformPhase` is
+resolved through the same cached path the game uses for its button icon, fixed event phases get
+role words, anything else falls back to its `getLevelEndButton` text. All pending rewards are
+listed (no "+N more" cap). Inventory speaks "new items" when the glow is showing; Continue
+speaks the refusal reason (read via `getNoContinueReason`) before running the panel's own
+click; the under-panel refusal/reminder TextWriters are also navigable nodes. Activation goes
+through `clickPhaseStart`/`inventoryClick`/`continueClick`, so the digit/I/Enter game keys and
+our nodes share one code path. The unequipped-items confirmation is a pushed modal (generic
+reader). Also added here: `PauseRecoveryScreen` for the game's stuck-pause screen (its only
+visual affordance is an invisible-for-a-minute "tap a few times to escape") — speaks the state
+and offers Resume-run (the game's own `resume()` recovery) and back-to-title.
+
+## 4.2 Minimap — DONE
 
 Bottom-center progress strip: zone backgrounds + node icons (normal/boss × neutral/current/complete). Purely decorative, no text, no interaction. Bosses are every 4th fight (4/8/12/16/20).
 
-## 4.3 Level-Up Choice — NOT STARTED
+> **Coverage:** a "Map" node on the level-end hub speaks what the strip paints: fight progress
+(the game's own `getLevelProgressString`), the current zone name from `getLevelTypes`, and the
+next boss fight from `ContextConfig.isBoss` ("Fight 5/20, zone Dungeon, next boss at fight
+8"). Only present when the mode shows the minimap.
+
+## 4.3 Level-Up Choice — DONE
 
 Even-numbered fights (`PhaseGeneratorLevelup` → `ChoicePhase`): choose 1 of 2 hero upgrades, plus a "random" option and a "skip" button once past the first run. Only lowest-level heroes are offered. Each option is a full character sheet of the upgraded hero; a dotted line connects it to the current hero's panel. Confirmation dialog shows current → new panel.
 
-## 4.4 Loot Choice — NOT STARTED
+> **Coverage:** each option speaks the upgraded class name, **which hero it upgrades** (the
+dotted line, as words), tier, and the upgraded hero's full sheet — level, max hp, all six
+sides, visible traits — read from a hypothetical hero built exactly the way the game builds
+its offer panel (`transformLevelup(...).makeEnt()`, blank state). Random and skip options
+speak their own descriptions. Hero offers show no visual header, so the screen names itself
+"Choose a level-up". The current→new confirmation dialog is a pushed modal (generic reader).
+
+## 4.4 Loot Choice — DONE
 
 Odd-numbered fights (`PhaseGeneratorStandardLoot` → `ChoicePhase`): choose 1 of 2 items + a special random reward on its own row (same-tier random, +1/−1, double/half, triple/third, N junk items…). Item quality scales with fight number.
 
-## 4.5 The ChoicePhase Interaction Model — NOT STARTED
+> **Coverage:** items speak name, type word, tier, and description; the special random row
+speaks its `Choosable` description ("a random tier 1 item"); Or/And/Replace composites recurse
+into their parts. Verified live on a fight-3 offer end-to-end including the confirmation
+dialog and the gained item arriving in the inventory.
+
+## 4.5 The ChoicePhase Interaction Model — DONE
 
 `ChoicePhase` is the universal "choose a reward" screen (items, levelups, curses, blessings, tweaks):
 
@@ -419,7 +449,18 @@ Odd-numbered fights (`PhaseGeneratorStandardLoot` → `ChoicePhase`): choose 1 o
 - Digits 1–9 toggle option N; confirmation dialog accepts Enter/Backspace; everything else mouse
 - **Anticheese reroll**: on first-fight offers, a tiny unlabeled icon button (top-right of the panel) rerolls the starting party and options, with its own warning dialogs
 
-## 4.6 Event Phases — NOT STARTED
+> **Coverage:** `ChoiceScreen` (rewritten), driving the phase's own `tapForChoiceToggle` /
+`choose` / `clearChoices` / `endPhase`. The outline-only selection speaks as a "selected"
+state part plus immediate selected/deselected feedback on toggle; the suppressed right-click
+detail is replaced by each option's model-read effect text spoken on focus. All four styles
+verified live: exact-N (auto-confirm dialog via the modal reader), up-to-N (Confirm node with
+"n of max chosen"), point-buy (tally node, Reset, Confirm with a spoken not-yet-valid
+refusal), optional (accept/decline nodes running the dialog's own routes). The anticheese
+reroll surfaces as a named button (found by its flaff texture, fired through the game's
+listener) — code-complete but not yet exercised live, since it only exists on first-fight
+offers. The game's digit keys keep working alongside.
+
+## 4.6 Event Phases — DONE
 
 Random between-fight events (gated by unlockable features), all dialog-based:
 
@@ -431,7 +472,18 @@ Random between-fight events (gated by unlockable features), all dialog-based:
 - **Message / reveal panels** (`MessagePhase`, `RandomRevealPhase`): text + single OK button; Space/Enter (+Backspace for messages) work
 - Blessing/tweak picks: standard `ChoicePhase`
 
-## 4.7 Inventory / Equip Screen (`PartyManagementPanel`) — NOT STARTED
+> **Coverage:** these dialogs are added straight to the dungeon screen, never pushed on the
+modal stack, so the modal reader can't see them; `DialogPhaseScreen` reads each phase's
+private dialog field and walks it with the shared actor reader (`ActorNodes`, extracted from
+the modal screen). Monster tiles (`MonsterLedgerView`) and item/modifier cards
+(`ConcisePanel`) are labeled from their models — name, effect text. All seven dialog phases
+verified live (interrupted synthetically over a real level end). Fixing activation here also
+fixed a general bug: `GameUi.activate` now fires **every** TannListener on an actor like a
+real tap, not just the first — buttons whose handler is added after construction (reveal "ok",
+challenge accept/decline) were silently inert before. The challenge's on-accept reveal is a
+pushed modal (generic reader); Space/Enter/Backspace game keys keep working underneath.
+
+## 4.7 Inventory / Equip Screen (`PartyManagementPanel`) — PARTIAL
 
 The party equipment screen (from Level End's Inventory button, or **I**):
 
@@ -441,6 +493,19 @@ The party equipment screen (from Level End's Inventory button, or **I**):
 - Hero rename: click the title bar (text input)
 - Keyboard: **I/Enter/ESC** = done, **R** = randomize equipment; all other keys are swallowed while open
 - Items are visible but **not equippable during combat** (`Phase.canEquip()` false in-fight)
+
+> **Coverage:** `InventoryScreen` (replaces the generic modal reader for this panel).
+Drag-and-drop becomes pick-and-place: activate a bag item or an occupied hero slot to pick it
+up (a "holding X" banner node appears), activate any hero slot to place it there, or a
+put-away button to return an equipped held item to the bag. Placement runs the panel's own
+public `equip` — the exact drop code, including swaps and displaced items — with the outcome
+spoken ("Big Shield equipped on Defender, slot 1"); a bag-sourced item is first removed from
+the bag list exactly as the drag path does at pickup. Hero rows speak name/level with the full
+character sheet on activate or Backspace; slots speak their item or "empty"; bag items speak
+name, tier, held/new/force-equip glows, and description (the zoom list's content, in place).
+Randomize and Done drive the panel's own R/Enter key routes. Verified live: equip from bag,
+pick-up from slot, unequip to bag, re-equip, close, focus restore. PARTIAL: hero **rename**
+(title-bar click → native text input) is not exposed.
 
 ---
 

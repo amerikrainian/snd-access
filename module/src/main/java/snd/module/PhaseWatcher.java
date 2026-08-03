@@ -68,8 +68,9 @@ final class PhaseWatcher {
             return Loc.get("combat", "phase.surrender");
         }
         if (p instanceof LevelEndPhase) {
+            // The LevelEndScreen announces itself; only the turn stamps reset here.
             resetStamps();
-            return Loc.get("combat", "phase.level_end");
+            return null;
         }
         if (p instanceof RunEndPhase) {
             resetStamps();
