@@ -51,7 +51,10 @@ public final class ModuleLoader {
         try {
             newTemp = Files.createTempFile("snd-module-gen" + (generation + 1) + "-", ".jar");
             Files.copy(moduleJar, newTemp, StandardCopyOption.REPLACE_EXISTING);
-            newLoader = new URLClassLoader(new URL[]{newTemp.toUri().toURL()}, Host.class.getClassLoader());
+            // Parent through the game's loader so module code links against
+            // the game wherever the shim put it; host/core still resolve.
+            newLoader = new URLClassLoader(new URL[]{newTemp.toUri().toURL()},
+                    new BridgeLoader(Dispatcher.gameLoader(), Host.class.getClassLoader()));
             Class<?> cls = Class.forName("snd.module.SndModule", true, newLoader);
             if (cls.getClassLoader() != newLoader) {
                 throw new IllegalStateException("snd.module.SndModule resolved from the parent loader ("

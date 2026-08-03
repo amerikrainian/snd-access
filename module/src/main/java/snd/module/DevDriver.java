@@ -1,4 +1,4 @@
-package snd.host;
+package snd.module;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,15 +8,17 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.utils.ScreenUtils;
+
 import snd.core.SndLog;
 
 /**
- * The host's few direct touches on the game, all render-thread-only (callers
- * marshal via Dispatcher.post). Compiled against dice.jar; these classes are
- * always present at runtime (the game is the app).
+ * Game-touching dev-driver verbs, module-side: the host routes /input and
+ * /screenshot here via devCommand because the shipped shim loads the game
+ * outside the system loader — only module code (parented on the game's
+ * loader) can link against it. Render-thread-only; the dev server marshals.
  */
-public final class GameDriver {
-    private GameDriver() {
+final class DevDriver {
+    private DevDriver() {
     }
 
     private static final Map<String, Integer> VERBS = new HashMap<String, Integer>();
@@ -42,12 +44,11 @@ public final class GameDriver {
     }
 
     /**
-     * Drives the FULL input chain — the installed InputProcessor (our
-     * navigator's processor at the multiplexer head, then the game's stage) —
-     * exactly what a physical keypress reaches. "type:<text>" feeds keyTyped
-     * (the type-ahead path).
+     * Drives the FULL input chain — our navigator's processor at the
+     * multiplexer head, then the game's stage — exactly what a physical
+     * keypress reaches. "type:<text>" feeds keyTyped (the type-ahead path).
      */
-    public static String input(String verb) {
+    static String input(String verb, snd.core.nav.GraphNavigator nav) {
         verb = verb.trim();
         InputProcessor proc = Gdx.input.getInputProcessor();
         if (proc == null) {
@@ -56,11 +57,7 @@ public final class GameDriver {
         if (verb.equalsIgnoreCase("shift+tab")) {
             // The processor path can't fake held modifiers (SndInput reads
             // live key state), so drive the navigator action directly.
-            snd.core.ModModule m = snd.core.Dispatcher.current();
-            if (m == null) {
-                return "no module loaded";
-            }
-            return "shift+tab -> " + m.devCommand("nav", "PREV_STOP");
+            return "shift+tab -> " + nav.onAction(snd.core.nav.NavAction.PREV_STOP);
         }
         if (verb.startsWith("type:")) {
             String text = verb.substring(5);
@@ -87,7 +84,7 @@ public final class GameDriver {
         return "ok: " + verb + " -> keycode " + code + " consumed=" + consumed;
     }
 
-    public static String screenshot(String path) {
+    static String screenshot(String path) {
         int w = Gdx.graphics.getWidth();
         int h = Gdx.graphics.getHeight();
         Pixmap pixmap = ScreenUtils.getFrameBufferPixmap(0, 0, w, h);
@@ -105,7 +102,7 @@ public final class GameDriver {
      * clients. While the dev server is up, keep the loop rendering; the game
      * re-applies its own option during load, so re-assert every frame.
      */
-    public static void ensureContinuousRendering() {
+    static void ensureContinuousRendering() {
         try {
             if (Gdx.graphics != null && !Gdx.graphics.isContinuousRendering()) {
                 Gdx.graphics.setContinuousRendering(true);
@@ -114,22 +111,5 @@ public final class GameDriver {
         } catch (Throwable t) {
             SndLog.error("ensureContinuousRendering failed", t);
         }
-    }
-
-    /** Wakes a possibly-idle non-continuous render loop; safe from any thread. */
-    public static void requestRender() {
-        try {
-            if (Gdx.graphics != null) {
-                Gdx.graphics.requestRendering();
-            }
-        } catch (Throwable ignored) {
-            // pre-boot; the forced-continuous frame hook takes over shortly
-        }
-    }
-
-    /** Fallback /gui when the module doesn't answer: name the current screen. */
-    public static String describeScreen() {
-        com.tann.dice.screens.Screen screen = com.tann.dice.Main.getCurrentScreen();
-        return screen == null ? "no screen" : "screen: " + screen.getClass().getName();
     }
 }

@@ -72,8 +72,16 @@ public class SndModule implements ModModule {
         }
     }
 
+    private static final boolean DEV = "1".equals(System.getProperty("snd.dev"))
+            || "1".equals(System.getenv("SND_DEV"));
+
     @Override
     public void tick() {
+        if (DEV) {
+            // Keep the loop rendering for the dev server (the host can't:
+            // it never links against game classes).
+            DevDriver.ensureContinuousRendering();
+        }
         com.tann.dice.screens.Screen screen;
         try {
             screen = com.tann.dice.Main.getCurrentScreen();
@@ -136,6 +144,12 @@ public class SndModule implements ModModule {
 
     @Override
     public String devCommand(String command, String arg) {
+        if ("input".equals(command) && arg != null) {
+            return DevDriver.input(arg, nav);
+        }
+        if ("screenshot".equals(command) && arg != null) {
+            return DevDriver.screenshot(arg);
+        }
         if ("gui".equals(command)) {
             StringBuilder sb = new StringBuilder();
             try {

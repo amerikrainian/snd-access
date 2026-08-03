@@ -63,8 +63,12 @@ Four Gradle modules; artifact names are fixed (no version suffixes):
   `-javaagent:snd-host-all.jar -Dsnd.dev=1 -Dsnd.module=<module jar> -Djna.library.path=<prism>`
   and `-cp "dice.jar;snd-devrepl.jar"`, cwd = game dir). Never modifies the game install.
 - **Player deploy:** `scripts/deploy.ps1` stages jars + prism.dll into `<game>\mods\snd-access\`
-  and patches `SliceAndDice.json` vmArgs (backup kept). **Not yet exercised on the bundled OpenJ9
-  8 JRE — smoke-test before any release.**
+  and patches `SliceAndDice.json` vmArgs (backup kept; restore = copy the .bak back). Verified on
+  the bundled OpenJ9 8 JRE. Two shim facts learned the hard way: the shim's JSON parser rejects a
+  UTF-8 BOM and **exits silently** (the script writes BOM-free), and the shim loads dice.jar in
+  **its own classloader**, not the system loader — so the host never links against game classes
+  (game-typed code lives in the module, whose loader bridges through `Dispatcher.gameLoader()`),
+  and `/eval` (JShell) cannot see game classes in a deployed dev launch.
 - From the Bash tool, launch java with `MSYS2_ARG_CONV_EXCL="*"` or the `-javaagent:`/`-cp` args
   get path-mangled. Kill the game with PowerShell `Get-Process java | Stop-Process -Force`
   (note: this also kills the Gradle daemon — it restarts itself).

@@ -30,7 +30,7 @@ import snd.core.SndLog;
 import snd.core.dev.Bridge;
 import snd.core.dev.Evaluator;
 import snd.core.util.LineLog;
-import snd.host.GameDriver;
+import snd.host.HostWake;
 import snd.host.ModuleLoader;
 
 /**
@@ -118,7 +118,7 @@ public final class DevServer {
             respond(ex, 200, onMainThread(new Callable<String>() {
                 @Override
                 public String call() {
-                    return GameDriver.input(verb);
+                    return moduleCommand("input", verb);
                 }
             }, 15000));
         } else if (path.equals("/wait")) {
@@ -128,16 +128,14 @@ public final class DevServer {
             respond(ex, 200, onMainThread(new Callable<String>() {
                 @Override
                 public String call() {
-                    return GameDriver.screenshot(file);
+                    return moduleCommand("screenshot", file);
                 }
             }, 15000));
         } else if (path.equals("/gui")) {
             respond(ex, 200, onMainThread(new Callable<String>() {
                 @Override
                 public String call() {
-                    ModModule m = Dispatcher.current();
-                    String fromModule = m != null ? m.devCommand("gui", null) : null;
-                    return fromModule != null ? fromModule : GameDriver.describeScreen();
+                    return moduleCommand("gui", null);
                 }
             }, 15000));
         } else if (path.equals("/typeinfo")) {
@@ -146,6 +144,17 @@ public final class DevServer {
             respond(ex, 404, "unknown endpoint " + path
                     + "\nendpoints: /health /eval /reload /module /speech /log /input /wait /screenshot /gui /typeinfo");
         }
+    }
+
+    // Game-touching dev verbs live in the MODULE (loaded via the game's own
+    // classloader); the host never links against game classes.
+    private static String moduleCommand(String command, String arg) {
+        ModModule m = Dispatcher.current();
+        if (m == null) {
+            return "module not loaded yet";
+        }
+        String result = m.devCommand(command, arg);
+        return result != null ? result : "unhandled dev command: " + command;
     }
 
     // ---- /eval -------------------------------------------------------------
@@ -227,7 +236,7 @@ public final class DevServer {
                 hit.countDown();
             }
         });
-        GameDriver.requestRender();
+        HostWake.requestRender();
         boolean ok = hit.await(timeoutMs, TimeUnit.MILLISECONDS);
         if (!ok) {
             Dispatcher.removeWait(id);
@@ -296,7 +305,7 @@ public final class DevServer {
                 }
             }
         });
-        GameDriver.requestRender();
+        HostWake.requestRender();
         try {
             if (!done.await(timeoutMs, TimeUnit.MILLISECONDS)) {
                 return "[timeout] render thread did not run the job within " + timeoutMs

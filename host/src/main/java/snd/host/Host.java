@@ -56,15 +56,9 @@ public final class Host implements HostServices {
                 loader.reload();
             }
         });
-        // Per-frame host work: keep the loop alive for the dev server.
-        if (dev) {
-            Dispatcher.setFrameHook(new Runnable() {
-                @Override
-                public void run() {
-                    GameDriver.ensureContinuousRendering();
-                }
-            });
-        }
+        // The module tick keeps the render loop continuous in dev mode; the
+        // host itself never links against game classes (the shipped shim
+        // loads the game outside the system loader).
         SndLog.info("host booted (dev server " + (dev ? "on" : "off") + ")");
     }
 

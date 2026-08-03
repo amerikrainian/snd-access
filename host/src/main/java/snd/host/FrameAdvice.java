@@ -13,7 +13,9 @@ public final class FrameAdvice {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit() {
-        Dispatcher.frame();
+    public static void exit(@Advice.This Object self) {
+        // The instance identifies the game's classloader (the shipped shim
+        // loads the game outside the system loader).
+        Dispatcher.frame(self);
     }
 }

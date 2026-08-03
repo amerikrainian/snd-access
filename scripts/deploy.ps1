@@ -1,8 +1,8 @@
 # Player-style deploy: stage the mod into the game folder and patch
 # SliceAndDice.json so the game's own launcher (bundled OpenJ9 Java 8 JRE)
 # loads the agent. Backs up the original json once as SliceAndDice.json.bak.
-# NOTE: not yet exercised — the dev loop uses run-dev.ps1. Smoke-test this on
-# the bundled JRE before any release.
+# The json must be written WITHOUT a UTF-8 BOM: the packr-style shim's JSON
+# parser rejects a BOM and exits silently.
 param(
     [string]$GameDir = 'C:\Program Files (x86)\Steam\steamapps\common\Slice_n_Dice'
 )
@@ -29,6 +29,7 @@ $cfg.vmArgs = @(
     '-Dsnd.module=mods/snd-access/snd-module.jar',
     '-Djna.library.path=mods/snd-access'
 )
-$cfg | ConvertTo-Json -Depth 5 | Out-File $jsonPath -Encoding utf8
+$json = ($cfg | ConvertTo-Json -Depth 5) -replace "`r`n", "`n"
+[System.IO.File]::WriteAllText($jsonPath, $json, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "Deployed to $modDir and patched SliceAndDice.json (backup at $bakPath)."
 Write-Host "Restore the original launch with: Copy-Item '$bakPath' '$jsonPath' -Force"

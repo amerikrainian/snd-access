@@ -34,6 +34,25 @@ public final class Dispatcher {
         void satisfied();
     }
 
+    // The game's own classloader, captured from the render hook. Under the
+    // dev launch this is the system loader (dice.jar on -cp); under the
+    // shipped packr-style shim the game lives in the shim's own loader and
+    // nothing game-typed can link against the system loader.
+    private static volatile ClassLoader gameLoader;
+
+    /** The game's classloader, or null before the first pumped frame. */
+    public static ClassLoader gameLoader() {
+        return gameLoader;
+    }
+
+    /** Called from the Advice hook on the game's render method. */
+    public static void frame(Object gameInstance) {
+        if (gameLoader == null && gameInstance != null) {
+            gameLoader = gameInstance.getClass().getClassLoader();
+        }
+        frame();
+    }
+
     /** Called from the Advice hook on the game's render method. */
     public static void frame() {
         frames++;
