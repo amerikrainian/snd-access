@@ -125,6 +125,9 @@ final class ActorNodes {
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
                         }
+                        if (label == null) {
+                            label = sideIconName(actor); // bare die-side images
+                        }
                         if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.DieSidePanel) {
                             // Die-net previews in dialogs (level-ups, sheets).
                             label = GameText.t(((com.tann.dice.screens.dungeon.panels.DieSidePanel) actor)
@@ -161,7 +164,10 @@ final class ActorNodes {
                     @Override
                     public String get() {
                         String effect = choosableEffect(actor);
-                        return effect != null ? effect : achievementDescription(actor);
+                        if (effect == null) {
+                            effect = achievementDescription(actor);
+                        }
+                        return effect != null ? effect : itemSlotDescription(actor);
                     }
                 }, AnnouncementKinds.TOOLTIP),
                 // Party-layout picker options: the visual squares' colour
@@ -334,6 +340,43 @@ final class ActorNodes {
         com.tann.dice.gameplay.progress.chievo.Achievement achievement = achievementOf(actor);
         // The right-click detail's own text, gating rule included.
         return achievement != null ? GameText.t(achievement.getExplanelDescription()) : null;
+    }
+
+    // An item slot's description, the same text its right-click panel shows.
+    private static String itemSlotDescription(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel)) {
+            return null;
+        }
+        com.tann.dice.gameplay.content.item.Item item =
+                ((com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel) actor).item;
+        return item != null ? GameText.t(item.getDescription()) : null;
+    }
+
+    // Bare die-side images (the graph tab's series icons and add-side popup)
+    // carry no text; name them via a texture-to-side map.
+    private static java.util.Map<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide> sidesByTexture;
+
+    private static String sideIconName(Actor actor) {
+        if (!(actor instanceof com.tann.dice.util.ImageActor)) {
+            return null;
+        }
+        try {
+            if (sidesByTexture == null) {
+                java.util.Map<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide> map =
+                        new java.util.IdentityHashMap<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide>();
+                for (com.tann.dice.gameplay.content.ent.die.side.EntSide side
+                        : com.tann.dice.gameplay.content.ent.die.side.EntSidesLib.getAllSidesWithValue()) {
+                    map.put(side.getTexture(), side);
+                }
+                sidesByTexture = map;
+            }
+            com.tann.dice.gameplay.content.ent.die.side.EntSide side =
+                    sidesByTexture.get(((com.tann.dice.util.ImageActor) actor).tr);
+            return side != null ? GameText.t(side.getBaseEffect().describe()) : null;
+        } catch (Throwable t) {
+            snd.core.SndLog.error("side icon name failed", t);
+            return null;
+        }
     }
 
     // A Checkbox draws its own tick state; find one under the row.
