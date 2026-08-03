@@ -1,6 +1,6 @@
 # snd-access
 
-Accessibility mod for [Slice & Dice](https://tann.itch.io/slice-dice) (v3.2.13, Steam/desktop).
+Accessibility mod for [Slice & Dice](https://store.steampowered.com/app/1775490/Slice__Dice/) (v3.2.13, Steam/desktop).
 Adds full screen-reader support: every screen — title, combat, rewards, inventory, almanac,
 options, leaderboards — is navigable by keyboard and spoken through
 [Prism](https://github.com/ethindp/prism) (NVDA, SAPI, etc.). Windows only.
@@ -68,5 +68,3 @@ hooks, Prism, module loader — game-blind), `module` (all feature code, hot-rel
 ## Notes
 
 - Dev launches share the real save data; the mod never writes save state itself.
-- `game/` (decompiled reference) and `third_party/` are gitignored — nothing from the game
-  or Prism is redistributed here.
