@@ -225,6 +225,8 @@ public class LevelEndScreen extends AccessScreen {
                     }, AnnouncementKinds.VALUE));
             b.addItem(ControlId.structural(CompositeKey.of("levelend", "map")), map);
         }
+
+        TutorialNodes.build(b, ds);
     }
 
     // "Fight 5/20, zone Dungeon, next boss at fight 8" — what the minimap's

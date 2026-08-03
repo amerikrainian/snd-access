@@ -767,7 +767,7 @@ descriptions spoken.
 
 ---
 
-# Phase 9: Tutorial System — NOT STARTED
+# Phase 9: Tutorial System — DONE
 
 `screens/dungeon/panels/tutorial/` — an 85-px "Tutorial" box shown during rolling/targeting/level-end phases with up to 2 items:
 
@@ -775,6 +775,16 @@ descriptions spoken.
 - **Quests** (checkbox glyph): tracked tasks ("Reroll your dice", "Right-click a dice to learn what it does", "Shield some incoming damage", "Cast a spell", "Use a hero, then undo"…). Completion auto-detected; feedback is a flash + checkbox glyph change
 - The close button responds **only to right-click** and opens Skip-all / Dismiss options
 - Progress persists; reset only via Book → Help → Basics → Reset Tutorial
+
+> **Coverage:** a "Tutorial" stop appended to the combat and level-end screens whenever the box
+is actually on screen (dismissed boxes slide offscreen keeping their items — filtered by
+position). Items speak their text plus a kind/state word — "tip", or "quest, to do / done"
+(the visual checkbox is markup the speech filter strips, so the state is explicit). A
+"Tutorial options" button fires the right-click-only close control, opening the game's
+Skip-all/Dismiss dialog (verified live end-to-end, including the "Tutorial Skipped" banner
+arriving through the transient-text hook). `TutorialWatcher` announces quest completions,
+whose only visual feedback is a flash — pattern-verified; completing a quest live needs
+mid-combat play. Reset Tutorial reads via the help page (7.1).
 
 ---
 

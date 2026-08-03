@@ -81,6 +81,12 @@
   "glyph.skip_forward": "skip forward",
   "glyph.next_song": "next song",
 
+  "tutorial.tip": "tip",
+  "tutorial.todo": "quest, to do",
+  "tutorial.done": "quest, done",
+  "tutorial.close": "Tutorial options",
+  "tutorial.complete": "quest complete: {quest}",
+
   "choice.header": "Choose",
   "choice.tier": "tier {tier}",
   "choice.unreadable": "unreadable option",

@@ -38,6 +38,7 @@ public class SndModule implements ModModule {
     private TargetingWatcher targeting;
     private BannerWatcher banners;
     private TextEntryWatcher textEntry;
+    private snd.module.screens.TutorialWatcher tutorial;
     private Object lastScreen;
     private boolean greeted;
 
@@ -64,6 +65,7 @@ public class SndModule implements ModModule {
         targeting = new TargetingWatcher(h.speech());
         banners = new BannerWatcher(h.speech());
         textEntry = new TextEntryWatcher(h.speech());
+        tutorial = new snd.module.screens.TutorialWatcher(h.speech());
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
@@ -100,6 +102,7 @@ public class SndModule implements ModModule {
         targeting.tick();
         banners.tick();
         textEntry.tick();
+        tutorial.tick();
     }
 
     // The game rebuilds its InputMultiplexer in Main.setupScale (resize,

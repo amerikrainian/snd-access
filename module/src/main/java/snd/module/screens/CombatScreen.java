@@ -83,6 +83,7 @@ public class CombatScreen extends AccessScreen {
         } else if (phase instanceof TargetingPhase) {
             buildButtons(b, ds, ds.confirmButton, false);
         }
+        TutorialNodes.build(b, ds);
     }
 
     // ---- the ability bar: one node per spell/tactic card, in the bar's own
