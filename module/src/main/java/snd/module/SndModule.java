@@ -18,6 +18,7 @@ import snd.module.screens.GameModalScreen;
 import snd.module.screens.InventoryScreen;
 import snd.module.screens.LevelEndScreen;
 import snd.module.screens.PauseRecoveryScreen;
+import snd.module.screens.RunEndStatsScreen;
 import snd.module.screens.TitleFlowScreen;
 
 /**
@@ -53,6 +54,7 @@ public class SndModule implements ModModule {
         screens.register(new DialogPhaseScreen());
         screens.register(new InventoryScreen(h));
         screens.register(new PauseRecoveryScreen());
+        screens.register(new RunEndStatsScreen());
         input = new SndInput(screens, nav);
         popups = new PopupWatcher(h.speech());
         phases = new PhaseWatcher(h.speech());

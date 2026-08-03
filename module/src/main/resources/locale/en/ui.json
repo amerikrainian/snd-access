@@ -86,6 +86,11 @@
   "reward.reveal": "Reward",
   "reward.reset": "Curse loop reset",
 
+  "runend.stats": "Run statistics",
+  "runend.deaths": "deaths {n}",
+  "runend.crosses": "Crosses rolled:",
+  "runend.layout": "Party layout {name}",
+
   "pause.title": "Paused",
   "pause.text": "The game is paused. Your run was saved.",
   "pause.resume": "Resume run",

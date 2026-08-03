@@ -187,22 +187,34 @@ final class ActorNodes {
     }
 
     private static java.lang.reflect.Field monsterTypeField;
+    private static java.lang.reflect.Field heroTypeField;
 
+    // Ledger tiles are portrait-only; their entity type is a field.
     private static String monsterTileName(Actor actor) {
-        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView)) {
-            return null;
-        }
         try {
-            if (monsterTypeField == null) {
-                monsterTypeField = com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView.class
-                        .getDeclaredField("type");
-                monsterTypeField.setAccessible(true);
+            if (actor instanceof com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView) {
+                if (monsterTypeField == null) {
+                    monsterTypeField = com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView.class
+                            .getDeclaredField("type");
+                    monsterTypeField.setAccessible(true);
+                }
+                com.tann.dice.gameplay.content.ent.type.MonsterType type =
+                        (com.tann.dice.gameplay.content.ent.type.MonsterType) monsterTypeField.get(actor);
+                return type != null ? GameText.t(type.getName(true)) : null;
             }
-            com.tann.dice.gameplay.content.ent.type.MonsterType type =
-                    (com.tann.dice.gameplay.content.ent.type.MonsterType) monsterTypeField.get(actor);
-            return type != null ? GameText.t(type.getName(true)) : null;
+            if (actor instanceof com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView) {
+                if (heroTypeField == null) {
+                    heroTypeField = com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView.class
+                            .getDeclaredField("h");
+                    heroTypeField.setAccessible(true);
+                }
+                com.tann.dice.gameplay.content.ent.type.HeroType type =
+                        (com.tann.dice.gameplay.content.ent.type.HeroType) heroTypeField.get(actor);
+                return type != null ? GameText.t(type.getName(true)) : null;
+            }
+            return null;
         } catch (Throwable t) {
-            snd.core.SndLog.error("monster tile name failed", t);
+            snd.core.SndLog.error("ledger tile name failed", t);
             return null;
         }
     }

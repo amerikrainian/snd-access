@@ -41,6 +41,13 @@ public class DialogPhaseScreen extends AccessScreen {
         DIALOG_FIELDS.put(PositionSwapPhase.class, "cd");
         DIALOG_FIELDS.put(MessagePhase.class, "messageActor");
         DIALOG_FIELDS.put(RandomRevealPhase.class, "g");
+        // The victory/defeat band: left column text, right column buttons
+        // (Quit, Stats, mode extras), all readable once the slide-in reveals
+        // them.
+        DIALOG_FIELDS.put(com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase.class, "endPanel");
+        // The cursed-family loop boundary: purple text + a single "never" button.
+        DIALOG_FIELDS.put(com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.resetPhase.ResetPhase.class,
+                "resetPanel");
     }
 
     private final Map<Class<?>, Field> fieldCache = new HashMap<Class<?>, Field>();
@@ -117,7 +124,43 @@ public class DialogPhaseScreen extends AccessScreen {
         if (p instanceof MessagePhase) {
             return Loc.get("ui", "reward.message");
         }
+        if (p instanceof com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase) {
+            return runEndTitle((com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase) p);
+        }
+        if (p instanceof com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.resetPhase.ResetPhase) {
+            return Loc.get("ui", "reward.reset");
+        }
         return Loc.get("ui", "reward.reveal");
+    }
+
+    // "Classic - Victory": the stats header's own composition.
+    static String runEndTitle(com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase p) {
+        String word = snd.module.GameText.t(isVictory(p) ? "Victory" : "Defeat");
+        try {
+            com.tann.dice.screens.dungeon.DungeonScreen ds = com.tann.dice.screens.dungeon.DungeonScreen.get();
+            String title = snd.module.GameText.t(
+                    ds.getDungeonContext().getContextConfig().getEndTitle());
+            return title + ", " + word;
+        } catch (Throwable t) {
+            SndLog.error("run end title failed", t);
+            return word;
+        }
+    }
+
+    private static Field victoryField;
+
+    static boolean isVictory(com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase p) {
+        try {
+            if (victoryField == null) {
+                victoryField = com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase.class
+                        .getDeclaredField("victory");
+                victoryField.setAccessible(true);
+            }
+            return victoryField.getBoolean(p);
+        } catch (Throwable t) {
+            SndLog.error("failed to read RunEndPhase.victory", t);
+            return false;
+        }
     }
 
     @Override

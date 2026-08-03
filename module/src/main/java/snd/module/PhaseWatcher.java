@@ -73,8 +73,9 @@ final class PhaseWatcher {
             return null;
         }
         if (p instanceof RunEndPhase) {
+            // The DialogPhaseScreen announces the victory/defeat band.
             resetStamps();
-            return Loc.get("combat", "phase.run_end");
+            return null;
         }
         return null;
     }

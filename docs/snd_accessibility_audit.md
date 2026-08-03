@@ -516,11 +516,18 @@ names, custom-mode saves).
 
 # Phase 5: Run End
 
-## 5.1 Victory / Defeat Panel (`RunEndPanel`) — NOT STARTED
+## 5.1 Victory / Defeat Panel (`RunEndPanel`) — DONE
 
 Full-width band: center victory/defeat **image**, left column text (end title, "Fight n/20", streak, "Previous best: n (new record!)", leaderboard submit), right column buttons (**Quit**, **Stats**, mode extras like "ANOTHER!" in Instant). Buttons are invisible until a ~2 s slide/fade completes. **No keyboard handling at all.**
 
-## 5.2 End-of-Run Stats (`GameEndStatsPanel`) — NOT STARTED
+> **Coverage:** `DialogPhaseScreen` reads `RunEndPhase.endPanel` like the other screen-floating
+dialogs; the screen announces itself with the mode's own end title plus Victory/Defeat (read
+from the phase's `victory` flag). Left-column text and right-column buttons emit as nodes once
+the slide-in makes them visible (the immediate-mode build picks them up the frame they appear).
+Verified live over a demo run: title, fight progress, Quit and Stats buttons all read, Stats
+activates. The keyboard absence is moot — the navigator provides activation.
+
+## 5.2 End-of-Run Stats (`GameEndStatsPanel`) — DONE
 
 - Header: "\<mode\> \<difficulty\> — Victory/Defeat", "Fight n/20"
 - Modifier list (small panels, right-click for detail)
@@ -528,14 +535,33 @@ Full-width band: center victory/defeat **image**, left column text (end title, "
 - Two-column stats: Time, Turns, Undos, Rolls, crosses rolled / Kills, Dmg Taken, Blocked, Healed, Abilities
 - Party layout swatch (1-px color squares, no text)
 
-## 5.3 Fleeing and Restarting — NOT STARTED
+> **Coverage:** `RunEndStatsScreen`, model-driven: the panel's stats render as two parallel
+columns of separate name/value actors (association purely spatial) and heroes as portrait
+tiles, so instead of walking actors it rebuilds every line from the same `DungeonContext` and
+stats-map calls the panel uses — modifiers with full descriptions, per-hero death counts and
+equipped items, all ten stat lines correctly paired, and the party-layout swatch as the
+layout's name and colour list. Verified live. Ledger portrait tiles (`HeroLedgerView` /
+`MonsterLedgerView`) are also now named in the generic actor walker for wherever else they
+appear.
+
+## 5.3 Fleeing and Restarting — DONE
 
 - **Flee** (abandon run): cog menu → "Flee" → "Flee? (counts as a loss)" dialog
 - Restart: only via mode-specific affordances (Cursed family disallows; Nightmare/Paste can't restart)
 
-## 5.4 Cursed Loop Reset (`ResetPanel`) — NOT STARTED
+> **Coverage:** the cog menu and the flee confirmation are pushed modals the generic reader
+already covers — verified live: Flee reads with its "(counts as a loss)" warning, cancel and
+Escape both back out, and the in-run Quit → title → Continue round trip restores the run.
+Mode-specific restart buttons ride the run-end band reading (5.1).
+
+## 5.4 Cursed Loop Reset (`ResetPanel`) — DONE
 
 At each 20-fight loop boundary in the Cursed family: a purple panel ("You feel weaker. All your items disappear. Only curses remain…") with a single "never" button. Click only, no keys.
+
+> **Coverage:** `ResetPhase.resetPanel` is registered with `DialogPhaseScreen` — the purple
+text and the "never" button read and activate like every other dialog phase. Code-complete but
+not exercised live: it only occurs at a cursed-family loop boundary, and the cursed modes are
+locked in the dev demo build.
 
 ---
 
