@@ -28,7 +28,6 @@
   "future_schedule": "Turn schedule",
   "predicted_death_one": "a hero dies this turn",
   "predicted_deaths": "{n} heroes die this turn",
-  "no_keywords": "no keywords on this side",
   "timer": "time {time}",
   "clock": "clock {time}"
 }

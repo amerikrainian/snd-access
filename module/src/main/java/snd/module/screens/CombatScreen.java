@@ -187,7 +187,7 @@ public class CombatScreen extends AccessScreen {
                     rules = keywordRules(a.getDerivedEffects().getKeywords());
                 } catch (Throwable t) {
                     snd.core.SndLog.error("ability keyword rules failed", t);
-                    rules = Loc.get("combat", "no_keywords");
+                    rules = null;
                 }
                 host.speech().speak(rules, false);
             }
@@ -343,24 +343,25 @@ public class CombatScreen extends AccessScreen {
     }
 
     // "bloodlust: +1 pip for each damaged enemy" for every keyword on the
-    // rolled side's calculated effect.
+    // rolled side's calculated effect. Null when there is nothing to say —
+    // speak(null) is a no-op, so a keywordless side stays silent.
     static String sideKeywordRules(Ent ent) {
         try {
             EntSide side = ent.getDie().getCurrentSide();
             if (side == null) {
-                return Loc.get("combat", "no_keywords");
+                return null;
             }
             return keywordRules(side.findState(FightLog.Temporality.Present, ent)
                     .getCalculatedEffect().getKeywords());
         } catch (Throwable t) {
             snd.core.SndLog.error("side keyword rules failed", t);
-            return Loc.get("combat", "no_keywords");
+            return null;
         }
     }
 
     static String keywordRules(java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords) {
         if (keywords == null || keywords.isEmpty()) {
-            return Loc.get("combat", "no_keywords");
+            return null;
         }
         StringBuilder sb = new StringBuilder();
         for (com.tann.dice.gameplay.effect.eff.keyword.Keyword keyword : keywords) {
