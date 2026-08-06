@@ -68,8 +68,13 @@
   "icon.expand": "Expand",
   "icon.reroll": "Reroll",
   "icon.close": "Close",
+  "icon.display": "Display",
+  "icon.sound": "Sound",
+
+  "jukebox.now_playing": "now playing: {song}",
 
   "modal.dialog": "Dialog",
+  "modal.settings": "Settings dialog",
   "modal.unlabeled": "unlabeled {type}",
   "modal.empty_slot": "empty slot",
 

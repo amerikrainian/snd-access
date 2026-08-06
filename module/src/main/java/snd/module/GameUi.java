@@ -75,7 +75,12 @@ public final class GameUi {
         for (com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener l : gestureListeners(actor)) {
             if (l instanceof TannListener) {
                 any = true;
-                ((TannListener) l).action(0, 0, actor.getWidth() / 2f, actor.getHeight() / 2f);
+                TannListener tl = (TannListener) l;
+                // The game's own tap path: info() is the fallback when action()
+                // leaves the tap unhandled (info-only rows like "UI size").
+                if (!tl.action(0, 0, actor.getWidth() / 2f, actor.getHeight() / 2f)) {
+                    tl.info(0, actor.getWidth() / 2f, actor.getHeight() / 2f);
+                }
             }
         }
         return any || fireClick(actor);
@@ -83,19 +88,24 @@ public final class GameUi {
 
     /**
      * Right-click equivalent: the game's info() surface (details panels), on
-     * EVERY gesture listener — like a real right-click reaches them all.
+     * EVERY gesture listener — like a real right-click reaches them all. A
+     * real right-click also BUBBLES: an unhandled info walks up the ancestor
+     * chain (the cog menu's option panels carry their help listener on the
+     * panel group, not the rows).
      */
     public static boolean info(Actor actor) {
-        if (actor == null) {
-            return false;
-        }
-        boolean handled = false;
-        for (ActorGestureListener l : gestureListeners(actor)) {
-            if (l instanceof TannListener) {
-                handled |= ((TannListener) l).info(1, actor.getWidth() / 2f, actor.getHeight() / 2f);
+        for (Actor a = actor; a != null; a = a.getParent()) {
+            boolean handled = false;
+            for (ActorGestureListener l : gestureListeners(a)) {
+                if (l instanceof TannListener) {
+                    handled |= ((TannListener) l).info(1, a.getWidth() / 2f, a.getHeight() / 2f);
+                }
+            }
+            if (handled) {
+                return true;
             }
         }
-        return handled;
+        return false;
     }
 
     // Specifically the game's own listener type: plain ActorGestureListeners
@@ -205,6 +215,8 @@ public final class GameUi {
             m.put(com.tann.dice.statics.Images.padlock, "icon.locked");
             m.put(com.tann.dice.statics.Images.searchIcon, "icon.search");
             m.put(com.tann.dice.statics.Images.zoom2, "icon.expand");
+            m.put(com.tann.dice.statics.Images.esc_display, "icon.display");
+            m.put(com.tann.dice.statics.Images.esc_sound, "icon.sound");
             m.put(com.tann.dice.statics.Images.singleDie, "icon.reroll");
             m.put(com.tann.dice.statics.Images.reroll, "icon.reroll");
             m.put(com.tann.dice.statics.Images.ui_crossAlmanac, "icon.close");

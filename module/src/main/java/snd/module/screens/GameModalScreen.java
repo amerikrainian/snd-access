@@ -44,8 +44,16 @@ public class GameModalScreen extends AccessScreen {
         if (modal == null) {
             return;
         }
-        b.pushContext(Loc.get("ui", "modal.dialog"));
+        b.pushContext(Loc.get("ui", isCogMenu(modal) ? "modal.settings" : "modal.dialog"));
         ActorNodes.emit(b, modal);
         b.popContext();
+    }
+
+    // The cog/settings menu marks itself with a CogTag child — the same tag
+    // the game's own EscMenuUtils.refreshIfOnTop checks for.
+    private static boolean isCogMenu(Actor modal) {
+        return modal instanceof com.badlogic.gdx.scenes.scene2d.Group
+                && com.tann.dice.util.Tann.findByClass((com.badlogic.gdx.scenes.scene2d.Group) modal,
+                        com.tann.dice.screens.dungeon.DungeonUtils.CogTag.class) != null;
     }
 }

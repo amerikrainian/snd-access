@@ -76,10 +76,52 @@ final class ActorNodes {
             return;
         }
         if (actor instanceof Group) {
-            for (Actor child : ((Group) actor).getChildren()) {
+            Group group = (Group) actor;
+            String section = sectionTitle(group);
+            if (section != null) {
+                b.pushContext(section, Loc.get("ui", "role.group"));
+                emit(b, group.getChild(0));
+                b.popContext();
+                return;
+            }
+            for (Actor child : group.getChildren()) {
                 emit(b, child);
             }
         }
+    }
+
+    // DipPanel.makeTopPanelGroup — the game's titled-section idiom (the cog
+    // menu's "screen mode"/display/sound panels, the jukebox page's options):
+    // two bordered Pixl wrappers, body first, title floated over the body's
+    // top edge. The title names a context around the body's controls. A panel
+    // whose title is itself interactive (the almanac icon) or unnameable (an
+    // unknown icon) keeps the plain walk.
+    private static String sectionTitle(Group group) {
+        if (group.getChildren().size != 2) {
+            return null;
+        }
+        Actor bodyWrap = group.getChild(0);
+        Actor titleWrap = group.getChild(1);
+        if (!(bodyWrap instanceof Group) || !(titleWrap instanceof Group)
+                || titleWrap.getY() <= bodyWrap.getY()) {
+            return null;
+        }
+        Group bw = (Group) bodyWrap;
+        Group tw = (Group) titleWrap;
+        if (bw.getChildren().size != 2 || tw.getChildren().size != 2
+                || !(bw.getChild(0) instanceof com.tann.dice.util.Rectactor)
+                || !(tw.getChild(0) instanceof com.tann.dice.util.Rectactor)) {
+            return null;
+        }
+        Actor title = tw.getChild(1);
+        if (GameUi.hasTannListener(title)) {
+            return null;
+        }
+        if (title instanceof TextWriter) {
+            String text = ((TextWriter) title).text;
+            return text != null && !text.trim().isEmpty() ? text : null;
+        }
+        return GameUi.iconNameUnder(title);
     }
 
     /** Walk an actor's children without re-dispatching on the actor itself. */
@@ -119,6 +161,9 @@ final class ActorNodes {
                         // Model label first: some achievement icons are text
                         // glyphs ("H5") that would win the text search.
                         String label = achievementTileName(actor);
+                        if (label == null) {
+                            label = nowPlayingLabel(actor);
+                        }
                         if (label == null) {
                             label = crypticButtonName(GameUi.labelOf(actor));
                         }
@@ -187,10 +232,19 @@ final class ActorNodes {
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
-                GameUi.info(actor);
+                GameUi.info(infoTarget(actor));
             }
         };
         return vt;
+    }
+
+    // A ChOption radio row's own info listener is a dead end — the game builds
+    // it with null extra text yet it reports the click handled. The option's
+    // real description listens on the enclosing panel, so start the bubble
+    // above the row.
+    private static Actor infoTarget(Actor actor) {
+        return findCheckbox(actor) instanceof com.tann.dice.util.ui.RadioCheckbox
+                && actor.getParent() != null ? actor.getParent() : actor;
     }
 
     // "Basic" (or "Basic, r: 0.1") → "orange, yellow, grey, red, blue" from
@@ -216,6 +270,27 @@ final class ActorNodes {
                     sb.append(col == null ? Loc.get("ui", "value.random") : col.name());
                 }
                 return sb.length() > 0 ? sb.toString() : null;
+            }
+        }
+        return null;
+    }
+
+    // The jukebox's currently-playing row: a LiveText (the game's only one)
+    // over a progress bar. Name it from the model — the LiveText's own child
+    // text is empty until its first act() and lags a frame behind.
+    private static String nowPlayingLabel(Actor actor) {
+        if (!(actor instanceof Group)) {
+            return null;
+        }
+        for (Actor child : ((Group) actor).getChildren()) {
+            if (child instanceof com.tann.dice.util.ui.LiveText) {
+                try {
+                    return Loc.get("ui", "jukebox.now_playing", "song",
+                            ((com.tann.dice.util.ui.LiveText) child).fetchText());
+                } catch (Throwable t) {
+                    snd.core.SndLog.error("now-playing label failed", t);
+                    return null;
+                }
             }
         }
         return null;
