@@ -61,7 +61,7 @@ final class DiceWatcher {
             Boolean prev = lockStates.put(h, locked);
             if (prev != null && prev != locked) {
                 // A direct response to the player's toggle — supersedes.
-                speech.speak(GameText.t(h.getName(true)) + " "
+                speech.speak(GameUi.entName(h) + " "
                         + (locked ? GameText.t("locked") : Loc.get("combat", "unlocked")), true);
             }
         }
@@ -76,7 +76,7 @@ final class DiceWatcher {
             if (sb.length() > 0) {
                 sb.append(". ");
             }
-            sb.append(GameText.t(h.getName(true))).append(": ")
+            sb.append(GameUi.entName(h)).append(": ")
                     .append(CombatScreen.currentSideText(h));
         }
         if (sb.length() > 0) {

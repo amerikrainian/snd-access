@@ -267,7 +267,7 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return GameText.t(ent.getName(true));
+                        return GameUi.entName(ent);
                     }
                 }, AnnouncementKinds.LABEL),
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -279,6 +279,12 @@ public class CombatScreen extends AccessScreen {
                             return null;
                         }
                         return currentSideText(ent);
+                    }
+                }, AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return ent.isPlayer() ? null : targetsText(ds, ent);
                     }
                 }, AnnouncementKinds.VALUE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -375,7 +381,7 @@ public class CombatScreen extends AccessScreen {
     }
 
     static String sheetText(DungeonScreen ds, Ent ent) {
-        StringBuilder sb = new StringBuilder(GameText.t(ent.getName(true)));
+        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
         if (ent instanceof com.tann.dice.gameplay.content.ent.Hero) {
             sb.append(", ").append(Loc.get("combat", "level", "n",
                     ((com.tann.dice.gameplay.content.ent.Hero) ent).getLevel()));
@@ -457,7 +463,9 @@ public class CombatScreen extends AccessScreen {
         StringBuilder sb = new StringBuilder();
         int incoming = present.getIncomingDamage();
         if (incoming > 0) {
-            sb.append(Loc.get("combat", "incoming_damage", "n", incoming));
+            String from = ent.isPlayer() ? attackerNames(ds, ent) : null;
+            sb.append(from == null ? Loc.get("combat", "incoming_damage", "n", incoming)
+                    : Loc.get("combat", "incoming_damage_from", "n", incoming, "names", from));
         }
         int poison = future.getPoisonDamageTaken(true) - present.getPoisonDamageTaken(true);
         if (poison > 0) {
@@ -471,6 +479,40 @@ public class CombatScreen extends AccessScreen {
                 sb.append(", ");
             }
             sb.append(Loc.get("combat", future.isFled() ? "flees" : "dies"));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // "targets Thief, Fighter" — the monster's locked-in targets, from the
+    // same command walk the game's hover arrows and the hero-coloured
+    // stripes on the monster panel draw from (redirects resolved). Cross-side
+    // only: self and ally effects already read on the side text.
+    private static String targetsText(DungeonScreen ds, Ent ent) {
+        List<Ent> targets = new java.util.ArrayList<Ent>(
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getAllTargeters(ent, false));
+        StringBuilder sb = new StringBuilder();
+        for (Ent target : targets) {
+            if (target.isPlayer() != ent.isPlayer()) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(GameUi.entName(target));
+            }
+        }
+        return sb.length() > 0 ? Loc.get("combat", "targets", "names", sb.toString()) : null;
+    }
+
+    // The enemies whose commands aim at this hero — the hover arrows' other
+    // direction.
+    private static String attackerNames(DungeonScreen ds, Ent ent) {
+        List<Ent> attackers = new java.util.ArrayList<Ent>(
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getAllTargeters(ent, true));
+        StringBuilder sb = new StringBuilder();
+        for (Ent attacker : attackers) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(GameUi.entName(attacker));
         }
         return sb.length() > 0 ? sb.toString() : null;
     }

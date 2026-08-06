@@ -108,6 +108,41 @@ public final class GameUi {
         return false;
     }
 
+    /**
+     * "Wolf 2" — a combatant's spoken name, numbered among same-name entities
+     * in its visible column (heroes keep dead slots, dead monsters vanish) so
+     * attack attribution matches what column navigation reads. Plain name
+     * when unique or no fight is live.
+     */
+    public static String entName(com.tann.dice.gameplay.content.ent.Ent ent) {
+        String name = ent.getName(true);
+        try {
+            com.tann.dice.screens.dungeon.DungeonScreen ds = com.tann.dice.screens.dungeon.DungeonScreen.get();
+            com.tann.dice.gameplay.fightLog.FightLog fightLog = ds != null ? ds.getFightLog() : null;
+            if (fightLog != null) {
+                List<com.tann.dice.gameplay.content.ent.Ent> column = fightLog
+                        .getSnapshot(com.tann.dice.gameplay.fightLog.FightLog.Temporality.Present)
+                        .getEntities(ent.isPlayer(), ent.isPlayer() ? null : Boolean.FALSE);
+                int count = 0;
+                int index = 0;
+                for (com.tann.dice.gameplay.content.ent.Ent other : column) {
+                    if (name.equals(other.getName(true))) {
+                        count++;
+                        if (other == ent) {
+                            index = count;
+                        }
+                    }
+                }
+                if (count > 1 && index > 0) {
+                    return Loc.get("combat", "numbered_name", "name", GameText.t(name), "n", index);
+                }
+            }
+        } catch (Throwable t) {
+            SndLog.error("ent name numbering failed", t);
+        }
+        return GameText.t(name);
+    }
+
     // Specifically the game's own listener type: plain ActorGestureListeners
     // (a ScrollPane's built-in scroll handling) are not activation surfaces.
     public static boolean hasTannListener(Actor actor) {

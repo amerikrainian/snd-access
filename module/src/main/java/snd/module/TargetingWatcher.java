@@ -75,7 +75,7 @@ final class TargetingWatcher {
             return eff;
         }
         String text = Loc.get("combat", "applied",
-                "eff", eff, "target", GameText.t(command.target.getName(true)));
+                "eff", eff, "target", GameUi.entName(command.target));
         // Player damage resolves in the Present immediately — a kill vanishes
         // from the enemy column with only a death animation to show for it.
         com.tann.dice.gameplay.fightLog.EntState after =
