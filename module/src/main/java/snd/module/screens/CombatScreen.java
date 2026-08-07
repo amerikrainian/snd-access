@@ -185,7 +185,7 @@ public class CombatScreen extends AccessScreen {
             public void run() {
                 String rules;
                 try {
-                    rules = keywordRules(a.getDerivedEffects().getKeywords());
+                    rules = keywordRules(a.getDerivedEffects());
                 } catch (Throwable t) {
                     snd.core.SndLog.error("ability keyword rules failed", t);
                     rules = null;
@@ -380,14 +380,22 @@ public class CombatScreen extends AccessScreen {
                 return null;
             }
             return keywordRules(side.findState(FightLog.Temporality.Present, ent)
-                    .getCalculatedEffect().getKeywords());
+                    .getCalculatedEffect());
         } catch (Throwable t) {
             snd.core.SndLog.error("side keyword rules failed", t);
             return null;
         }
     }
 
-    static String keywordRules(java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords) {
+    // The game's keyword box composition (KUtils.makeActor): the effect's
+    // display-filtered keywords, each rules text parameterized by the source
+    // effect — halved and treble rewrite their numbers from it.
+    static String keywordRules(com.tann.dice.gameplay.effect.eff.Eff e) {
+        if (e == null) {
+            return null;
+        }
+        java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords =
+                e.getKeywordsForDisplay(true);
         if (keywords == null || keywords.isEmpty()) {
             return null;
         }
@@ -397,7 +405,7 @@ public class CombatScreen extends AccessScreen {
                 sb.append(". ");
             }
             sb.append(GameText.t(keyword.getColourTaggedString()))
-                    .append(": ").append(GameText.t(keyword.getRules()));
+                    .append(": ").append(GameText.t(keyword.getRules(e)));
         }
         return sb.toString();
     }

@@ -137,7 +137,7 @@ public class SheetScreen extends AccessScreen {
                     try {
                         rules = CombatScreen.keywordRules(sides[index]
                                 .findState(FightLog.Temporality.Present, ent)
-                                .getCalculatedEffect().getKeywords());
+                                .getCalculatedEffect());
                     } catch (Throwable t) {
                         SndLog.error("sheet side keyword rules failed", t);
                         rules = null;
