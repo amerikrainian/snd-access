@@ -104,6 +104,7 @@
 
   "confirm.becomes": "becomes {name}",
 
+  "tutorial.hp_legend": "Reading the hp display: hp, incoming damage, and incoming poison are spoken with each character",
   "tutorial.tip": "tip",
   "tutorial.todo": "quest, to do",
   "tutorial.done": "quest, done",

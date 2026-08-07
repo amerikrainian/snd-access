@@ -63,7 +63,16 @@ final class TutorialNodes {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return item.getSortText();
+                            String text = item.getSortText();
+                            // The one actor-only tip: the pip-colour legend
+                            // (HpGrid.makeTutorial). Its sort text is the
+                            // actor's internal name; speak the tip's purpose
+                            // instead — the pips' meanings are already spoken
+                            // in words on every character here.
+                            if ("hp display show thing".equals(text)) {
+                                return Loc.get("ui", "tutorial.hp_legend");
+                            }
+                            return text;
                         }
                     }, AnnouncementKinds.LABEL),
                     NodeAnnouncement.kinded(new Supplier<String>() {
