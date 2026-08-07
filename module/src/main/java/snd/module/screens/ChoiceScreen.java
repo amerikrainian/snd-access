@@ -111,6 +111,13 @@ public class ChoiceScreen extends AccessScreen {
         for (int i = 0; i < options.size(); i++) {
             final Choosable option = options.get(i);
             final int index = i;
+            // A level-up offer is a whole character sheet in the game (the
+            // EntPanelInventory panel); it reads as a row — the choose button
+            // followed by the sheet's nodes — instead of one tooltip burst.
+            final boolean levelup = option instanceof LevelupHeroChoosable;
+            if (levelup) {
+                b.startRow("levelup");
+            }
             NodeVtable vt = new NodeVtable();
             vt.controlType = optional ? ControlTypes.TEXT : ControlTypes.BUTTON;
             vt.announcements = Arrays.asList(
@@ -136,7 +143,7 @@ public class ChoiceScreen extends AccessScreen {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return effectOf(option, index);
+                            return levelup ? null : effectOf(option, index);
                         }
                     }, AnnouncementKinds.TOOLTIP));
             if (!optional) {
@@ -160,6 +167,10 @@ public class ChoiceScreen extends AccessScreen {
                 };
             }
             b.addItem(ControlId.referenced(option, CompositeKey.of("choice", i, option.getSaveString())), vt);
+            if (levelup) {
+                buildLevelupSheet(b, (LevelupHeroChoosable) option, index);
+                b.endRow();
+            }
         }
 
         if ("UpToNumber".equals(style)) {
@@ -477,9 +488,121 @@ public class ChoiceScreen extends AccessScreen {
         return ds.getDungeonContext().getParty().getHeroFor(option.getHeroType(), index);
     }
 
-    // The upgraded hero's full character sheet — the same numbers the offer's
-    // EntPanelInventory renders, from a hypothetical hero built the way the
-    // game builds its panel.
+    // The offer's sheet as sibling nodes in the option's row — the same
+    // per-side treatment as the combat sheet (SheetScreen): level and hp, the
+    // six sides with keyword rules on the tooltip key, items, passives.
+    private void buildLevelupSheet(GraphBuilder b, final LevelupHeroChoosable option, final int index) {
+        final Hero upgraded = upgradedHero(option, index);
+        if (upgraded == null) {
+            return;
+        }
+        final EntState blank = upgraded.getBlankState();
+
+        NodeVtable header = new NodeVtable();
+        header.controlType = ControlTypes.TEXT;
+        header.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("combat", "level", "n", upgraded.getLevel())
+                        + ", " + blank.getMaxHp() + " " + GameText.t("hp");
+            }
+        }, AnnouncementKinds.LABEL));
+        // Structural ids only: the option's reference belongs to its choose
+        // node alone — a shared reference would pull tier-1 focus
+        // reconciliation to an arbitrary sibling on every rebuild.
+        b.addItem(ControlId.structural(CompositeKey.of("choice", index, "lvl")), header);
+
+        for (int s = 0; s < 6; s++) {
+            final int side = s;
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.TEXT;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return (side + 1) + ": " + GameText.t(blank.getSideState(side).describe());
+                }
+            }, AnnouncementKinds.LABEL));
+            vt.onTooltip = new Runnable() {
+                @Override
+                public void run() {
+                    String rules;
+                    try {
+                        rules = CombatScreen.keywordRules(blank.getSideState(side).getCalculatedEffect());
+                    } catch (Throwable t) {
+                        SndLog.error("levelup side keyword rules failed", t);
+                        rules = null;
+                    }
+                    host.speech().speak(rules, false);
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("choice", index, "side", side)), vt);
+        }
+
+        List<com.tann.dice.gameplay.content.item.Item> items = upgraded.getItems();
+        if (items != null) {
+            for (int n = 0; n < items.size(); n++) {
+                final com.tann.dice.gameplay.content.item.Item item = items.get(n);
+                NodeVtable vt = new NodeVtable();
+                vt.controlType = ControlTypes.TEXT;
+                vt.announcements = Arrays.asList(
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return GameText.t(item.getName());
+                            }
+                        }, AnnouncementKinds.LABEL),
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                String desc = item.getDescription();
+                                return desc == null || desc.trim().isEmpty()
+                                        ? null : GameText.t(desc);
+                            }
+                        }, AnnouncementKinds.VALUE));
+                b.addItem(ControlId.structural(CompositeKey.of("choice", index, "item", n)), vt);
+            }
+        }
+
+        int n = 0;
+        for (com.tann.dice.gameplay.trigger.personal.Personal p : blank.getActivePersonals()) {
+            if (!p.hasImage()) {
+                continue; // invisible mechanics don't show on the panel either
+            }
+            final com.tann.dice.gameplay.trigger.personal.Personal personal = p;
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.TEXT;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameText.t(personal.describeForTriggerPanel());
+                }
+            }, AnnouncementKinds.LABEL));
+            b.addItem(ControlId.structural(CompositeKey.of("choice", index, "passive", n)), vt);
+            n++;
+        }
+    }
+
+    // The hypothetical upgraded hero, built the way makeChoosableActor builds
+    // the offer's panel.
+    private static Hero upgradedHero(LevelupHeroChoosable option, int index) {
+        try {
+            DungeonScreen ds = DungeonScreen.get();
+            if (ds == null) {
+                return null;
+            }
+            HeroType ht = option.getHeroType();
+            Hero target = targetHero(option, index);
+            Hero upgraded = (target != null ? target.transformLevelup(ht) : ht).makeEnt();
+            upgraded.setRealFightLog(ds.getFightLog());
+            return upgraded;
+        } catch (Throwable t) {
+            SndLog.error("failed to build the upgraded-hero preview", t);
+            return null;
+        }
+    }
+
+    // The upgraded hero's full character sheet as one burst — for level-ups
+    // nested inside composite (or-style) options, which stay single nodes.
     private static String levelupSheet(LevelupHeroChoosable option, int index) {
         DungeonScreen ds = DungeonScreen.get();
         if (ds == null) {
