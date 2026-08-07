@@ -45,7 +45,13 @@ public class GameModalScreen extends AccessScreen {
             return;
         }
         b.pushContext(Loc.get("ui", isCogMenu(modal) ? "modal.settings" : "modal.dialog"));
-        ActorNodes.emit(b, modal);
+        if (modal instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) {
+            // A choosable's big panel reads from the model, not the actors.
+            ChoosablePanelNodes.emit(b,
+                    (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) modal);
+        } else {
+            ActorNodes.emit(b, modal);
+        }
         b.popContext();
     }
 
