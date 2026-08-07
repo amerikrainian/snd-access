@@ -20,6 +20,7 @@ import com.tann.dice.gameplay.phase.gameplay.SurrenderPhase;
 import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.dungeon.TargetingManager;
+import com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager;
 
 import snd.core.HostServices;
 import snd.core.graph.AnnouncementKinds;
@@ -329,12 +330,33 @@ public class CombatScreen extends AccessScreen {
                 ds.targetingManager.clicked(ent, true);
             }
         };
-        // The full character sheet (the right-click EntPanelInventory), as
-        // one readout: name, level, hp, die net, equipped items, statuses.
+        // The right-click route: pushes the game's character sheet (the
+        // EntPanelInventory, a light modal) — SheetScreen reads it as
+        // navigable nodes. The game refuses the panel for a dead ent, so the
+        // sheet's skull rule is spoken directly instead of failing silently.
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
-                host.speech().speak(sheetText(ds, ent), false);
+                // The tutorial hooks EntPanelCombat's info listener fires on
+                // this same gesture.
+                TutorialManager tm = ds.getTutorialManager();
+                if (ent.isPlayer()) {
+                    tm.onAction(TutorialManager.TutorialAction.DieInfo);
+                }
+                tm.onAction(ent.isPlayer() ? TutorialManager.TutorialAction.HeroPanelInfo
+                        : TutorialManager.TutorialAction.MonsterPanelInfo, ent);
+                EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+                if (present != null && present.isDead()) {
+                    StringBuilder sb = new StringBuilder(GameUi.entName(ent));
+                    sb.append(", ").append(Loc.get("combat", "defeated"));
+                    if (ent.isPlayer()) {
+                        // The sheet's skull-tag rule, the game's own sentence.
+                        sb.append(". ").append(GameText.t("Heroes defeated last fight return with half hp"));
+                    }
+                    host.speech().speak(sb.toString(), false);
+                    return;
+                }
+                ds.targetingManager.clicked(ent, false);
             }
         };
         // The current side's keyword rules — the game shows these only in
@@ -380,46 +402,6 @@ public class CombatScreen extends AccessScreen {
         return sb.toString();
     }
 
-    static String sheetText(DungeonScreen ds, Ent ent) {
-        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
-        if (ent instanceof com.tann.dice.gameplay.content.ent.Hero) {
-            sb.append(", ").append(Loc.get("combat", "level", "n",
-                    ((com.tann.dice.gameplay.content.ent.Hero) ent).getLevel()));
-        }
-        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-        String health = healthText(ds, ent);
-        if (health != null) {
-            sb.append(", ").append(health);
-        }
-        if (present != null && present.isDead()) {
-            sb.append(", ").append(Loc.get("combat", "defeated"));
-            if (ent.isPlayer()) {
-                // The sheet's skull-tag rule, the game's own sentence.
-                sb.append(". ").append(GameText.t("Heroes defeated last fight return with half hp"));
-            }
-        }
-        sb.append(". ").append(dieNetText(ent));
-        List<com.tann.dice.gameplay.content.item.Item> items = ent.getItems();
-        if (items != null && !items.isEmpty()) {
-            sb.append(". ").append(GameText.t("Items")).append(": ");
-            for (int i = 0; i < items.size(); i++) {
-                if (i > 0) {
-                    sb.append("; ");
-                }
-                sb.append(GameText.t(items.get(i).getName()));
-                String desc = items.get(i).getDescription();
-                if (desc != null && !desc.trim().isEmpty()) {
-                    sb.append(", ").append(GameText.t(desc));
-                }
-            }
-        }
-        String statuses = statusText(ds, ent);
-        if (statuses != null) {
-            sb.append(". ").append(statuses);
-        }
-        return sb.toString();
-    }
-
     // "defeated" for a dead hero's greyed panel; "locked" while rolling (the
     // slide-to-panel visual); "used" while targeting (the dark overlay, its
     // only visual cue).
@@ -439,7 +421,7 @@ public class CombatScreen extends AccessScreen {
     }
 
     // The HP pip grid and shield badge, as text: "8 of 10 hp, shield 2".
-    private static String healthText(DungeonScreen ds, Ent ent) {
+    static String healthText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present == null) {
             return null;
@@ -517,25 +499,6 @@ public class CombatScreen extends AccessScreen {
         return sb.length() > 0 ? sb.toString() : null;
     }
 
-    // Each active buff/debuff's own description — the 5x5 icon grid's text.
-    private static String statusText(DungeonScreen ds, Ent ent) {
-        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-        if (present == null) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        for (com.tann.dice.gameplay.trigger.personal.Personal p : present.getActivePersonals()) {
-            if (!p.hasImage()) {
-                continue; // invisible mechanics don't show on the panel either
-            }
-            if (sb.length() > 0) {
-                sb.append(". ");
-            }
-            sb.append(GameText.t(p.describeForTriggerPanel()));
-        }
-        return sb.length() > 0 ? sb.toString() : null;
-    }
-
     private static boolean isValidTarget(DungeonScreen ds, Ent ent) {
         Targetable selected = ds.targetingManager.getSelectedTargetable();
         if (selected == null || !PhaseManager.get().getPhase().canTarget()) {
@@ -554,19 +517,6 @@ public class CombatScreen extends AccessScreen {
             return Loc.get("combat", "die_rolling");
         }
         return GameText.t(side.findState(FightLog.Temporality.Present, ent).describe());
-    }
-
-    private static String dieNetText(Ent ent) {
-        EntSide[] sides = ent.getSides();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < sides.length; i++) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(i + 1).append(": ")
-                    .append(GameText.t(sides[i].findState(FightLog.Temporality.Present, ent).describe()));
-        }
-        return sb.toString();
     }
 
     // ---- the phase's buttons: Reroll (n/max, rolling only) and the

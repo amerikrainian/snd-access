@@ -20,6 +20,7 @@ import snd.module.screens.InventoryScreen;
 import snd.module.screens.LevelEndScreen;
 import snd.module.screens.PauseRecoveryScreen;
 import snd.module.screens.RunEndStatsScreen;
+import snd.module.screens.SheetScreen;
 import snd.module.screens.TitleFlowScreen;
 
 /**
@@ -52,6 +53,7 @@ public class SndModule implements ModModule {
         screens.register(new ChoiceScreen(h));
         screens.register(new GameModalScreen());
         screens.register(new CombatScreen(h));
+        screens.register(new SheetScreen(h));
         screens.register(new LevelEndScreen(h));
         screens.register(new DialogPhaseScreen());
         screens.register(new InventoryScreen(h));

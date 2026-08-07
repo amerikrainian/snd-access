@@ -135,7 +135,7 @@ public class InventoryScreen extends AccessScreen {
             Runnable sheet = new Runnable() {
                 @Override
                 public void run() {
-                    host.speech().speak(CombatScreen.sheetText(ds, hero), false);
+                    host.speech().speak(SheetScreen.sheetText(ds, hero), false);
                 }
             };
             heroNode.onActivate = sheet;

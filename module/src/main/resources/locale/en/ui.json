@@ -99,6 +99,9 @@
   "glyph.skip_forward": "skip forward",
   "glyph.next_song": "next song",
 
+  "sheet.title": "{name} sheet",
+  "sheet.rolled": "rolled",
+
   "tutorial.tip": "tip",
   "tutorial.todo": "quest, to do",
   "tutorial.done": "quest, done",
