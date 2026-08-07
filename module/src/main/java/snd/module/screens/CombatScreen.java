@@ -319,6 +319,11 @@ public class CombatScreen extends AccessScreen {
                 // The digit-key route: toggles the lock while rolling, selects
                 // the side or applies the selection while targeting. A vetoed
                 // target names its reason (the explanel's red text, spoken).
+                if (!ent.isPlayer()) {
+                    // The tutorial hook EntPanelCombat's tap listener fires on
+                    // this same gesture, before the click resolves.
+                    ds.getTutorialManager().onAction(TutorialManager.TutorialAction.SelectMonster);
+                }
                 Targetable selected = ds.targetingManager.getSelectedTargetable();
                 if (selected != null && PhaseManager.get().getPhase().canTarget()) {
                     String reason = ds.targetingManager.getInvalidTargetReason(ent, selected, true);
