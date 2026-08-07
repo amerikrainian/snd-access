@@ -102,6 +102,8 @@
   "sheet.title": "{name} sheet",
   "sheet.rolled": "rolled",
 
+  "confirm.becomes": "becomes {name}",
+
   "tutorial.tip": "tip",
   "tutorial.todo": "quest, to do",
   "tutorial.done": "quest, done",

@@ -12,6 +12,7 @@ import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
 import snd.module.screens.BookScreen;
+import snd.module.screens.ChoiceConfirmScreen;
 import snd.module.screens.ChoiceScreen;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.DialogPhaseScreen;
@@ -52,6 +53,7 @@ public class SndModule implements ModModule {
         screens.register(new TitleFlowScreen(h));
         screens.register(new ChoiceScreen(h));
         screens.register(new GameModalScreen());
+        screens.register(new ChoiceConfirmScreen(h));
         screens.register(new CombatScreen(h));
         screens.register(new SheetScreen(h));
         screens.register(new LevelEndScreen(h));

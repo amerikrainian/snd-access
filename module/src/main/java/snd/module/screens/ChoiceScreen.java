@@ -385,7 +385,7 @@ public class ChoiceScreen extends AccessScreen {
     // An option's real identity: modifiers, items, and the special choosables
     // all self-describe through Choosable.getName (Or/And compose their
     // children, level-ups name the upgraded class).
-    private static String nameOf(Choosable option) {
+    static String nameOf(Choosable option) {
         try {
             String name = option.getName();
             if (name != null && !name.trim().isEmpty()) {
@@ -401,7 +401,7 @@ public class ChoiceScreen extends AccessScreen {
 
     // The short qualifier: the type word ("curse", "item"), the tier, and for
     // level-ups which hero upgrades.
-    private static String valueOf(Choosable option, int index) {
+    static String valueOf(Choosable option, int index) {
         StringBuilder sb = new StringBuilder();
         if (option instanceof LevelupHeroChoosable) {
             try {
@@ -433,7 +433,7 @@ public class ChoiceScreen extends AccessScreen {
     }
 
     // The full effect text — the same content the visual panels render.
-    private static String effectOf(Choosable option, int index) {
+    static String effectOf(Choosable option, int index) {
         try {
             if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
                 return GameText.t(((com.tann.dice.gameplay.modifier.Modifier) option).getFullDescription());
@@ -480,7 +480,7 @@ public class ChoiceScreen extends AccessScreen {
         }
     }
 
-    private static Hero targetHero(LevelupHeroChoosable option, int index) {
+    static Hero targetHero(LevelupHeroChoosable option, int index) {
         DungeonScreen ds = DungeonScreen.get();
         if (ds == null) {
             return null;
@@ -584,7 +584,7 @@ public class ChoiceScreen extends AccessScreen {
 
     // The hypothetical upgraded hero, built the way makeChoosableActor builds
     // the offer's panel.
-    private static Hero upgradedHero(LevelupHeroChoosable option, int index) {
+    static Hero upgradedHero(LevelupHeroChoosable option, int index) {
         try {
             DungeonScreen ds = DungeonScreen.get();
             if (ds == null) {
