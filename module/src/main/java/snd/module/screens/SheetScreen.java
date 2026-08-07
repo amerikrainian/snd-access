@@ -98,8 +98,9 @@ public class SheetScreen extends AccessScreen {
         if (pan == null || ds == null) {
             return;
         }
+        // No context label: screenName() already announces the title on
+        // attach, and a same-text context would read it out twice.
         final Ent ent = pan.ent;
-        b.pushContext(Loc.get("ui", "sheet.title", "name", GameUi.entName(ent)));
         b.beginStop("sheet");
 
         NodeVtable header = textVtable();
@@ -190,8 +191,6 @@ public class SheetScreen extends AccessScreen {
                 i++;
             }
         }
-
-        b.popContext();
     }
 
     /**
