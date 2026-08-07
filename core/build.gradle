@@ -8,3 +8,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 compileJava.options.release = 8
+// javac on the 21 toolchain calls release 8 obsolete; the game's bundled
+// OpenJ9 1.8 JRE fixes the target, so the [options] lint is noise here.
+compileJava.options.compilerArgs << '-Xlint:-options'
