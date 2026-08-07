@@ -146,6 +146,26 @@ public class ChoiceScreen extends AccessScreen {
                             return levelup ? null : effectOf(option, index);
                         }
                     }, AnnouncementKinds.TOOLTIP));
+            // The right-click route on an item option pushes a big panel with
+            // one rules box per referenced keyword; the tooltip key speaks
+            // the same boxes.
+            if (option instanceof com.tann.dice.gameplay.content.item.Item) {
+                final com.tann.dice.gameplay.content.item.Item item =
+                        (com.tann.dice.gameplay.content.item.Item) option;
+                vt.onTooltip = new Runnable() {
+                    @Override
+                    public void run() {
+                        String rules;
+                        try {
+                            rules = referencedKeywordRules(item.getReferencedKeywords());
+                        } catch (Throwable t) {
+                            SndLog.error("item keyword rules failed", t);
+                            rules = null;
+                        }
+                        host.speech().speak(rules, false);
+                    }
+                };
+            }
             if (!optional) {
                 vt.onActivate = new Runnable() {
                     @Override
@@ -385,6 +405,24 @@ public class ChoiceScreen extends AccessScreen {
     // An option's real identity: modifiers, items, and the special choosables
     // all self-describe through Choosable.getName (Or/And compose their
     // children, level-ups name the upgraded class).
+    // The big item panel's keyword boxes, as speech: each referenced keyword
+    // with its glossary rules.
+    static String referencedKeywordRules(
+            java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (com.tann.dice.gameplay.effect.eff.keyword.Keyword k : keywords) {
+            if (sb.length() > 0) {
+                sb.append(". ");
+            }
+            sb.append(GameText.t(k.getColourTaggedString()))
+                    .append(": ").append(GameText.t(k.getRules()));
+        }
+        return sb.toString();
+    }
+
     static String nameOf(Choosable option) {
         try {
             String name = option.getName();
