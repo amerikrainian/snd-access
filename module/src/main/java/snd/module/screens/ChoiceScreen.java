@@ -146,9 +146,25 @@ public class ChoiceScreen extends AccessScreen {
                             return levelup ? null : effectOf(option, index);
                         }
                     }, AnnouncementKinds.TOOLTIP));
-            // The right-click route on an item option pushes a big panel with
-            // one rules box per referenced keyword; the tooltip key speaks
-            // the same boxes.
+            // The right-click route: the option's big panel — description
+            // plus a rules box per referenced keyword — pushed the way
+            // ConcisePanel's info listener pushes its copy. It is a
+            // blocker-backed modal, so the generic modal reader takes over
+            // and Escape pops it. Level-ups keep their sheet rows instead.
+            if (!levelup) {
+                vt.onSecondary = new Runnable() {
+                    @Override
+                    public void run() {
+                        com.badlogic.gdx.scenes.scene2d.Actor big =
+                                option.makeChoosableActor(true, index);
+                        com.tann.dice.statics.sound.Sounds.playSound(
+                                com.tann.dice.statics.sound.Sounds.pip);
+                        com.tann.dice.Main.getCurrentScreen().push(big, 0.7F);
+                        com.tann.dice.util.Tann.center(big);
+                    }
+                };
+            }
+            // The tooltip key stays the quick keyword probe, same as sides.
             if (option instanceof com.tann.dice.gameplay.content.item.Item) {
                 final com.tann.dice.gameplay.content.item.Item item =
                         (com.tann.dice.gameplay.content.item.Item) option;
