@@ -333,6 +333,19 @@ public class CombatScreen extends AccessScreen {
                     }
                 }
                 ds.targetingManager.clicked(ent, true);
+                if (!ent.isPlayer()) {
+                    // Act-then-listen for the attack explanel: when this click
+                    // opened it, speak its payload — the rolled side, the
+                    // lit arrow's target, and the passives stack. The
+                    // toggle-close and the applied-attack case stay silent
+                    // (the TargetingWatcher reads applied commands).
+                    com.badlogic.gdx.scenes.scene2d.Actor top = ds.getTopPushedActor();
+                    EntSide side = ent.getDie().getCurrentSide();
+                    if (top instanceof com.tann.dice.screens.dungeon.panels.Explanel.Explanel && side != null
+                            && ((com.tann.dice.screens.dungeon.panels.Explanel.Explanel) top).isShowing(side)) {
+                        host.speech().speak(attackPanelText(ds, ent), true);
+                    }
+                }
             }
         };
         // The right-click route: pushes the game's character sheet (the
@@ -510,6 +523,27 @@ public class CombatScreen extends AccessScreen {
             sb.append(GameUi.entName(attacker));
         }
         return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // The attack explanel's payload: the calculated rolled side, the arrow's
+    // target, and the passives the panel stacks beneath itself — statuses and
+    // traits, on the panel's own showInDiePanel filter.
+    private static String attackPanelText(DungeonScreen ds, Ent ent) {
+        StringBuilder sb = new StringBuilder(currentSideText(ent));
+        String targets = targetsText(ds, ent);
+        if (targets != null) {
+            sb.append(", ").append(targets);
+        }
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present != null) {
+            for (com.tann.dice.gameplay.trigger.personal.Personal p : present.getActivePersonals()) {
+                if (!p.showInDiePanel()) {
+                    continue;
+                }
+                sb.append(". ").append(GameText.t(p.describeForTriggerPanel()));
+            }
+        }
+        return sb.toString();
     }
 
     private static boolean isValidTarget(DungeonScreen ds, Ent ent) {
