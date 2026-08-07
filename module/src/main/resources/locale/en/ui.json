@@ -98,6 +98,7 @@
   "glyph.skip_back": "skip back",
   "glyph.skip_forward": "skip forward",
   "glyph.next_song": "next song",
+  "glyph.help": "help",
 
   "sheet.title": "{name} sheet",
   "sheet.rolled": "rolled",

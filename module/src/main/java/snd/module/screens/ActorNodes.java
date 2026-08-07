@@ -321,6 +321,10 @@ final class ActorNodes {
             key = "glyph.skip_forward";
         } else if ("->".equals(clean)) {
             key = "glyph.next_song";
+        } else if ("?".equals(clean)) {
+            // The explanation button (the surrender dialog's purple ?);
+            // punctuation alone is silent in speech.
+            key = "glyph.help";
         }
         return key != null ? Loc.get("ui", key) : label;
     }
