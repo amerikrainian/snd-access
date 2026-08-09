@@ -274,10 +274,28 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
+                        // Every combat row is a button; silence the type's
+                        // role word rather than spend it on every scroll step.
+                        return null;
+                    }
+                }, AnnouncementKinds.ROLE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
                         // For a monster, the locked face IS its intent for the turn.
                         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-                        if (present != null && present.isDead()) {
-                            return null;
+                        if (present != null) {
+                            if (present.isDead()) {
+                                return null;
+                            }
+                            // A spent face is dead information — the row's
+                            // longest part drops on exactly the rows being
+                            // skipped. isUsed stays false for a multi-use die
+                            // that can still act.
+                            if (ent.isPlayer() && present.isUsed()
+                                    && PhaseManager.get().getPhase() instanceof TargetingPhase) {
+                                return null;
+                            }
                         }
                         return currentSideText(ent);
                     }
@@ -309,10 +327,12 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        // The valid-target border highlight, as a word.
-                        return isValidTarget(ds, ent) ? Loc.get("combat", "target_valid") : null;
+                        return invalidTargetText(ds, ent);
                     }
                 }, AnnouncementKinds.STATE));
+        // No auto "n of m": the roster is fixed for the whole fight, and
+        // names already number duplicates ("Bandit 2").
+        vt.speaksOwnPosition = true;
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
@@ -440,19 +460,24 @@ public class CombatScreen extends AccessScreen {
             return Loc.get("combat", "defeated");
         }
         if (PhaseManager.get().getPhase() instanceof TargetingPhase) {
-            return ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
-                    .getNumDiceUsedThisTurn(ent) > 0 ? Loc.get("combat", "used") : null;
+            // isUsed = exhausted (the dark overlay); a multi-use die that can
+            // still act is not called used.
+            return present != null && present.isUsed() ? Loc.get("combat", "used") : null;
         }
         return ent.getDie().getState().isLockedOrLocking() ? GameText.t("locked") : null;
     }
 
-    // The HP pip grid and shield badge, as text: "8 of 10 hp, shield 2".
+    // The HP pip grid and shield badge, as text: "4 of 8 hp, shield 2". The
+    // ceiling speaks only when it differs — full hp reads "9 hp". A corpse
+    // has no health readout ("defeated" covers it).
     static String healthText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-        if (present == null) {
+        if (present == null || present.isDead()) {
             return null;
         }
-        String text = Loc.get("combat", "hp", "hp", present.getHp(), "max", present.getMaxHp());
+        String text = present.getHp() >= present.getMaxHp()
+                ? Loc.get("combat", "hp_full", "hp", present.getHp())
+                : Loc.get("combat", "hp", "hp", present.getHp(), "max", present.getMaxHp());
         if (present.getShields() > 0) {
             text += ", " + GameText.t("Shield") + " " + present.getShields();
         }
@@ -465,7 +490,7 @@ public class CombatScreen extends AccessScreen {
     private static String previewText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
-        if (present == null || future == null) {
+        if (present == null || future == null || present.isDead()) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
@@ -546,14 +571,27 @@ public class CombatScreen extends AccessScreen {
         return sb.toString();
     }
 
-    private static boolean isValidTarget(DungeonScreen ds, Ent ent) {
+    // The valid-target border highlight, inverted to words: silence is the
+    // common case — a valid target, or a faction the selected effect cannot
+    // reach at all (an attack never touches your own heroes). "invalid"
+    // marks the informative exception: faction-mates are targetable but this
+    // ent is not (back row out of reach, damaged-only restrictions...).
+    private static String invalidTargetText(DungeonScreen ds, Ent ent) {
         Targetable selected = ds.targetingManager.getSelectedTargetable();
         if (selected == null || !PhaseManager.get().getPhase().canTarget()) {
-            return false;
+            return null;
         }
-        return TargetingManager.getValidTargets(
-                ds.getFightLog().getSnapshot(FightLog.Temporality.Present), selected, true)
-                .contains(ent);
+        List<Ent> valid = TargetingManager.getValidTargets(
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present), selected, true);
+        if (valid.contains(ent)) {
+            return null;
+        }
+        for (Ent v : valid) {
+            if (v.isPlayer() == ent.isPlayer()) {
+                return Loc.get("combat", "target_invalid");
+            }
+        }
+        return null;
     }
 
     /** The rolled side's calculated, buff-adjusted text, or "rolling" mid-tumble. */
