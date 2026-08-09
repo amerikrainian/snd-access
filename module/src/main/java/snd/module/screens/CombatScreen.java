@@ -484,24 +484,33 @@ public class CombatScreen extends AccessScreen {
         return text;
     }
 
-    // The damage preview the pips paint in colour: yellow = incoming
-    // blockable, green = incoming poison, the red flash = the Future
-    // snapshot's death (grey = flees).
+    // The damage preview, computed the way the game's own hp grid computes
+    // its pip colours (HPHolder.setupStates): every part is a Present→Future
+    // diff of an EntState counter — yellow pips = blockable damage, green =
+    // poison. The net-hp remainder then catches every source the named
+    // counters miss (unblockable triggers, incoming heals, modded
+    // mechanics): a mechanic must move future hp to matter, so nothing
+    // incoming can stay silent. All parts enumerate under one "incoming"
+    // prefix: "incoming 6 damage from Bandit 2, 2 poison". The from-clause
+    // stays on the damage part — poison ticks from the buff, not from a
+    // current attacker.
     private static String previewText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
         if (present == null || future == null || present.isDead()) {
             return null;
         }
-        // One "incoming" prefix over an enumeration: "incoming 6 damage from
-        // Bandit 2, 2 poison". The from-clause stays on the damage part —
-        // poison ticks from the buff, not from a current attacker.
+        // Across a turn boundary the future counters have reset and diffs
+        // are meaningless — the game blanks its pip preview then too.
+        if (present.getSnapshot().getTurn() != future.getSnapshot().getTurn()) {
+            return null;
+        }
         StringBuilder parts = new StringBuilder();
-        int incoming = present.getIncomingDamage();
-        if (incoming > 0) {
+        int damage = future.getBlockableDamageTaken() - present.getBlockableDamageTaken();
+        if (damage > 0) {
             String from = ent.isPlayer() ? attackerNames(ds, ent) : null;
-            parts.append(from == null ? Loc.get("combat", "incoming_damage", "n", incoming)
-                    : Loc.get("combat", "incoming_damage_from", "n", incoming, "names", from));
+            parts.append(from == null ? Loc.get("combat", "incoming_damage", "n", damage)
+                    : Loc.get("combat", "incoming_damage_from", "n", damage, "names", from));
         }
         int poison = future.getPoisonDamageTaken(true) - present.getPoisonDamageTaken(true);
         if (poison > 0) {
@@ -509,6 +518,14 @@ public class CombatScreen extends AccessScreen {
                 parts.append(", ");
             }
             parts.append(Loc.get("combat", "incoming_poison", "n", poison));
+        }
+        int other = present.getHp() - future.getHp() - damage - poison;
+        if (other != 0) {
+            if (parts.length() > 0) {
+                parts.append(", ");
+            }
+            parts.append(other > 0 ? Loc.get("combat", "incoming_unblockable", "n", other)
+                    : Loc.get("combat", "incoming_healing", "n", -other));
         }
         StringBuilder sb = new StringBuilder();
         if (parts.length() > 0) {

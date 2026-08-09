@@ -16,6 +16,8 @@
   "incoming_damage": "{n} damage",
   "incoming_damage_from": "{n} damage from {names}",
   "incoming_poison": "{n} poison",
+  "incoming_unblockable": "{n} unblockable",
+  "incoming_healing": "{n} healing",
   "targets": "targets {names}",
   "numbered_name": "{name} {n}",
   "dies": "dies this turn",
