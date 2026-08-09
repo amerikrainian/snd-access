@@ -12,6 +12,7 @@ import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.LevelEndPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.core.SndLog;
 import snd.core.loc.Loc;
 import snd.core.speech.SpeechPipeline;
 
@@ -21,7 +22,8 @@ import snd.core.speech.SpeechPipeline;
  * of each round and the fight number on a fight's first round. Only the
  * gameplay/animation phases speak here — decision phases (ChoicePhase and the
  * other reward dialogs) have their own screens with their own announcements,
- * and unknown phases stay silent rather than reading class names. Polled from
+ * and unknown phases stay silent rather than reading class names — but are
+ * logged once per class, so a new phase can't slip by invisibly. Polled from
  * the module tick; the previous phase is remembered by identity only, for the
  * change diff.
  */
@@ -77,8 +79,18 @@ final class PhaseWatcher {
             resetStamps();
             return null;
         }
+        // Decision phases (the rewardPhase package) are announced by their
+        // own screens. Anything else is a phase this watcher has never met —
+        // a game update or mod could add one — and a phase change the player
+        // never hears is invisible, so leave a trace.
+        if (!p.getClass().getName().contains(".rewardPhase.")
+                && loggedUnknown.add(p.getClass().getName())) {
+            SndLog.info("phase with no announcement: " + p.getClass().getName());
+        }
         return null;
     }
+
+    private final java.util.Set<String> loggedUnknown = new java.util.HashSet<String>();
 
     private void resetStamps() {
         lastFight = null;

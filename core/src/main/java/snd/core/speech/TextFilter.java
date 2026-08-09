@@ -37,7 +37,14 @@ public final class TextFilter {
             out.append(c);
             i++;
         }
-        return collapseWhitespace(out.toString());
+        return collapseWhitespace(stripEmptyParens(out.toString()));
+    }
+
+    // Image-tag runs that lived inside parentheses ("([hp][p][hp][p])" —
+    // status magnitudes draw as pip icons) leave empty shells once the tags
+    // are stripped; drop the shells.
+    private static String stripEmptyParens(String s) {
+        return s.indexOf('(') < 0 ? s : s.replaceAll("\\(\\s*\\)", "");
     }
 
     private static String collapseWhitespace(String s) {

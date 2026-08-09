@@ -18,6 +18,7 @@ import com.tann.dice.gameplay.phase.gameplay.EnemyRollingPhase;
 import com.tann.dice.gameplay.phase.gameplay.PlayerRollingPhase;
 import com.tann.dice.gameplay.phase.gameplay.SurrenderPhase;
 import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
+import com.tann.dice.gameplay.trigger.personal.Personal;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.dungeon.TargetingManager;
 import com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager;
@@ -321,6 +322,12 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
+                        return statusText(ds, ent);
+                    }
+                }, AnnouncementKinds.ENABLED),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
                         return previewText(ds, ent);
                     }
                 }, AnnouncementKinds.ENABLED),
@@ -479,9 +486,34 @@ public class CombatScreen extends AccessScreen {
                 ? Loc.get("combat", "hp_full", "hp", present.getHp())
                 : Loc.get("combat", "hp", "hp", present.getHp(), "max", present.getMaxHp());
         if (present.getShields() > 0) {
-            text += ", " + GameText.t("Shield") + " " + present.getShields();
+            // "shielded 3", not "Shield 3" — a rolled Shield side in the same
+            // row would read as the same words twice.
+            text += ", " + Loc.get("combat", "shielded", "n", present.getShields());
         }
         return text;
+    }
+
+    // The TriggerPanel's icon strip, as text: every ACTIVE status/trait the
+    // panel draws, by its own panel description ("Poisoned 2 for 2 turns") —
+    // same visibility filter as TriggerPanel.draw, so a mechanic that shows
+    // an icon speaks, whatever added it. Statuses that are only incoming
+    // join the "incoming" enumeration in previewText instead.
+    private static String statusText(DungeonScreen ds, Ent ent) {
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present == null || present.isDead()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Personal p : present.getActivePersonals()) {
+            if (!p.showInEntPanel() || p.skipNetAndIcon()) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(GameText.t(p.describeForTriggerPanel()));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     // The damage preview, computed the way the game's own hp grid computes
@@ -508,7 +540,7 @@ public class CombatScreen extends AccessScreen {
         StringBuilder parts = new StringBuilder();
         int damage = future.getBlockableDamageTaken() - present.getBlockableDamageTaken();
         if (damage > 0) {
-            String from = ent.isPlayer() ? attackerNames(ds, ent) : null;
+            String from = attackerNames(ds, ent);
             parts.append(from == null ? Loc.get("combat", "incoming_damage", "n", damage)
                     : Loc.get("combat", "incoming_damage_from", "n", damage, "names", from));
         }
@@ -527,6 +559,21 @@ public class CombatScreen extends AccessScreen {
             parts.append(other > 0 ? Loc.get("combat", "incoming_unblockable", "n", other)
                     : Loc.get("combat", "incoming_healing", "n", -other));
         }
+        // Statuses that will land this turn — the icons TriggerPanel ghosts
+        // as incoming, mirrored with the game's own incoming test.
+        for (Personal p : future.getActivePersonals()) {
+            if (!p.showInEntPanel() || p.skipNetAndIcon() || !p.showAsIncoming()) {
+                continue;
+            }
+            Boolean incoming = Personal.treatAsIncoming(p, present.getActivePersonals());
+            if (incoming != null && !incoming) {
+                continue;
+            }
+            if (parts.length() > 0) {
+                parts.append(", ");
+            }
+            parts.append(GameText.t(p.describeForTriggerPanel()));
+        }
         StringBuilder sb = new StringBuilder();
         if (parts.length() > 0) {
             sb.append(Loc.get("combat", "incoming", "parts", parts.toString()));
@@ -535,21 +582,30 @@ public class CombatScreen extends AccessScreen {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(Loc.get("combat", future.isFled() ? "flees" : "dies"));
+            if (future.isFled()) {
+                sb.append(Loc.get("combat", "flees"));
+            } else {
+                // "overkill 2" says both that they die and by how much —
+                // whether a partial block can still save them.
+                int overkill = -future.getHp();
+                sb.append(overkill > 0 ? Loc.get("combat", "overkill", "n", overkill)
+                        : Loc.get("combat", "dies"));
+            }
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
 
     // "targets Thief, Fighter" — the monster's locked-in targets, from the
     // same command walk the game's hover arrows and the hero-coloured
-    // stripes on the monster panel draw from (redirects resolved). Cross-side
-    // only: self and ally effects already read on the side text.
+    // stripes on the monster panel draw from (redirects resolved). A monster
+    // supporting another monster shows the same arrow, so ally targets speak
+    // too; only self stays on the side text.
     private static String targetsText(DungeonScreen ds, Ent ent) {
         List<Ent> targets = new java.util.ArrayList<Ent>(
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getAllTargeters(ent, false));
         StringBuilder sb = new StringBuilder();
         for (Ent target : targets) {
-            if (target.isPlayer() != ent.isPlayer()) {
+            if (target != ent) {
                 if (sb.length() > 0) {
                     sb.append(", ");
                 }

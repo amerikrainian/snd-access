@@ -11,6 +11,7 @@ import com.tann.dice.gameplay.fightLog.command.Command;
 import com.tann.dice.gameplay.fightLog.command.TargetableCommand;
 import com.tann.dice.gameplay.phase.PhaseManager;
 import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
+import com.tann.dice.gameplay.trigger.personal.Personal;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
 import snd.core.SndLog;
@@ -63,8 +64,9 @@ final class TargetingWatcher {
         Targetable selected = ds.targetingManager.getSelectedTargetable();
         if (selected != lastSelected) {
             if (selected != null) {
-                speech.speak(GameText.t(selected.getDerivedEffects().describe(false))
-                        + ", " + Loc.get("ui", "state.selected"), true);
+                // Just the word: the player scrolled (or digit-keyed) the die
+                // to select it and already heard its side.
+                speech.speak(Loc.get("ui", "state.selected"), true);
             } else if (!applied) {
                 speech.speak(Loc.get("combat", "deselected"), true);
             }
@@ -112,29 +114,45 @@ final class TargetingWatcher {
         if (pre == null || post == null) {
             return null;
         }
+        StringBuilder sb = new StringBuilder();
         int hpLost = pre.getHp() - post.getHp();
         int shieldsLost = pre.getShields() - post.getShields();
         if (hpLost > 0 || shieldsLost > 0) {
             int dealt = Math.max(0, hpLost) + Math.max(0, shieldsLost);
-            String text = GameText.t(dealt + " damage");
+            sb.append(GameText.t(dealt + " damage"));
             if (shieldsLost > 0) {
-                text += ", " + (hpLost > 0
+                sb.append(", ").append(hpLost > 0
                         ? Loc.get("combat", "blocked_n", "n", shieldsLost)
                         : Loc.get("combat", "blocked_all"));
             }
-            return text;
-        }
-        StringBuilder gained = new StringBuilder();
-        if (hpLost < 0) {
-            gained.append(GameText.t("Heal " + -hpLost));
-        }
-        if (shieldsLost < 0) {
-            if (gained.length() > 0) {
-                gained.append(", ");
+        } else {
+            if (hpLost < 0) {
+                sb.append(GameText.t("Heal " + -hpLost));
             }
-            gained.append(GameText.t("Shield " + -shieldsLost));
+            if (shieldsLost < 0) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(GameText.t("Shield " + -shieldsLost));
+            }
         }
-        return gained.length() > 0 ? gained.toString() : null;
+        // Statuses the command put on the target (a rider's poison, a debuff
+        // side's wither) — the game's own incoming test against the
+        // before-state finds them, whatever mechanic added them.
+        for (Personal p : post.getActivePersonals()) {
+            if (!p.hasImage()) {
+                continue; // invisible mechanics don't show on the panel either
+            }
+            Boolean gained = Personal.treatAsIncoming(p, pre.getActivePersonals());
+            if (gained != null && !gained) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(GameText.t(p.describeForTriggerPanel()));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     // FightLog keeps its command list private; reading it beats re-deriving

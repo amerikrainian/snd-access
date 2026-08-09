@@ -35,6 +35,13 @@ class TextFilterTest {
     }
 
     @Test
+    void dropsParensEmptiedByImageTags() {
+        // A status magnitude drawn as pip icons: "Poisoned 2 (♥♥)".
+        assertEquals("Poisoned 2", TextFilter.clean("[notranslate][green]Poisoned[cu] 2 ([green][hp][p][hp][p][cu])"));
+        assertEquals("keep (this)", TextFilter.clean("keep (this)"));
+    }
+
+    @Test
     void nullAndEmptySafe() {
         assertEquals("", TextFilter.clean(null));
         assertEquals("", TextFilter.clean("[green][cu]"));

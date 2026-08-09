@@ -22,6 +22,8 @@
   "numbered_name": "{name} {n}",
   "dies": "dies this turn",
   "flees": "flees this turn",
+  "overkill": "overkill {n}",
+  "shielded": "shielded {n}",
   "defeated": "defeated",
   "level": "level {n}",
   "caster_defeated": "caster defeated",
