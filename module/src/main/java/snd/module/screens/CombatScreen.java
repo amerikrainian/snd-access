@@ -404,15 +404,37 @@ public class CombatScreen extends AccessScreen {
                 ds.targetingManager.clicked(ent, false);
             }
         };
-        // The current side's keyword rules — the game shows these only in
-        // the almanac glossary or the right-click explanation panel.
+        // The current side's keyword rules plus the statuses' full rules
+        // text — the row speaks only status names. The game shows both only
+        // in the almanac glossary or the right-click explanation panel.
         vt.onTooltip = new Runnable() {
             @Override
             public void run() {
-                host.speech().speak(sideKeywordRules(ent), false);
+                host.speech().speak(entTooltipText(ds, ent), false);
             }
         };
         return vt;
+    }
+
+    private static String entTooltipText(DungeonScreen ds, Ent ent) {
+        StringBuilder sb = new StringBuilder();
+        String rules = sideKeywordRules(ent);
+        if (rules != null) {
+            sb.append(rules);
+        }
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present != null) {
+            for (Personal p : present.getActivePersonals()) {
+                if (!p.showInEntPanel() || p.skipNetAndIcon()) {
+                    continue;
+                }
+                if (sb.length() > 0) {
+                    sb.append(". ");
+                }
+                sb.append(GameText.t(p.describeForTriggerPanel()));
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     // "bloodlust: +1 pip for each damaged enemy" for every keyword on the
@@ -494,10 +516,10 @@ public class CombatScreen extends AccessScreen {
     }
 
     // The TriggerPanel's icon strip, as text: every ACTIVE status/trait the
-    // panel draws, by its own panel description ("Poisoned 2 for 2 turns") —
-    // same visibility filter as TriggerPanel.draw, so a mechanic that shows
-    // an icon speaks, whatever added it. Statuses that are only incoming
-    // join the "incoming" enumeration in previewText instead.
+    // panel draws, by name — same visibility filter as TriggerPanel.draw, so
+    // a mechanic that shows an icon speaks, whatever added it. Full rules
+    // read on the tooltip key; statuses that are only incoming join the
+    // "incoming" enumeration in previewText instead.
     private static String statusText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present == null || present.isDead()) {
@@ -511,9 +533,35 @@ public class CombatScreen extends AccessScreen {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(GameText.t(p.describeForTriggerPanel()));
+            sb.append(GameText.t(statusName(p)));
         }
         return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    /**
+     * The status's name line — its own description up to the first [n]
+     * break, which is where multi-line statuses put their rules text
+     * ("Weakened 1[n]All sides reduced by 1") — with the buff's turns rider
+     * kept ("Weakened 1 for 2 turns"). Single-line statuses have no separate
+     * name and read whole. Rows and outcomes speak this; the tooltip key
+     * reads the full description.
+     */
+    public static String statusName(Personal p) {
+        String desc;
+        try {
+            desc = p.describeForSelfBuff();
+        } catch (Throwable t) {
+            // describeForTriggerPanel carries the game's own fallback.
+            return p.describeForTriggerPanel();
+        }
+        if (desc == null) {
+            return null;
+        }
+        int cut = desc.indexOf("[n]");
+        if (cut >= 0) {
+            desc = desc.substring(0, cut);
+        }
+        return p.buff != null ? desc + p.buff.getTurnsString() : desc;
     }
 
     // The damage preview, computed the way the game's own hp grid computes
@@ -572,7 +620,7 @@ public class CombatScreen extends AccessScreen {
             if (parts.length() > 0) {
                 parts.append(", ");
             }
-            parts.append(GameText.t(p.describeForTriggerPanel()));
+            parts.append(GameText.t(statusName(p)));
         }
         StringBuilder sb = new StringBuilder();
         if (parts.length() > 0) {

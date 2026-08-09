@@ -150,7 +150,7 @@ final class TargetingWatcher {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(GameText.t(p.describeForTriggerPanel()));
+            sb.append(GameText.t(CombatScreen.statusName(p)));
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
