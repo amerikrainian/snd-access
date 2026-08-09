@@ -149,8 +149,8 @@ class GraphAnnouncerTest {
 
     private static final ControlType TEST_BUTTON = new ControlType(
             "button",
-            new String[]{AnnouncementKinds.LABEL, AnnouncementKinds.ROLE, AnnouncementKinds.VALUE,
-                    AnnouncementKinds.ENABLED, AnnouncementKinds.POSITION},
+            new String[]{AnnouncementKinds.STATE, AnnouncementKinds.LABEL, AnnouncementKinds.ROLE,
+                    AnnouncementKinds.VALUE, AnnouncementKinds.ENABLED, AnnouncementKinds.POSITION},
             new Supplier<List<NodeAnnouncement>>() {
                 @Override
                 public List<NodeAnnouncement> get() {
@@ -186,6 +186,19 @@ class GraphAnnouncerTest {
                 NodeAnnouncement.kinded(fixed("Hold position"), AnnouncementKinds.LABEL));
 
         assertEquals("Hold position, button, on", GraphAnnouncer.composeFull(node));
+    }
+
+    @Test
+    void statePartSpeaksBeforeTheLabel() {
+        // Declared last, spoken first — and the first DECLARED part (the
+        // label, which search and dedupe read) is unaffected.
+        GraphNode node = typedNode(TEST_BUTTON,
+                NodeAnnouncement.kinded(fixed("Ranger"), AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(fixed("2 damage"), AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(fixed("used"), AnnouncementKinds.STATE));
+
+        assertEquals("used, Ranger, button, 2 damage", GraphAnnouncer.composeFull(node));
+        assertEquals("Ranger", GraphAnnouncer.firstPartText(node));
     }
 
     @Test

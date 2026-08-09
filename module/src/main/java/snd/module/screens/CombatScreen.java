@@ -293,7 +293,7 @@ public class CombatScreen extends AccessScreen {
                     public String get() {
                         return dieUseState(ds, ent);
                     }
-                }, AnnouncementKinds.SELECTED),
+                }, AnnouncementKinds.STATE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
@@ -312,7 +312,7 @@ public class CombatScreen extends AccessScreen {
                         // The valid-target border highlight, as a word.
                         return isValidTarget(ds, ent) ? Loc.get("combat", "target_valid") : null;
                     }
-                }, AnnouncementKinds.ENABLED));
+                }, AnnouncementKinds.STATE));
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
