@@ -7,6 +7,8 @@
   "target_valid": "valid target",
   "deselected": "deselected",
   "applied": "{eff}, on {target}",
+  "blocked_n": "{n} blocked",
+  "blocked_all": "all blocked",
   "used": "used",
   "hp": "{hp} of {max} hp",
   "incoming_damage": "incoming {n} damage",

@@ -4,7 +4,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import com.tann.dice.gameplay.effect.targetable.Targetable;
+import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.FightLog;
+import com.tann.dice.gameplay.fightLog.Snapshot;
 import com.tann.dice.gameplay.fightLog.command.Command;
 import com.tann.dice.gameplay.fightLog.command.TargetableCommand;
 import com.tann.dice.gameplay.phase.PhaseManager;
@@ -20,10 +22,11 @@ import snd.module.screens.CombatScreen;
  * Speaks the targeting loop's state changes, whichever input path caused them
  * (a digit key, a click, or the navigator): selecting a die or ability reads
  * its calculated effect (the pushed Explanel's content), deselecting says so,
- * and every applied command reads as "effect, on target" — the visual is only
+ * and every applied command reads as "outcome, on target" — the visual is only
  * a damage-preview repaint. Commands are read from the FightLog's own list
- * (its private pastCommands, reflectively), so the announcement can never
- * disagree with the model. Polled from the module tick.
+ * (its private pastCommands, reflectively), and the outcome is diffed from the
+ * command's own before/after snapshots, so the announcement can never disagree
+ * with the model. Polled from the module tick.
  */
 final class TargetingWatcher {
     private final SpeechPipeline speech;
@@ -70,7 +73,12 @@ final class TargetingWatcher {
     }
 
     private static String appliedText(DungeonScreen ds, TargetableCommand command) {
-        String eff = GameText.t(command.targetable.getDerivedEffects().describe(false));
+        String eff = command.target != null ? outcomeText(ds.getFightLog(), command) : null;
+        if (eff == null) {
+            // The side's own description — right for everything that leaves
+            // the target's hp and shields alone (buffs, group effects).
+            eff = GameText.t(command.targetable.getDerivedEffects().describe(false));
+        }
         if (command.target == null) {
             return eff;
         }
@@ -78,12 +86,55 @@ final class TargetingWatcher {
                 "eff", eff, "target", GameUi.entName(command.target));
         // Player damage resolves in the Present immediately — a kill vanishes
         // from the enemy column with only a death animation to show for it.
-        com.tann.dice.gameplay.fightLog.EntState after =
-                ds.getFightLog().getState(FightLog.Temporality.Present, command.target);
+        EntState after = ds.getFightLog().getState(FightLog.Temporality.Present, command.target);
         if (after != null && after.isDead()) {
             text += ", " + Loc.get("combat", "defeated");
         }
         return text;
+    }
+
+    /**
+     * What the command actually did to the target, diffed across the
+     * FightLog's own before/after snapshots. Target-conditional keywords
+     * (engage, cruel, wham...) multiply damage at resolution, so the side's
+     * description understates exactly when it matters; hp and shield deltas
+     * are the truth. Composed the way EffType.describe composes ("4 damage",
+     * "Heal 4"), so the game's #{n}-keyed translation applies. Null when
+     * neither hp nor shields moved.
+     */
+    private static String outcomeText(FightLog fightLog, TargetableCommand command) {
+        Snapshot before = fightLog.getSnapshotBefore(command);
+        Snapshot after = fightLog.getSnapshotAfter(command);
+        // Snapshot.getState is null for entities the snapshot doesn't hold,
+        // e.g. a target summoned mid-fight.
+        EntState pre = before != null ? before.getState(command.target) : null;
+        EntState post = after != null ? after.getState(command.target) : null;
+        if (pre == null || post == null) {
+            return null;
+        }
+        int hpLost = pre.getHp() - post.getHp();
+        int shieldsLost = pre.getShields() - post.getShields();
+        if (hpLost > 0 || shieldsLost > 0) {
+            int dealt = Math.max(0, hpLost) + Math.max(0, shieldsLost);
+            String text = GameText.t(dealt + " damage");
+            if (shieldsLost > 0) {
+                text += ", " + (hpLost > 0
+                        ? Loc.get("combat", "blocked_n", "n", shieldsLost)
+                        : Loc.get("combat", "blocked_all"));
+            }
+            return text;
+        }
+        StringBuilder gained = new StringBuilder();
+        if (hpLost < 0) {
+            gained.append(GameText.t("Heal " + -hpLost));
+        }
+        if (shieldsLost < 0) {
+            if (gained.length() > 0) {
+                gained.append(", ");
+            }
+            gained.append(GameText.t("Shield " + -shieldsLost));
+        }
+        return gained.length() > 0 ? gained.toString() : null;
     }
 
     // FightLog keeps its command list private; reading it beats re-deriving
