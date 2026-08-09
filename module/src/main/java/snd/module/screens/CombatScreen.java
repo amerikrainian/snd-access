@@ -493,19 +493,26 @@ public class CombatScreen extends AccessScreen {
         if (present == null || future == null || present.isDead()) {
             return null;
         }
-        StringBuilder sb = new StringBuilder();
+        // One "incoming" prefix over an enumeration: "incoming 6 damage from
+        // Bandit 2, 2 poison". The from-clause stays on the damage part —
+        // poison ticks from the buff, not from a current attacker.
+        StringBuilder parts = new StringBuilder();
         int incoming = present.getIncomingDamage();
         if (incoming > 0) {
             String from = ent.isPlayer() ? attackerNames(ds, ent) : null;
-            sb.append(from == null ? Loc.get("combat", "incoming_damage", "n", incoming)
+            parts.append(from == null ? Loc.get("combat", "incoming_damage", "n", incoming)
                     : Loc.get("combat", "incoming_damage_from", "n", incoming, "names", from));
         }
         int poison = future.getPoisonDamageTaken(true) - present.getPoisonDamageTaken(true);
         if (poison > 0) {
-            if (sb.length() > 0) {
-                sb.append(", ");
+            if (parts.length() > 0) {
+                parts.append(", ");
             }
-            sb.append(Loc.get("combat", "incoming_poison", "n", poison));
+            parts.append(Loc.get("combat", "incoming_poison", "n", poison));
+        }
+        StringBuilder sb = new StringBuilder();
+        if (parts.length() > 0) {
+            sb.append(Loc.get("combat", "incoming", "parts", parts.toString()));
         }
         if (future.isDead() && !present.isDead()) {
             if (sb.length() > 0) {
