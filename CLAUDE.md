@@ -100,8 +100,9 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   with a `cursor:` header; long-polls with `wait`. The tap is upstream of Prism, so it works with
   speech muted (`SND_NO_SPEECH=1` for headless runs — backend skipped, tap still fires).
 - `GET /log?since=N[&grep=S]` — the mod's log in-band (same cursor protocol).
-- `POST /input` — body is a verb (`up down left right enter escape space tab backspace z r i 1-9`
-  or `key:<code>`), driven through the game's own key path (`Screen.mainKeyPress`) — the same
+- `POST /input` — body is a verb (`up down left right enter escape space tab backspace z r i f1
+  1-9` or `key:<code>`; a `ctrl+`/`shift+` prefix drives the mod's key table with those modifiers
+  held — the mod's path only, since the game reads its modifiers from the live keyboard), driven through the game's own key path (`Screen.mainKeyPress`) — the same
   route the stage listener uses.
 - `POST /wait?timeout=MS` — body is a boolean Java expression, compiled once in the eval session
   and evaluated **every frame** on the render thread; returns `true` or `timeout`. Use instead of
@@ -176,6 +177,21 @@ Permanent/reloadable split (verified end-to-end):
   side descriptions) is English source the game translates at display time — route it through
   `GameText.t` (= the game's `Main.t`) before speaking. Actor text (`TextWriter.text`) is
   already translated at set time; never bridge it twice.
+- **Every key of the mod's own is bound in one table** (`SndKeys`, over `snd.core.input`):
+  `SndInput` resolves presses through it (most specific chord wins; held modifiers no chord asks
+  for are ignored), the key help reads labels and spoken chords from it, and the dev driver drives
+  it. Never add a keycode check anywhere else. A handler key states where it applies with
+  `.when(...)` — that one predicate gates the press and the help row. A handler key that does not
+  apply does nothing, silently, and is still consumed: fallen through, Ctrl+1 is the game's 1.
+  The Ctrl tiers of the digits are the glances' (Ctrl+1 = the focused unit's hp display); the
+  unassigned ones are bound to a silent placeholder for the same reason.
+- **The game's hotkeys are never in the table** — they are the game's, reached by fall-through. A
+  screen offers the ones live in its state from `AccessScreen.keys()`, gated on what the game's
+  own `keyPress` checks and labelled with the game's words (`GameKeys`).
+- **The key help (F1) declares nothing of its own.** It lists the screen's `keys()`, the handler
+  keys that are available, and the navigator keys the dry run (`GraphNavigator.wouldHandle`)
+  answers, at the moment it opens. `wouldHandle` mirrors `onAction` decision for decision —
+  change them together.
 - Only commit when asked. Gitignored: `game/`, `third_party/`, Gradle build dirs.
 
 ## Gotchas

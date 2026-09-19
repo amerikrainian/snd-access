@@ -1,5 +1,8 @@
 package snd.core.nav;
 
+import java.util.Collections;
+import java.util.List;
+
 import snd.core.graph.GraphBuilder;
 
 /**
@@ -41,5 +44,31 @@ public abstract class AccessScreen {
     /** The stop initial focus should land in, or null for the start node. */
     public Object initialFocusStop() {
         return null;
+    }
+
+    /**
+     * The keys that act here right now beyond the navigator's own (the game's
+     * hotkeys for the current state), read fresh from live game state each
+     * call. The key help lists them first.
+     */
+    public List<KeyOffer> keys() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Escape with no search to cancel. True = the screen took it; false lets
+     * it fall through to the game.
+     */
+    public boolean onCancel() {
+        return false;
+    }
+
+    /**
+     * While attached, keys the navigator leaves unconsumed stay with the mod
+     * instead of falling through to the game (an overlay of the mod's own,
+     * with the game's screen still live underneath).
+     */
+    public boolean exclusive() {
+        return false;
     }
 }

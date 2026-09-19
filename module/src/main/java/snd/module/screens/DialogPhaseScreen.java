@@ -1,7 +1,9 @@
 package snd.module.screens;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -19,6 +21,9 @@ import snd.core.SndLog;
 import snd.core.graph.GraphBuilder;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
+import snd.module.GameKeys;
+import snd.module.GameText;
 
 /**
  * The dialog-based event phases: challenge offers, the cursed chest, the
@@ -55,6 +60,20 @@ public class DialogPhaseScreen extends AccessScreen {
     @Override
     public String key() {
         return "dialog-phase";
+    }
+
+    // MessagePhase.keyPress / RandomRevealPhase.keyPress: Space is OK (their
+    // Enter and Backspace are the navigator's here). The two-choice dialogs
+    // answer only Enter and Backspace, so they offer nothing of their own.
+    @Override
+    public List<KeyOffer> keys() {
+        List<KeyOffer> keys = new ArrayList<KeyOffer>();
+        Phase p = currentDialogPhase();
+        if (p instanceof MessagePhase || p instanceof RandomRevealPhase) {
+            keys.add(GameKeys.key("ok", Loc.get("ui", "key.space"), GameText.t("ok"), GameKeys.SPACE));
+        }
+        keys.add(GameKeys.escape());
+        return keys;
     }
 
     @Override

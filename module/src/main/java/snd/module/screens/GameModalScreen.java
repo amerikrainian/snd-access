@@ -1,11 +1,15 @@
 package snd.module.screens;
 
+import java.util.List;
+
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.tann.dice.screens.dungeon.panels.book.Book;
 
 import snd.core.loc.Loc;
 import snd.core.graph.GraphBuilder;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
+import snd.module.GameKeys;
 import snd.module.GameUi;
 
 /**
@@ -21,6 +25,11 @@ public class GameModalScreen extends AccessScreen {
     @Override
     public String key() {
         return "game-modal";
+    }
+
+    @Override
+    public List<KeyOffer> keys() {
+        return GameKeys.escapeOnly();
     }
 
     @Override

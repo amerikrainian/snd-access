@@ -64,7 +64,8 @@ public final class ScreenManager {
         if (top != current) {
             current = top;
             nav.attach(top);
-            if (top != null && top.screenName() != null) {
+            // A quiet landing covers the returning screen's name too.
+            if (top != null && top.screenName() != null && !nav.quietLandingPending()) {
                 speech.speak(top.screenName(), true); // a new screen supersedes
             }
         }

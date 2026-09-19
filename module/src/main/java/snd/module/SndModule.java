@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputProcessor;
 import snd.core.HostServices;
 import snd.core.ModModule;
 import snd.core.SndLog;
+import snd.core.input.InputRegistry;
 import snd.core.loc.Loc;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
@@ -17,6 +18,7 @@ import snd.module.screens.ChoiceScreen;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.DialogPhaseScreen;
 import snd.module.screens.GameModalScreen;
+import snd.module.screens.HelpScreen;
 import snd.module.screens.InventoryScreen;
 import snd.module.screens.LevelEndScreen;
 import snd.module.screens.PauseRecoveryScreen;
@@ -34,6 +36,7 @@ public class SndModule implements ModModule {
     private GraphNavigator nav;
     private ScreenManager screens;
     private SndInput input;
+    private HelpScreen help;
     private PopupWatcher popups;
     private PhaseWatcher phases;
     private DiceWatcher dice;
@@ -62,7 +65,11 @@ public class SndModule implements ModModule {
         screens.register(new PauseRecoveryScreen());
         screens.register(new RunEndStatsScreen());
         screens.register(new BookScreen(h));
-        input = new SndInput(screens, nav);
+        help = new HelpScreen(h, nav);
+        screens.register(help);
+        InputRegistry keys = SndKeys.build(help, nav, h.speech());
+        help.setKeys(keys);
+        input = new SndInput(screens, nav, help, keys);
         popups = new PopupWatcher(h.speech());
         phases = new PhaseWatcher(h.speech());
         dice = new DiceWatcher(h.speech());
@@ -108,6 +115,7 @@ public class SndModule implements ModModule {
 
         reassertInput();
         screens.tick();
+        help.tick();
         popups.tick();
         phases.tick();
         dice.tick();
@@ -149,7 +157,7 @@ public class SndModule implements ModModule {
     @Override
     public String devCommand(String command, String arg) {
         if ("input".equals(command) && arg != null) {
-            return DevDriver.input(arg, nav);
+            return DevDriver.input(arg, input);
         }
         if ("screenshot".equals(command) && arg != null) {
             return DevDriver.screenshot(arg);

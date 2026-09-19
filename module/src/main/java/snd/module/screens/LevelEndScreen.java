@@ -36,7 +36,9 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
 import snd.module.ChoicePhases;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -99,6 +101,31 @@ public class LevelEndScreen extends AccessScreen {
             return null;
         }
         return GameText.t(ds.getDungeonContext().getLevelProgressString(false));
+    }
+
+    // LevelEndPhase.keyPress: a digit starts that reward, I opens the
+    // inventory. Enter (its Continue) is the navigator's here.
+    @Override
+    public List<KeyOffer> keys() {
+        List<KeyOffer> keys = new ArrayList<KeyOffer>();
+        LevelEndPhase p = phase();
+        if (p == null) {
+            return keys;
+        }
+        int pending = 0;
+        for (Phase nested : p.getNestedPhases()) {
+            if (!nested.hasActivated()) {
+                pending++;
+            }
+        }
+        if (pending > 0) {
+            keys.add(GameKeys.range("digits", GameKeys.digits(pending), Loc.get("ui", "help.start_reward")));
+        }
+        if (DungeonScreen.get().getDungeonContext().allowInventory()) {
+            keys.add(GameKeys.key("inventory", "I", GameText.t("Inventory"), GameKeys.I));
+        }
+        keys.add(GameKeys.escape());
+        return keys;
     }
 
     @Override

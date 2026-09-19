@@ -30,7 +30,9 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
 import snd.module.ChoicePhases;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -94,6 +96,26 @@ public class ChoiceScreen extends AccessScreen {
         }
         String top = ChoicePhases.topMessage(p);
         return top != null && !top.trim().isEmpty() ? GameText.t(top) + ", " + header : header;
+    }
+
+    // ChoicePhase.keyPress: a digit toggles that option; I opens the
+    // inventory where the phase shows its corner button (Phase.keyPress).
+    @Override
+    public List<KeyOffer> keys() {
+        List<KeyOffer> keys = new java.util.ArrayList<KeyOffer>();
+        ChoicePhase p = phase();
+        if (p == null) {
+            return keys;
+        }
+        int options = p.getOptions().size();
+        if (options > 0) {
+            keys.add(GameKeys.range("digits", GameKeys.digits(options), Loc.get("ui", "help.choose_option")));
+        }
+        if (p.showCornerInventory()) {
+            keys.add(GameKeys.key("inventory", "I", GameText.t("Inventory"), GameKeys.I));
+        }
+        keys.add(GameKeys.escape());
+        return keys;
     }
 
     @Override

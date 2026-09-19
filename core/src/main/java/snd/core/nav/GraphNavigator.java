@@ -18,6 +18,7 @@ import snd.core.graph.GraphState;
 import snd.core.graph.KeyGraph;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.GraphDir;
+import snd.core.graph.Transition;
 import snd.core.search.TypeAheadSearch;
 import snd.core.speech.SpeechPipeline;
 import snd.core.speech.TextFilter;
@@ -188,7 +189,9 @@ public final class GraphNavigator {
         if (lastSpokenKey == null || !lastSpokenKey.equals(node.id)) {
             // Queued (not interrupting): landings follow the screen name /
             // preceding feedback.
-            speak(GraphAnnouncer.compose(lastSpokenNode, node), false);
+            if (!takeQuietLanding()) {
+                speak(GraphAnnouncer.compose(lastSpokenNode, node), false);
+            }
             lastSpokenKey = node.id;
             lastSpokenNode = node;
         }
@@ -337,9 +340,173 @@ public final class GraphNavigator {
                 return true;
             }
             case CANCEL:
+                return screen != null && screen.onCancel();
             default:
                 return false;
         }
+    }
+
+    // ---- the dry run ----
+
+    /**
+     * The same decisions as {@link #onAction}, made without acting: an arrow
+     * where the focused node has a way that way (an edge, a value to adjust,
+     * a group to open or leave), Tab where there is another stop, Home/End
+     * where the node has siblings, Enter and the Backspace tiers where the
+     * node has the behavior. The key help lists exactly these.
+     */
+    public boolean wouldHandle(NavAction action) {
+        GraphNode node = graph != null && graph.rerender() ? graph.currentNode() : null;
+        if (node == null) {
+            return false;
+        }
+        switch (action) {
+            case UP:
+                return hasWay(node, GraphDir.UP);
+            case DOWN:
+                return hasWay(node, GraphDir.DOWN);
+            case LEFT:
+                return node.vtable.onAdjust != null || hasWay(node, GraphDir.LEFT)
+                        || (node.expandable && node.expanded) || hasFocusableAncestor(node);
+            case RIGHT:
+                return node.vtable.onAdjust != null || hasWay(node, GraphDir.RIGHT) || node.expandable;
+            case NEXT_STOP:
+                return hasStop(node, 1);
+            case PREV_STOP:
+                return hasStop(node, -1);
+            case HOME:
+                return KeyGraph.inTree(node) ? siblingEdge(node, true) != node : hasWay(node, GraphDir.UP);
+            case END:
+                return KeyGraph.inTree(node) ? siblingEdge(node, false) != node : hasWay(node, GraphDir.DOWN);
+            case REGION_PREV:
+            case REGION_NEXT:
+                return node.regionKey != null;
+            case ACTIVATE:
+                return node.vtable.onActivate != null;
+            case SECONDARY:
+                return node.vtable.onSecondary != null;
+            case TOOLTIP:
+                return node.vtable.onTooltip != null;
+            case CANCEL:
+                return search.isSearchActive();
+            default:
+                return false;
+        }
+    }
+
+    private boolean hasWay(GraphNode node, GraphDir dir) {
+        Transition t = node.transitions.get(dir);
+        GraphNode dest = t != null ? graph.current().nodeAt(t.destination) : null;
+        return dest != null && dest != node;
+    }
+
+    private boolean hasFocusableAncestor(GraphNode node) {
+        for (GraphNode p = node.parent; p != null; p = p.parent) {
+            if (p.focusable && graph.current().nodes.containsKey(p.id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Tab's own test: another stop that way, or a wrapping screen with more
+    // than one; from outside every stop, any stop at all.
+    private boolean hasStop(GraphNode node, int step) {
+        List<Object> stops = new ArrayList<Object>();
+        for (GraphNode n : graph.current().order) {
+            if (n.stopKey != null && !stops.contains(n.stopKey)) {
+                stops.add(n.stopKey);
+            }
+        }
+        int idx = stops.indexOf(node.stopKey);
+        if (idx < 0) {
+            return !stops.isEmpty();
+        }
+        int ni = idx + step;
+        return (ni >= 0 && ni < stops.size()) || (screen.wrap() && stops.size() > 1);
+    }
+
+    // Where Home/End land inside a tree: the first/last node sharing the
+    // focused node's parent.
+    private GraphNode siblingEdge(GraphNode node, boolean first) {
+        GraphNode target = node;
+        for (GraphNode n : graph.current().order) {
+            if (n.parent != node.parent) {
+                continue;
+            }
+            target = n;
+            if (first) {
+                break;
+            }
+        }
+        return target;
+    }
+
+    // ---- the quiet landing: an overlay of the mod's own that closes to run
+    // an action for the player brings the covered screen back; its name and
+    // landing stay unspoken, the focus being read after the action instead.
+    // Good for a short while only: a request nothing consumed (the covered
+    // screen went away meanwhile) must not swallow some later landing.
+
+    /** Frame counter; tests substitute their own. */
+    public interface FrameClock {
+        long frame();
+    }
+
+    private static final int QUIET_LANDING_FRAMES = 90;
+    private long quietLandingUntil = Long.MIN_VALUE;
+    private FrameClock frames = new FrameClock() {
+        @Override
+        public long frame() {
+            return snd.core.Dispatcher.frameCount();
+        }
+    };
+
+    public void setFrameClock(FrameClock clock) {
+        frames = clock;
+    }
+
+    public void quietNextLanding() {
+        quietLandingUntil = frames.frame() + QUIET_LANDING_FRAMES;
+    }
+
+    public boolean quietLandingPending() {
+        return frames.frame() <= quietLandingUntil;
+    }
+
+    private boolean takeQuietLanding() {
+        boolean quiet = quietLandingPending();
+        quietLandingUntil = Long.MIN_VALUE;
+        return quiet;
+    }
+
+    // ---- reading the focus back ----
+
+    /** The focused node's identity, or null. */
+    public ControlId focusedId() {
+        GraphNode node = graph != null ? graph.currentNode() : null;
+        return node != null ? node.id : null;
+    }
+
+    /** The focused node's label (its first announcement part), or null. */
+    public String focusedLabel() {
+        GraphNode node = graph != null ? graph.currentNode() : null;
+        return node != null ? GraphAnnouncer.firstPartText(node) : null;
+    }
+
+    /** Speak the focused node's own readout, queued, without its context. */
+    public void readFocus() {
+        if (graph == null || !graph.rerender()) {
+            return;
+        }
+        GraphNode node = graph.currentNode();
+        if (node == null) {
+            return;
+        }
+        speak(GraphAnnouncer.leafText(node), false);
+        lastSpokenKey = node.id;
+        lastSpokenNode = node;
+        liveKey = null;
     }
 
     private boolean arrow(GraphDir dir) {

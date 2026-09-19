@@ -22,6 +22,8 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -66,6 +68,17 @@ public class InventoryScreen extends AccessScreen {
     @Override
     public boolean wrap() {
         return true;
+    }
+
+    // PartyManagementPanel.keyPress: R randomises, I and Escape are Done.
+    // Enter (Done too) is the navigator's here.
+    @Override
+    public List<KeyOffer> keys() {
+        List<KeyOffer> keys = new ArrayList<KeyOffer>();
+        keys.add(GameKeys.key("randomize", "R", Loc.get("ui", "inv.randomize"), GameKeys.R));
+        keys.add(GameKeys.key("done", Loc.get("ui", "help.keys_or", "a", "I", "b", Loc.get("ui", "key.escape")),
+                Loc.get("ui", "inv.done"), GameKeys.ESCAPE));
+        return keys;
     }
 
     @Override

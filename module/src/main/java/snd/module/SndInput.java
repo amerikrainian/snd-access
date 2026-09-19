@@ -3,25 +3,34 @@ package snd.module;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 
+import snd.core.input.InputAction;
+import snd.core.input.InputRegistry;
 import snd.core.nav.GraphNavigator;
-import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
+import snd.module.screens.HelpScreen;
 
 /**
  * The mod's InputProcessor, kept at the HEAD of the game's InputMultiplexer
  * (reasserted every frame by the module tick, since the game rebuilds the
- * multiplexer in Main.setupScale). While an access screen is attached, nav
- * keys route to the navigator; everything unconsumed falls through to the
+ * multiplexer in Main.setupScale). A press resolves through the key table
+ * ({@link SndKeys}): navigator keys route to the navigator while an access
+ * screen is attached, handler keys (the key help, the glances) run where
+ * they apply, and everything unmatched or unconsumed falls through to the
  * game — its own hotkeys (1-9, R, Z, Space in combat, Escape's cog menu) keep
- * working. Never claims Escape unless a search is live.
+ * working. Escape is claimed only by a live search or a screen that takes it
+ * ({@code AccessScreen.onCancel}).
  */
 final class SndInput implements InputProcessor {
     private final ScreenManager screens;
     private final GraphNavigator nav;
+    private final HelpScreen help;
+    private final InputRegistry keys;
 
-    SndInput(ScreenManager screens, GraphNavigator nav) {
+    SndInput(ScreenManager screens, GraphNavigator nav, HelpScreen help, InputRegistry keys) {
         this.screens = screens;
         this.nav = nav;
+        this.help = help;
+        this.keys = keys;
     }
 
     // While the game's own text input holds stage keyboard focus, every key
@@ -39,48 +48,50 @@ final class SndInput implements InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if (textEntryActive() || !screens.ownsKeyboard()) {
-            return false;
-        }
         boolean shift = Gdx.input.isKeyPressed(59) || Gdx.input.isKeyPressed(60);
         boolean ctrl = Gdx.input.isKeyPressed(129) || Gdx.input.isKeyPressed(130);
-        NavAction action;
-        switch (keycode) {
-            case 19: // UP
-                action = ctrl ? NavAction.REGION_PREV : NavAction.UP;
-                break;
-            case 20: // DOWN
-                action = ctrl ? NavAction.REGION_NEXT : NavAction.DOWN;
-                break;
-            case 21: // LEFT
-                action = NavAction.LEFT;
-                break;
-            case 22: // RIGHT
-                action = NavAction.RIGHT;
-                break;
-            case 61: // TAB
-                action = shift ? NavAction.PREV_STOP : NavAction.NEXT_STOP;
-                break;
-            case 3: // HOME
-                action = NavAction.HOME;
-                break;
-            case 123: // END
-                action = NavAction.END;
-                break;
-            case 66: // ENTER
-            case 160: // NUMPAD_ENTER
-                action = NavAction.ACTIVATE;
-                break;
-            case 67: // BACKSPACE
-                action = shift ? NavAction.TOOLTIP : NavAction.SECONDARY;
-                break;
-            case 111: // ESCAPE — consumed only when a live search needs cancelling
-                action = NavAction.CANCEL;
-                break;
-            default:
-                return false;
+        return key(keycode, shift, ctrl);
+    }
+
+    /** A key press with its modifier state given (the dev driver fakes held modifiers here). */
+    boolean key(int keycode, boolean shift, boolean ctrl) {
+        if (textEntryActive()) {
+            return false;
         }
-        return nav.onAction(action);
+        help.keyPressed();
+        int digit = digitOf(keycode);
+        InputAction action = keys.match(keycode, digit, shift, ctrl);
+        boolean owns = screens.ownsKeyboard();
+        // An overlay of the mod's own keeps every key from the game beneath.
+        boolean exclusive = owns && screens.current().exclusive();
+        if (action == null) {
+            return exclusive;
+        }
+        if (action.nav != null) {
+            return owns && (nav.onAction(action.nav) || exclusive);
+        }
+        if (exclusive && !action.worksOverOverlay()) {
+            return true;
+        }
+        if (!action.isAvailable()) {
+            // Does nothing where it does not apply, and stays ours: fallen
+            // through, Ctrl+1 is the game's 1.
+            return true;
+        }
+        action.perform(digit);
+        return true;
+    }
+
+    // The game's own digit mapping (Tann.getDigit): NUM_1.. and NUMPAD_1..
+    // are digit 0.., so "1" is the first combatant.
+    private static int digitOf(int keycode) {
+        if (keycode >= 8 && keycode <= 16) {
+            return keycode - 8;
+        }
+        if (keycode >= 145 && keycode <= 153) {
+            return keycode - 145;
+        }
+        return -1;
     }
 
     @Override
@@ -90,7 +101,7 @@ final class SndInput implements InputProcessor {
         }
         boolean wasActive = nav.searchActive();
         nav.typeChar(character);
-        return wasActive || nav.searchActive();
+        return wasActive || nav.searchActive() || screens.current().exclusive();
     }
 
     @Override

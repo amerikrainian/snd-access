@@ -33,6 +33,9 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.GraphNavigator;
+import snd.core.nav.KeyOffer;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -59,6 +62,11 @@ public class CombatScreen extends AccessScreen {
 
     @Override
     public boolean isActive() {
+        return inFight();
+    }
+
+    /** A fight is on screen: the combat phases of the dungeon screen. */
+    public static boolean inFight() {
         if (!(com.tann.dice.Main.getCurrentScreen() instanceof DungeonScreen)) {
             return false;
         }
@@ -66,6 +74,34 @@ public class CombatScreen extends AccessScreen {
         return p instanceof EnemyRollingPhase || p instanceof PlayerRollingPhase
                 || p instanceof TargetingPhase || p instanceof DamagePhase
                 || p instanceof SurrenderPhase;
+    }
+
+    // ---- the vitals glance: on a hero or monster row, its hp display alone,
+    // without the rest of the row (side, targets, statuses) ----
+
+    /** The combatant whose row has the focus in the fight, or null anywhere else. */
+    public static Ent focusedUnit(GraphNavigator nav) {
+        if (!(nav.screen() instanceof CombatScreen) || !inFight()) {
+            return null;
+        }
+        ControlId focused = nav.focusedId();
+        return focused != null && focused.reference instanceof Ent ? (Ent) focused.reference : null;
+    }
+
+    /** "Ranger, 9 hp, shielded 2, incoming 6 damage from Bandit 2"; "Ranger, defeated" for a corpse. */
+    public static String vitalsLine(Ent ent) {
+        DungeonScreen ds = DungeonScreen.get();
+        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present != null && present.isDead()) {
+            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
+        }
+        for (String part : new String[] {healthText(ds, ent), previewText(ds, ent)}) {
+            if (part != null) {
+                sb.append(", ").append(part);
+            }
+        }
+        return sb.toString();
     }
 
     @Override
@@ -86,6 +122,69 @@ public class CombatScreen extends AccessScreen {
             buildButtons(b, ds, ds.confirmButton, false);
         }
         TutorialNodes.build(b, ds);
+    }
+
+    // The game's combat hotkeys live in the current phase
+    // (PlayerRollingPhase.keyPress, TargetingPhase.keyPress), in the words of
+    // the game's own Tips page. Enter is the navigator's here, so the confirm
+    // button's key reads as Space.
+    @Override
+    public List<KeyOffer> keys() {
+        List<KeyOffer> keys = new java.util.ArrayList<KeyOffer>();
+        DungeonScreen ds = DungeonScreen.get();
+        if (ds == null || ds.getFightLog() == null) {
+            return keys;
+        }
+        com.tann.dice.gameplay.fightLog.Snapshot present =
+                ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+        Phase phase = PhaseManager.get().getPhase();
+        if (phase instanceof PlayerRollingPhase) {
+            keys.add(GameKeys.key("roll", "R", GameText.t("roll dice"), GameKeys.R));
+            addDigits(keys, "digits", false, present.getEntities(true, false).size(),
+                    GameText.t("lock/unlock dice"));
+            keys.add(GameKeys.key("confirm", Loc.get("ui", "key.space"),
+                    confirmText(ds.doneRollingButton), GameKeys.SPACE));
+        } else if (phase instanceof TargetingPhase) {
+            Targetable selected = ds.targetingManager.getSelectedTargetable();
+            if (selected == null) {
+                addDigits(keys, "digits", false, present.getEntities(true, false).size(),
+                        GameText.t("select heroes"));
+            } else {
+                // TargetingPhase.checkForEntPress: the digits reach the side
+                // the selected effect aims at, Shift the other one.
+                com.tann.dice.gameplay.effect.eff.Eff eff = selected.getDerivedEffects();
+                boolean player = eff.getOr(false) == null && eff.isFriendly();
+                addDigits(keys, "digits", false, present.getEntities(player, false).size(),
+                        GameText.t("target"));
+                addDigits(keys, "shift-digits", true, present.getEntities(!player, false).size(),
+                        Loc.get("ui", "help.target_other_side"));
+            }
+            List<Integer> slots = new java.util.ArrayList<Integer>();
+            for (int i = 0; i < 8; i++) {
+                if (ds.abilityHolder.getByIndex(i) != null) {
+                    slots.add(i);
+                }
+            }
+            if (!slots.isEmpty()) {
+                keys.add(GameKeys.range("abilities", GameKeys.abilityKeys(slots), GameText.t("select ability")));
+            }
+            keys.add(GameKeys.key("undo", "Z", GameText.t("undo"), GameKeys.Z));
+            keys.add(GameKeys.key("confirm", Loc.get("ui", "key.space"),
+                    confirmText(ds.confirmButton), GameKeys.SPACE));
+        }
+        keys.add(GameKeys.escape());
+        return keys;
+    }
+
+    private static void addDigits(List<KeyOffer> keys, String id, boolean shift, int count, String label) {
+        if (count > 0) {
+            keys.add(GameKeys.range(id, shift ? GameKeys.shiftDigits(count) : GameKeys.digits(count), label));
+        }
+    }
+
+    private static String confirmText(com.tann.dice.screens.dungeon.panels.ConfirmButton button) {
+        String label = GameUi.confirmLabel(button);
+        return label != null ? label : Loc.get("combat", "confirm");
     }
 
     // ---- the ability bar: one node per spell/tactic card, in the bar's own
@@ -806,8 +905,7 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        String label = GameUi.confirmLabel(confirmButton);
-                        return label != null ? label : Loc.get("combat", "confirm");
+                        return confirmText(confirmButton);
                     }
                 }, AnnouncementKinds.LABEL),
                 NodeAnnouncement.kinded(new Supplier<String>() {

@@ -29,7 +29,9 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
 import snd.module.ChoicePhases;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -53,6 +55,11 @@ public class ChoiceConfirmScreen extends AccessScreen {
     @Override
     public String key() {
         return "choice-confirm";
+    }
+
+    @Override
+    public List<KeyOffer> keys() {
+        return GameKeys.escapeOnly();
     }
 
     @Override

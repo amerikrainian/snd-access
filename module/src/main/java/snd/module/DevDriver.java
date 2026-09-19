@@ -38,6 +38,7 @@ final class DevDriver {
         VERBS.put("z", 54);
         VERBS.put("r", 46);
         VERBS.put("i", 37);
+        VERBS.put("f1", 131);
         for (int d = 1; d <= 9; d++) {
             VERBS.put(String.valueOf(d), 7 + d); // Input.Keys.NUM_1..NUM_9 = 8..16
         }
@@ -48,16 +49,36 @@ final class DevDriver {
      * multiplexer head, then the game's stage — exactly what a physical
      * keypress reaches. "type:<text>" feeds keyTyped (the type-ahead path).
      */
-    static String input(String verb, snd.core.nav.GraphNavigator nav) {
+    static String input(String verb, SndInput input) {
         verb = verb.trim();
         InputProcessor proc = Gdx.input.getInputProcessor();
         if (proc == null) {
             return "no input processor yet";
         }
-        if (verb.equalsIgnoreCase("shift+tab")) {
-            // The processor path can't fake held modifiers (SndInput reads
-            // live key state), so drive the navigator action directly.
-            return "shift+tab -> " + nav.onAction(snd.core.nav.NavAction.PREV_STOP);
+        // "ctrl+", "shift+" prefixes (any order): the processor path reads
+        // live key state and can't fake held modifiers, so a modified verb
+        // goes to the mod's own key path with the modifiers given. A chord
+        // the mod leaves unconsumed stops there — the game reads its
+        // modifiers from the live keyboard too.
+        boolean shift = false;
+        boolean ctrl = false;
+        String rest = verb.toLowerCase();
+        while (rest.startsWith("shift+") || rest.startsWith("ctrl+")) {
+            if (rest.startsWith("shift+")) {
+                shift = true;
+                rest = rest.substring(6);
+            } else {
+                ctrl = true;
+                rest = rest.substring(5);
+            }
+        }
+        if (shift || ctrl) {
+            Integer chordCode = VERBS.get(rest);
+            if (chordCode == null) {
+                return "unknown key '" + rest + "' in " + verb;
+            }
+            return "ok: " + verb + " -> keycode " + chordCode + " consumed=" + input.key(chordCode, shift, ctrl)
+                    + " (mod key path only)";
         }
         if (verb.startsWith("type:")) {
             String text = verb.substring(5);

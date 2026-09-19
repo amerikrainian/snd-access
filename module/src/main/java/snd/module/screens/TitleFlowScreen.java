@@ -27,6 +27,8 @@ import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
+import snd.core.nav.KeyOffer;
+import snd.module.GameKeys;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -50,6 +52,11 @@ public class TitleFlowScreen extends AccessScreen {
     @Override
     public String key() {
         return "title";
+    }
+
+    @Override
+    public List<KeyOffer> keys() {
+        return GameKeys.escapeOnly();
     }
 
     @Override
