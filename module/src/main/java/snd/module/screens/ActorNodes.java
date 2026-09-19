@@ -204,6 +204,9 @@ final class ActorNodes {
                         // glyphs ("H5") that would win the text search.
                         String label = achievementTileName(actor);
                         if (label == null) {
+                            label = partyLayoutName(actor); // its "?" squares are text too
+                        }
+                        if (label == null) {
                             label = nowPlayingLabel(actor);
                         }
                         if (label == null) {
@@ -268,12 +271,12 @@ final class ActorNodes {
                         return effect != null ? effect : itemSlotDescription(actor);
                     }
                 }, AnnouncementKinds.TOOLTIP),
-                // Party-layout picker options: the visual squares' colour
-                // composition, resolved from the enum the label names.
+                // Party-layout picker options: the colours the card draws as
+                // squares.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return partyLayoutColours(GameUi.labelOf(actor));
+                        return partyLayoutColours(actor);
                     }
                 }, AnnouncementKinds.VALUE));
         vt.onActivate = new Runnable() {
@@ -300,29 +303,68 @@ final class ActorNodes {
                 && actor.getParent() != null ? actor.getParent() : actor;
     }
 
-    // "Basic" (or "Basic, r: 0.1") → "orange, yellow, grey, red, blue" from
-    // PartyLayoutType; null for any label that isn't a layout name.
-    private static String partyLayoutColours(String label) {
-        if (label == null) {
+    // A party-layout option ("Choose party layout", GameStart) is an anonymous
+    // card: a name over five squares, coloured, or a "?" for a slot filled at
+    // random when the run starts. The layout it starts is the one its click
+    // listener holds.
+    private static String partyLayoutName(Actor actor) {
+        com.tann.dice.gameplay.content.ent.group.PartyLayoutType layout = partyLayoutOf(actor);
+        if (layout == null) {
             return null;
         }
-        String name = TextFilter.clean(label);
-        int comma = name.indexOf(',');
-        if (comma >= 0) {
-            name = name.substring(0, comma);
+        String name = GameText.t(layout.name());
+        // PartyLayoutType.addRarityIfNecessary
+        if (com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_RARITY.c()
+                && layout.getChance() != com.tann.dice.gameplay.trigger.global.chance.RarityUtils.IGNORED_RARITY) {
+            name += ", r: " + layout.getChance();
         }
-        name = name.trim();
-        for (com.tann.dice.gameplay.content.ent.group.PartyLayoutType plt
-                : com.tann.dice.gameplay.content.ent.group.PartyLayoutType.values()) {
-            if (plt.name().equals(name)) {
-                StringBuilder sb = new StringBuilder();
-                for (com.tann.dice.gameplay.content.ent.type.HeroCol col : plt.getColsInstance()) {
-                    if (sb.length() > 0) {
-                        sb.append(", ");
-                    }
-                    sb.append(col == null ? Loc.get("ui", "value.random") : col.name());
+        return name;
+    }
+
+    private static java.lang.reflect.Field layoutColsField;
+
+    private static String partyLayoutColours(Actor actor) {
+        com.tann.dice.gameplay.content.ent.group.PartyLayoutType layout = partyLayoutOf(actor);
+        if (layout == null) {
+            return null;
+        }
+        try {
+            if (layoutColsField == null) {
+                layoutColsField = com.tann.dice.gameplay.content.ent.group.PartyLayoutType.class
+                        .getDeclaredField("cols");
+                layoutColsField.setAccessible(true);
+            }
+            StringBuilder sb = new StringBuilder();
+            for (com.tann.dice.gameplay.content.ent.type.HeroCol col
+                    : (com.tann.dice.gameplay.content.ent.type.HeroCol[]) layoutColsField.get(layout)) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
                 }
-                return sb.length() > 0 ? sb.toString() : null;
+                sb.append(col == null ? Loc.get("ui", "value.random") : GameText.t(col.colName));
+            }
+            return sb.length() > 0 ? sb.toString() : null;
+        } catch (Throwable t) {
+            snd.contracts.SndLog.error("party layout colours read failed", t);
+            return null;
+        }
+    }
+
+    private static com.tann.dice.gameplay.content.ent.group.PartyLayoutType partyLayoutOf(Actor actor) {
+        for (com.badlogic.gdx.scenes.scene2d.EventListener listener : actor.getListeners()) {
+            if (!(listener instanceof com.tann.dice.util.listener.TannListener)) {
+                continue;
+            }
+            for (java.lang.reflect.Field field : listener.getClass().getDeclaredFields()) {
+                if (field.getType() != com.tann.dice.gameplay.content.ent.group.PartyLayoutType.class) {
+                    continue;
+                }
+                try {
+                    field.setAccessible(true);
+                    return (com.tann.dice.gameplay.content.ent.group.PartyLayoutType) field.get(listener);
+                } catch (Throwable t) {
+                    snd.contracts.SndLog.error("party layout read failed", t);
+                    return null;
+                }
             }
         }
         return null;
