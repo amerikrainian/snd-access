@@ -23,7 +23,8 @@ import snd.module.GameText;
  * a monster — what its sheet shows, a line each — without opening the sheet or
  * leaving the control that concerns it. Read from the FightLog's Present
  * state at every buffer keypress. One tooltip is one line, never several
- * joined; a rule the unit's sides share is given once.
+ * joined; a definition several sides or statuses share is given once. Terms
+ * are defined by the game alone ({@link Terms}).
  */
 public final class UnitLines {
     private UnitLines() {
@@ -72,26 +73,48 @@ public final class UnitLines {
         }
         lines.addAll(rules);
 
-        if (present != null) {
-            for (Personal p : present.getActivePersonals()) {
-                if (p.hasImage()) { // invisible mechanics don't show on the sheet either
-                    lines.add(GameText.t(p.describeForTriggerPanel()));
+        // Statuses and traits, each in full, then the keywords they reference.
+        Set<String> referenced = new LinkedHashSet<String>();
+        for (Personal p : sheetPersonals(present)) {
+            lines.add(GameText.t(p.describeForTriggerPanel()));
+            referenced.addAll(Terms.forPersonal(p));
+        }
+        referenced.removeAll(rules);
+        lines.addAll(referenced);
+        lines.addAll(Terms.glossary(lines));
+        return lines;
+    }
+
+    /**
+     * The statuses and traits the game's character sheet lists
+     * (EntPanelInventory.makeTraitActors): whatever says it shows in the die
+     * panel, a trait only while it is a visible one. The game's rule rather
+     * than a test of our own, so a modded status shows exactly where the
+     * game shows it.
+     */
+    static List<Personal> sheetPersonals(EntState state) {
+        List<Personal> shown = new ArrayList<Personal>();
+        if (state != null) {
+            for (Personal p : state.getActivePersonals()) {
+                if (p.showInDiePanel() && (p.getTrait() == null || p.getTrait().visible)) {
+                    shown.add(p);
                 }
             }
         }
-        return lines;
+        return shown;
     }
 
     /** What a unit carries: each item's name and tier, then its description. */
     public static List<String> items(Ent ent) {
-        List<String> lines = new ArrayList<String>();
+        // A keyword two items share is defined once.
+        Set<String> lines = new LinkedHashSet<String>();
         List<Item> items = ent.getItems();
         if (items != null) {
             for (Item item : items) {
                 lines.addAll(item(item));
             }
         }
-        return lines;
+        return new ArrayList<String>(lines);
     }
 
     public static List<String> item(Item item) {
@@ -102,6 +125,7 @@ public final class UnitLines {
         if (desc != null && !desc.trim().isEmpty()) {
             lines.add(GameText.t(desc));
         }
+        lines.addAll(Terms.forItem(item));
         return lines;
     }
 

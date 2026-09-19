@@ -143,6 +143,12 @@ public class SheetScreen extends AccessScreen {
             for (int i = 0; i < items.size(); i++) {
                 final Item item = items.get(i);
                 NodeVtable vt = textVtable(ent);
+                vt.details = new Supplier<List<String>>() {
+                    @Override
+                    public List<String> get() {
+                        return Terms.forItem(item);
+                    }
+                };
                 vt.announcements = Arrays.asList(
                         NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
@@ -165,12 +171,15 @@ public class SheetScreen extends AccessScreen {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null) {
             int i = 0;
-            for (Personal p : present.getActivePersonals()) {
-                if (!p.hasImage()) {
-                    continue; // invisible mechanics don't show on the panel either
-                }
+            for (Personal p : UnitLines.sheetPersonals(present)) {
                 final Personal personal = p;
                 NodeVtable vt = textVtable(ent);
+                vt.details = new Supplier<List<String>>() {
+                    @Override
+                    public List<String> get() {
+                        return Terms.forPersonal(personal);
+                    }
+                };
                 vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
@@ -217,10 +226,7 @@ public class SheetScreen extends AccessScreen {
             }
         }
         if (present != null) {
-            for (Personal p : present.getActivePersonals()) {
-                if (!p.hasImage()) {
-                    continue;
-                }
+            for (Personal p : UnitLines.sheetPersonals(present)) {
                 sb.append(". ").append(GameText.t(p.describeForTriggerPanel()));
             }
         }

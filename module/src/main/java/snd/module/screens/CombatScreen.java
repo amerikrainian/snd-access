@@ -574,7 +574,8 @@ public class CombatScreen extends AccessScreen {
     // speaks only status names. The game shows both only in the almanac
     // glossary or the right-click explanation panel.
     static List<String> entTooltipLines(DungeonScreen ds, Ent ent) {
-        List<String> lines = new java.util.ArrayList<String>(sideKeywordRuleLines(ent));
+        // A definition is given once, however many statuses reference it.
+        java.util.Set<String> lines = new java.util.LinkedHashSet<String>(sideKeywordRuleLines(ent));
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null) {
             for (Personal p : present.getActivePersonals()) {
@@ -582,9 +583,12 @@ public class CombatScreen extends AccessScreen {
                     continue;
                 }
                 lines.add(GameText.t(p.describeForTriggerPanel()));
+                lines.addAll(Terms.forPersonal(p));
             }
         }
-        return lines;
+        List<String> all = new java.util.ArrayList<String>(lines);
+        all.addAll(Terms.glossary(all));
+        return all;
     }
 
     // "bloodlust: +1 pip for each damaged enemy" for every keyword on the
@@ -614,20 +618,10 @@ public class CombatScreen extends AccessScreen {
         };
     }
 
-    // One line per keyword the effect displays: "ranged: can hit the back row".
+    // One line per keyword the effect displays ("ranged: can target enemies
+    // in the back row..."), each followed by its longer explanation.
     static List<String> keywordRuleLines(com.tann.dice.gameplay.effect.eff.Eff e) {
-        List<String> lines = new java.util.ArrayList<String>();
-        if (e == null) {
-            return lines;
-        }
-        java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords =
-                e.getKeywordsForDisplay(true);
-        if (keywords != null) {
-            for (com.tann.dice.gameplay.effect.eff.keyword.Keyword keyword : keywords) {
-                lines.add(GameText.t(keyword.getColourTaggedString()) + ": " + GameText.t(keyword.getRules(e)));
-            }
-        }
-        return lines;
+        return Terms.forEff(e);
     }
 
     // "defeated" for a dead hero's greyed panel; "locked" while rolling (the
