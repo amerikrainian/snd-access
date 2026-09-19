@@ -257,12 +257,31 @@ Permanent/reloadable split (verified end-to-end):
   `NodeVtable.selected` instead, the silent form of a SELECTED part, which is what makes entering
   the group land on the open tab (`KeyGraph.isSelected`). Controls where selecting is a decision
   (the title's mode buttons) are buttons, not tabs, and keep Enter and their spoken "selected".
-- **A chosen button among plain buttons is told by colour.** The game builds choose-one rows out
-  of `StandardButton`s and marks the chosen one light: the border (the almanac's modifier
-  filters, the leaderboard picker) or the caption among `[grey]` ones (the TextMod page's
-  sections). `ActorNodes.chosenAmongButtons` reads both as "selected". The caption form needs
-  the greyed siblings — the keyword index captions entries in their keyword colour, light
-  included.
+- **The generic walk knows the game, never a place.** `ActorNodes` holds two kinds of rule: what
+  is true of the game's UI everywhere (a `StandardButton` is a button, the innermost clickable
+  actor wins, `DipPanel.makeTopPanelGroup`'s title-over-body shape is a titled section), and
+  typed adapters keyed on a game class, enum or static constant (`ItemLedgerView` → its item, a
+  party-layout card → the `PartyLayoutType` its click listener holds, `Images.cog`). Anything
+  that infers meaning from how ONE place is drawn — a child count or order, a position, a
+  colour, a sibling comparison, a literal caption — does not go in the walk, where it runs on
+  every screen and fails without knowing it failed. Read the game's builder for that place
+  (`game/src`), then either give the place its own builder at the seam that knows where it is
+  (`BookScreen.buildContent` by tab identifier, `GameModalScreen` by modal class or the game's
+  own marker, `DialogPhaseScreen` by phase) — `LedgerNodes` is the model: WHICH tiles exist and
+  in what order is the game's actors, WHAT one is comes from the domain object it holds, which
+  also keys the node (`ControlId.referenced(type, CompositeKey…)`, never `actorId`), and it
+  returns false for content it does not recognise so the walk still reads it
+  (`BookPage.showThing` swaps a tab's content without changing the tab) — or, when the place is
+  anonymous `Pixl` output with nothing typed inside, have the seam hand the walk an
+  `ActorNodes.Place`: that place's shorthand captions (`glyphs`: "fs" is "fullscreen" in the
+  cog menu and nowhere else) and how it marks a chosen button. A builder that expects something
+  the game adds unconditionally logs once when it is missing (builds run every frame).
+- **A chosen button among plain buttons is told by colour, where the place says so.** The game
+  builds choose-one rows out of `StandardButton`s and keeps which one is chosen in no field —
+  only in the arguments the page was built with — so it is read off the colour:
+  `ChosenMark.LIGHT_BORDER` on the almanac's Modifier tab and in the leaderboard picker (the
+  modal the game names `leaderboard_modal`), `LIGHT_CAPTION` among `[grey]` ones on the TextMod
+  tab. No place, no "selected": the custom-mode magnifier is built with a light border too.
 - **Focus whose node vanished stays in its Tab-stop.** Generic actor nodes are keyed per actor
   instance, and the game answers many buttons by rebuilding the page they sit on (a filter, a
   section switch) — every id in the stop changes at once. `KeyGraph.reconcile` then lands on the

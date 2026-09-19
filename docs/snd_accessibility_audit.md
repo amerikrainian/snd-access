@@ -154,11 +154,13 @@ Locked difficulties are announced as locked rather than silently omitted.
 - Optional rarity line if `SHOW_RARITY` is on
 - Horizontally scrollable if needed; self-popping modal (click to dismiss)
 
-> **Coverage:** the picker is a pushed modal, so the generic modal reader lists its options, and
-each layout name is enriched with its **colour composition** read from `PartyLayoutType` (the
-visual card shows only coloured squares). PARTIAL because the picker is gated behind
-`Feature.PARTY_LAYOUT_CHOICE` and has not been exercised on an unlocked profile — the
-enrichment is code-complete but unverified live.
+> **Coverage:** the picker is a pushed modal, so the generic modal reader lists its options. A
+card is named by, and its **colour composition** read from, the `PartyLayoutType` its click
+listener holds (the visual card shows only coloured squares); a slot the game fills at random
+when the run starts reads "random", as the card's "?" does. Verified live by pushing the game's
+own picker panel (`GameStart.startWithPLTChoice`) and reading it. PARTIAL because the picker is
+gated behind `Feature.PARTY_LAYOUT_CHOICE`: choosing a layout, which starts a run, has not been
+exercised on an unlocked profile.
 
 ## 2.3 Overwrite Confirmation — DONE
 
