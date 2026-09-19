@@ -226,5 +226,18 @@ class BufferTest {
         assertEquals(Arrays.asList("used, [orange]Ranger[cu], 9 hp", "ranged: can hit the back row",
                 "Weakened 1: all sides reduced by 1"), NodeLines.lines(node));
         assertTrue(NodeLines.lines(null).isEmpty());
+
+        // A head part that joins several things has said each of them.
+        GraphNode tile = new GraphNode();
+        tile.vtable = new NodeVtable();
+        tile.vtable.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(name("First Boss, achieved"), AnnouncementKinds.LABEL));
+        tile.vtable.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                return Arrays.asList("[yellow]First Boss[cu]", "Beat level 4", "achieved");
+            }
+        };
+        assertEquals(Arrays.asList("First Boss, achieved", "Beat level 4"), NodeLines.lines(tile));
     }
 }

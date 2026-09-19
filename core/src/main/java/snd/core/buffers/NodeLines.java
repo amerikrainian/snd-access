@@ -18,9 +18,9 @@ import snd.core.graph.NodeAnnouncement;
  * position), then one line per description part
  * ({@link AnnouncementKinds#TOOLTIP}), then the vtable's
  * {@link snd.core.graph.NodeVtable#details}, one line each. A detail that
- * only repeats a head part (an item tooltip whose title is the item's name,
- * through markup or not) or an earlier detail is folded; blank lines are
- * dropped. Read live on every buffer keypress.
+ * only repeats a head part or a comma-separated piece of one (an item tooltip
+ * whose title is the item's name, through markup or not) or an earlier detail
+ * is folded; blank lines are dropped. Read live on every buffer keypress.
  */
 public final class NodeLines {
     private NodeLines() {
@@ -58,7 +58,13 @@ public final class NodeLines {
                     sb.append(", ");
                 }
                 sb.append(h);
-                seen.add(TextFilter.clean(h));
+                // Said already: the part, and each piece of a part that joins
+                // several ("First Boss, achieved" has said "First Boss").
+                String clean = TextFilter.clean(h);
+                seen.add(clean);
+                for (String piece : clean.split(",")) {
+                    seen.add(piece.trim());
+                }
             }
             out.add(sb.toString());
         }

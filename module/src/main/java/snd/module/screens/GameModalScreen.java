@@ -16,10 +16,11 @@ import snd.module.GameUi;
  * A generic reader for the game's pushed modals — choice dialogs, the cog
  * menu, unlock-requirement panels, the party-layout picker, mode info. Covers
  * whatever the game pushes onto its modal stack by walking the top modal's
- * actor tree ({@link ActorNodes}). Activation fires the game's own listener,
- * and Escape falls through to the game's own modal-pop handling. Screens with
- * dedicated readers (the Book, the party management panel) opt out of this
- * generic floor.
+ * actor tree ({@link ActorNodes}). Activation fires the game's own listener.
+ * Escape closes this panel alone when it sits over another one, and otherwise
+ * falls through to the game's own modal-pop handling. Screens with dedicated
+ * readers (the Book, the party management panel) opt out of this generic
+ * floor.
  */
 public class GameModalScreen extends AccessScreen {
     @Override
@@ -30,6 +31,11 @@ public class GameModalScreen extends AccessScreen {
     @Override
     public List<KeyOffer> keys() {
         return GameKeys.escapeOnly();
+    }
+
+    @Override
+    public boolean onCancel() {
+        return GameUi.popTopModalOnly();
     }
 
     @Override

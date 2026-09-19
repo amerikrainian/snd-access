@@ -56,6 +56,25 @@ public final class GameUi {
         return top;
     }
 
+    /** Whether a panel of this kind is anywhere on the current screen's modal stack, covered or not. */
+    public static boolean modalOpen(Class<? extends Actor> kind) {
+        Screen screen;
+        try {
+            screen = com.tann.dice.Main.getCurrentScreen();
+        } catch (Throwable t) {
+            return false; // the game is still booting
+        }
+        if (screen == null) {
+            return false;
+        }
+        for (Pair<Actor, ?> pair : castStack(screen.modalStack)) {
+            if (kind.isInstance(pair.a) && pair.a.getStage() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static List<Pair<Actor, ?>> castStack(List stack) {
         return (List<Pair<Actor, ?>>) stack;
@@ -71,6 +90,13 @@ public final class GameUi {
         if (actor == null) {
             return false;
         }
+        Actor top = stackTop();
+        boolean done = activateQuietly(actor);
+        readInfoPopup(actor, top);
+        return done;
+    }
+
+    private static boolean activateQuietly(Actor actor) {
         boolean any = false;
         for (com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener l : gestureListeners(actor)) {
             if (l instanceof TannListener) {
@@ -94,6 +120,13 @@ public final class GameUi {
      * panel group, not the rows).
      */
     public static boolean info(Actor actor) {
+        Actor top = stackTop();
+        boolean done = infoQuietly(actor);
+        readInfoPopup(actor, top);
+        return done;
+    }
+
+    private static boolean infoQuietly(Actor actor) {
         for (Actor a = actor; a != null; a = a.getParent()) {
             boolean handled = false;
             for (ActorGestureListener l : gestureListeners(a)) {
@@ -106,6 +139,93 @@ public final class GameUi {
             }
         }
         return false;
+    }
+
+    // ---- info popups: the game answers many gestures by pushing a little
+    // bordered panel of text over everything (Screen.pushAndCenter — "UI
+    // scaling factor" on the settings' UI size row, an achievement's
+    // description in the almanac). There is nothing in one to operate: a
+    // sighted player glances at it and clicks it away. Read as a modal it
+    // would be a one-line "dialog" that takes the focus and has to be
+    // escaped, so it is spoken where the player stands and dismissed, and the
+    // control that produced it keeps its lines for the control buffer. ----
+
+    private static snd.contracts.speech.SpeechPipeline speech;
+
+    // The popup each control last answered with. The panel is a live game
+    // object, read again whenever the buffer is; keyed weakly, so an entry
+    // goes when the game rebuilds the control.
+    private static final java.util.Map<Actor, Actor> INFO_POPUPS = new java.util.WeakHashMap<Actor, Actor>();
+
+    static void bind(snd.contracts.speech.SpeechPipeline pipeline) {
+        speech = pipeline;
+    }
+
+    private static Actor stackTop() {
+        Screen screen = com.tann.dice.Main.getCurrentScreen();
+        if (screen == null || screen.modalStack.isEmpty()) {
+            return null;
+        }
+        return screen.modalStack.get(screen.modalStack.size() - 1).a;
+    }
+
+    private static void readInfoPopup(Actor source, Actor topBefore) {
+        Actor top = stackTop();
+        if (top == null || top == topBefore || !isTextOnly(top)) {
+            return; // nothing new came up, or something to operate: a real modal, read as one
+        }
+        List<String> lines = textsUnder(top);
+        if (lines.isEmpty()) {
+            return;
+        }
+        INFO_POPUPS.put(source, top);
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) {
+            if (sb.length() > 0) {
+                sb.append(". ");
+            }
+            sb.append(line);
+        }
+        speech.speak(sb.toString(), false);
+        com.tann.dice.Main.getCurrentScreen().pop(top);
+    }
+
+    /** The lines of the info popup this control last answered with, for its control buffer. */
+    public static List<String> infoLines(Actor source) {
+        Actor popup = INFO_POPUPS.get(source);
+        return popup != null ? textsUnder(popup) : new ArrayList<String>();
+    }
+
+    // Nothing to click, drag or type into anywhere in it.
+    private static boolean isTextOnly(Actor actor) {
+        if (actor instanceof StandardButton || actor instanceof com.tann.dice.util.Slider
+                || actor instanceof com.tann.dice.util.ui.TextInput || hasTannListener(actor)) {
+            return false;
+        }
+        if (actor instanceof Group) {
+            for (Actor child : ((Group) actor).getChildren()) {
+                if (!isTextOnly(child)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Escape for a panel pushed over another panel: close the top one only,
+     * as a click outside it does. The game's own Escape pops EVERYTHING
+     * (Screen.popAllMedium), which from a details panel over the settings
+     * menu lands back on the dungeon. False = one level or none is up, or
+     * the top panel is not the kind Escape closes; the game's Escape applies.
+     */
+    public static boolean popTopModalOnly() {
+        Screen screen = com.tann.dice.Main.getCurrentScreen();
+        if (screen == null || screen.modalStack.size() < 2 || !screen.popSingleMedium()) {
+            return false;
+        }
+        com.tann.dice.statics.sound.Sounds.playSound(com.tann.dice.statics.sound.Sounds.pop);
+        return true;
     }
 
     /**

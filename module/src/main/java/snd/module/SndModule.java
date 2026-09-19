@@ -63,6 +63,7 @@ public class SndModule implements ModModule {
                     + ", not the module loader — core must ship in the module jar only");
         }
         GraphDefaults.install();
+        GameUi.bind(h.speech());
         Locales.load(); // before anything speaks
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());

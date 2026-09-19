@@ -54,13 +54,21 @@ public class BookScreen extends AccessScreen {
     }
 
     @Override
+    public boolean onCancel() {
+        return GameUi.popTopModalOnly();
+    }
+
+    @Override
     public int layer() {
-        return 20; // replaces the generic modal reader while the Book is top
+        return 19; // over the base screens; a panel pushed over the Book (the modal reader, 20) covers it
     }
 
     @Override
     public boolean isActive() {
-        return GameUi.topModal() instanceof Book;
+        // While the Book is open at all, not only while it is on top: a
+        // details panel pushed over it covers this screen rather than closing
+        // it, so closing the panel lands back on the entry that opened it.
+        return GameUi.modalOpen(Book.class);
     }
 
     @Override

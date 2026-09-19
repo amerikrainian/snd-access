@@ -251,6 +251,18 @@ Permanent/reloadable split (verified end-to-end):
   banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
   and gone, and the log buffer is the only way back to them. Echoes of the player's own
   navigation (focus readouts, "selected", typed characters) are not events.
+- **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
+  pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
+  achievement's description). `GameUi.activate`/`info` notice a text-only panel arriving on the
+  modal stack, speak it where the player stands, pop it, and keep it for that control's buffer
+  (`GameUi.infoLines`). A panel with anything to click stays a modal, read by `GameModalScreen`.
+- **Escape closes one panel, not all of them.** The game's Escape is `Screen.popAllMedium` —
+  everything at once, which from a details panel over the settings lands on the dungeon. A
+  screen reading a stacked panel answers `onCancel` with `GameUi.popTopModalOnly()` (what a click
+  outside the panel does); with one level up, or a panel Escape doesn't close, the game's Escape
+  applies. A screen whose panel can be covered (`BookScreen`) stays active while covered
+  (`GameUi.modalOpen`), one layer under the modal reader, so closing the cover lands back on the
+  entry that opened it.
 - **The key help (F1) declares nothing of its own.** It lists the screen's `keys()`, the handler
   keys that are available, and the navigator keys the dry run (`GraphNavigator.wouldHandle`)
   answers, at the moment it opens. `wouldHandle` mirrors `onAction` decision for decision —

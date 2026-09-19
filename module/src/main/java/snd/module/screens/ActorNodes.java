@@ -1,6 +1,7 @@
 package snd.module.screens;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -181,6 +182,17 @@ final class ActorNodes {
     static NodeVtable buttonFor(final Actor actor) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
+        // What the game's info popup said when this control was last asked
+        // (Enter on an info-only row, Backspace anywhere): read on the spot,
+        // kept here to step through.
+        vt.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
+                lines.addAll(GameUi.infoLines(infoTarget(actor)));
+                return lines;
+            }
+        };
         vt.announcements = Arrays.asList(
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
