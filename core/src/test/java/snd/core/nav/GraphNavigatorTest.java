@@ -192,6 +192,81 @@ class GraphNavigatorTest {
         assertEquals(Arrays.asList("Rolling", "Basics"), screen.opened);
     }
 
+    // Two stops: tabs, then a content list whose nodes carry a generation in
+    // their identity, as actor-keyed nodes do when the game rebuilds a page.
+    static final class RebuiltScreen extends ListScreen {
+        int generation;
+        List<String> content = new ArrayList<String>(Arrays.asList("Curses", "Blessings", "Both"));
+
+        RebuiltScreen() {
+            super("Modifier", "Keyword");
+        }
+
+        @Override
+        public void build(GraphBuilder b) {
+            b.beginStop("tabs");
+            for (String tab : items) {
+                NodeVtable vt = new NodeVtable();
+                vt.announcements = Arrays.asList(NodeAnnouncement.of(tab));
+                b.addItem(ControlId.structural(tab), vt);
+            }
+            b.beginStop("content");
+            for (String line : content) {
+                NodeVtable vt = new NodeVtable();
+                vt.announcements = Arrays.asList(NodeAnnouncement.of(line));
+                b.addItem(ControlId.structural(line + "#" + generation), vt);
+            }
+        }
+    }
+
+    @Test
+    void aGroupRebuiltUnderTheFocusKeepsTheFocusInIt() {
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        RebuiltScreen screen = new RebuiltScreen();
+        nav.attach(screen);
+        nav.ensureFocus();
+        nav.onAction(NavAction.NEXT_STOP);
+        nav.onAction(NavAction.DOWN); // on "Blessings"
+        assertEquals(ControlId.structural("Blessings#0"), nav.focusedId());
+
+        // The page re-lays every control (a filter button was pressed): none of
+        // the old nodes is left. Focus holds its place in the content, not the tab before it.
+        screen.generation = 1;
+        nav.ensureFocus();
+        assertEquals(ControlId.structural("Blessings#1"), nav.focusedId());
+
+        // Rebuilt shorter than the place held: the group's last node.
+        screen.generation = 2;
+        screen.content = new ArrayList<String>(Arrays.asList("Curses"));
+        nav.ensureFocus();
+        assertEquals(ControlId.structural("Curses#2"), nav.focusedId());
+    }
+
+    @Test
+    void losingTheFirstRowOfAGroupLandsOnTheNextRowNotTheGroupBefore() {
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        RebuiltScreen screen = new RebuiltScreen();
+        nav.attach(screen);
+        nav.ensureFocus();
+        nav.onAction(NavAction.NEXT_STOP); // on "Curses", the first of the content
+        screen.content.remove("Curses");
+        nav.ensureFocus();
+        assertEquals(ControlId.structural("Blessings#0"), nav.focusedId());
+
+        // A row lost further down still falls to the row before it, as ever.
+        nav.onAction(NavAction.DOWN); // on "Both"
+        screen.content.remove("Both");
+        nav.ensureFocus();
+        assertEquals(ControlId.structural("Blessings#0"), nav.focusedId());
+
+        // The whole group gone: the nearest survivor before it.
+        screen.content.clear();
+        nav.ensureFocus();
+        assertEquals(ControlId.structural("Keyword"), nav.focusedId());
+    }
+
     @Test
     void moveAnnouncesInterrupting() {
         Capture cap = new Capture();

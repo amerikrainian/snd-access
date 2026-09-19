@@ -135,11 +135,25 @@ public final class KeyGraph {
                     for (int i = oldIndex; i >= 0; i--) {
                         GraphNode survivor = render.nodes.get(state.keyOrder.get(i));
                         if (survivor != null) {
-                            resolved = slideToColumn(render, survivor.id, state.lastColumn);
+                            // A survivor in another stop means nothing before the old node
+                            // is left in its own: a page that rebuilt every control (a
+                            // filter button re-laying the list it filters) or a list that
+                            // lost its first row. The stop is still there, so stay in it,
+                            // at the place focus held, rather than fall out to the stop
+                            // before it.
+                            GraphNode held = Objects.equals(survivor.stopKey, state.lastStopKey) ? null
+                                    : nodeInStopAt(render, state.lastStopKey, state.lastStopIndex);
+                            resolved = held != null ? held.id
+                                    : slideToColumn(render, survivor.id, state.lastColumn);
                             break;
                         }
                     }
                 }
+            }
+            // Every earlier node is gone too (the old one led the screen): its stop first.
+            if (resolved == null) {
+                GraphNode held = nodeInStopAt(render, state.lastStopKey, state.lastStopIndex);
+                resolved = held != null ? held.id : null;
             }
         }
 
@@ -262,13 +276,46 @@ public final class KeyGraph {
         if (node != null && node.stopKey != null) {
             state.stopMemory.put(node.stopKey, key);
         }
+        state.lastStopKey = node != null ? node.stopKey : null;
+        state.lastStopIndex = -1;
+        if (node != null && node.stopKey != null) {
+            int index = 0;
+            for (GraphNode n : render.order) {
+                if (n == node) {
+                    state.lastStopIndex = index;
+                    break;
+                }
+                if (Objects.equals(n.stopKey, node.stopKey)) {
+                    index++;
+                }
+            }
+        }
+    }
+
+    // The node at a place within a stop, clamped to the stop's last; null when the
+    // stop is not in the render (or was never recorded).
+    private static GraphNode nodeInStopAt(GraphRender render, Object stopKey, int index) {
+        if (stopKey == null || index < 0) {
+            return null;
+        }
+        GraphNode last = null;
+        int seen = 0;
+        for (GraphNode n : render.order) {
+            if (!Objects.equals(n.stopKey, stopKey)) {
+                continue;
+            }
+            if (seen == index) {
+                return n;
+            }
+            last = n;
+            seen++;
+        }
+        return last;
     }
 
     private void setCurrent(GraphNode node) {
         state.curKey = node.id;
-        if (node.stopKey != null) {
-            state.stopMemory.put(node.stopKey, node.id);
-        }
+        rememberStop(current, state, node.id);
         if (node.vtable != null && node.vtable.column >= 0) {
             state.lastColumn = node.vtable.column;
         }

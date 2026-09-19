@@ -257,6 +257,11 @@ Permanent/reloadable split (verified end-to-end):
   `NodeVtable.selected` instead, the silent form of a SELECTED part, which is what makes entering
   the group land on the open tab (`KeyGraph.isSelected`). Controls where selecting is a decision
   (the title's mode buttons) are buttons, not tabs, and keep Enter and their spoken "selected".
+- **Focus whose node vanished stays in its Tab-stop.** Generic actor nodes are keyed per actor
+  instance, and the game answers many buttons by rebuilding the page they sit on (a filter, a
+  section switch) — every id in the stop changes at once. `KeyGraph.reconcile` then lands on the
+  stop's node at the place focus held (`GraphState.lastStopKey`/`lastStopIndex`), and only leaves
+  the stop when the stop itself is gone.
 - **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
   pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
   achievement's description). `GameUi.activate`/`info` notice a text-only panel arriving on the

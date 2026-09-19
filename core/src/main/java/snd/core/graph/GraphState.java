@@ -28,6 +28,14 @@ public final class GraphState {
      */
     public int lastColumn = -1;
 
+    /**
+     * The Tab-stop focus last sat in and its place among that stop's nodes.
+     * When the focused node is gone but its stop is not, the reconcile
+     * fallback stays in the stop at this place rather than leaving it.
+     */
+    public Object lastStopKey;
+    public int lastStopIndex = -1;
+
     /** Remembered position per Tab-stop: where Tab lands when cycling back in. */
     public final Map<Object, ControlId> stopMemory = new HashMap<Object, ControlId>();
 
