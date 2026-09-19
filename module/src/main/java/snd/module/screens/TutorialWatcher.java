@@ -10,7 +10,7 @@ import com.tann.dice.screens.dungeon.panels.tutorial.TutorialItem;
 import com.tann.dice.screens.dungeon.panels.tutorial.TutorialQuest;
 
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
+import snd.core.buffers.EventLog;
 
 /**
  * Speaks tutorial quest completion: the game's only feedback is a flash and
@@ -18,12 +18,12 @@ import snd.core.speech.SpeechPipeline;
  * identity, so a completion flip speaks exactly once.
  */
 public final class TutorialWatcher {
-    private final SpeechPipeline speech;
+    private final EventLog events;
     private Map<TutorialItem, Boolean> known = new IdentityHashMap<TutorialItem, Boolean>();
     private Map<TutorialItem, Boolean> next = new IdentityHashMap<TutorialItem, Boolean>();
 
-    public TutorialWatcher(SpeechPipeline speech) {
-        this.speech = speech;
+    public TutorialWatcher(EventLog events) {
+        this.events = events;
     }
 
     public void tick() {
@@ -48,7 +48,7 @@ public final class TutorialWatcher {
             boolean complete = item.isComplete();
             Boolean previous = known.get(item);
             if (previous != null && !previous && complete && item instanceof TutorialQuest) {
-                speech.speak(Loc.get("ui", "tutorial.complete",
+                events.say(Loc.get("ui", "tutorial.complete",
                         "quest", item.getSortText()), false);
             }
             next.put(item, complete);

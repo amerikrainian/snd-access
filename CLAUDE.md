@@ -201,11 +201,28 @@ Permanent/reloadable split (verified end-to-end):
   it. Never add a keycode check anywhere else. A handler key states where it applies with
   `.when(...)` — that one predicate gates the press and the help row. A handler key that does not
   apply does nothing, silently, and is still consumed: fallen through, Ctrl+1 is the game's 1.
-  The Ctrl tiers of the digits are the glances' (Ctrl+1 = the focused unit's hp display); the
-  unassigned ones are bound to a silent placeholder for the same reason.
+  The Ctrl tiers of the digits are the glances' (Ctrl+1 = the hp display of the unit the focused
+  control concerns); the unassigned ones are bound to a silent placeholder for the same reason.
+  Ctrl+arrows review the buffers; the section jump is Alt+Up/Down.
 - **The game's hotkeys are never in the table** — they are the game's, reached by fall-through. A
   screen offers the ones live in its state from `AccessScreen.keys()`, gated on what the game's
   own `keyPress` checks and labelled with the game's words (`GameKeys`).
+- **Review buffers** (`snd.core.buffers`, roster in `module/Buffers`; ported from guildrun): what a
+  control carries beyond its focus line is stepped line by line, not heard in one burst.
+  Ctrl+Left/Right switch buffers (speaking "name: current line"), Ctrl+Up/Down step lines (an edge
+  re-reads). In cycling order: **control** (the focused node's head line — never the role word or
+  the position — then its `TOOLTIP` parts and `NodeVtable.details`, repeats of the head folded),
+  **hero** / **monster** (the whole unit the control concerns: `UnitLines`), **items** (that hero's,
+  or the focused bag item), **party** and **enemies** (one hp line per unit), **log** (what
+  happened; follows its latest line). Empty buffers are skipped; every source is re-read on every
+  keypress (never cache lines); a focus change re-homes review to the control buffer. Conventions:
+  a tooltip is ONE line, never several joined — helpers return `List<String>`, and a burst spoken
+  on Backspace joins the same lines; a node says what it concerns with `NodeVtable.subject` (an
+  `Ent`, an `Item`) and the subject-fed buffers and the glances follow it from any screen.
+- **An event is spoken through the `EventLog`** (`events.say`), not the pipeline directly: a
+  banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
+  and gone, and the log buffer is the only way back to them. Echoes of the player's own
+  navigation (focus readouts, "selected", typed characters) are not events.
 - **The key help (F1) declares nothing of its own.** It lists the screen's `keys()`, the handler
   keys that are available, and the navigator keys the dry run (`GraphNavigator.wouldHandle`)
   answers, at the moment it opens. `wouldHandle` mirrors `onAction` decision for decision —

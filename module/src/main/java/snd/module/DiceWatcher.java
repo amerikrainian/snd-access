@@ -10,6 +10,7 @@ import com.tann.dice.gameplay.phase.gameplay.PlayerRollingPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
 import snd.core.loc.Loc;
+import snd.core.buffers.EventLog;
 import snd.core.speech.SpeechPipeline;
 import snd.module.screens.CombatScreen;
 
@@ -25,12 +26,14 @@ import snd.module.screens.CombatScreen;
  */
 final class DiceWatcher {
     private final SpeechPipeline speech;
+    private final EventLog events;
     private boolean wasRolling;
     private final java.util.WeakHashMap<Ent, Boolean> lockStates =
             new java.util.WeakHashMap<Ent, Boolean>();
 
-    DiceWatcher(SpeechPipeline speech) {
+    DiceWatcher(SpeechPipeline speech, EventLog events) {
         this.speech = speech;
+        this.events = events;
     }
 
     void tick() {
@@ -52,7 +55,7 @@ final class DiceWatcher {
             }
         }
         if (wasRolling && !rolling) {
-            speech.speak(rollResults(ds, heroes), false);
+            events.say(rollResults(ds, heroes), false);
         }
         wasRolling = rolling;
 

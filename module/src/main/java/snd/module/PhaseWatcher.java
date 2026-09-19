@@ -14,7 +14,7 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 
 import snd.core.SndLog;
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
+import snd.core.buffers.EventLog;
 
 /**
  * Speaks the combat turn structure: the current phase of the
@@ -28,7 +28,7 @@ import snd.core.speech.SpeechPipeline;
  * change diff.
  */
 final class PhaseWatcher {
-    private final SpeechPipeline speech;
+    private final EventLog events;
     private Phase lastPhase;
     // The last spoken fight/turn stamps. A fight's first announced phase can
     // be any of the in-combat phases (the opening enemy roll may resolve
@@ -37,8 +37,8 @@ final class PhaseWatcher {
     private String lastFight;
     private int lastTurn = -1;
 
-    PhaseWatcher(SpeechPipeline speech) {
-        this.speech = speech;
+    PhaseWatcher(EventLog events) {
+        this.events = events;
     }
 
     void tick() {
@@ -49,7 +49,7 @@ final class PhaseWatcher {
         lastPhase = p;
         String line = lineFor(p);
         if (line != null) {
-            speech.speak(line, false);
+            events.say(line, false);
         }
     }
 

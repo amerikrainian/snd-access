@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputProcessor;
 import snd.core.HostServices;
 import snd.core.ModModule;
 import snd.core.SndLog;
+import snd.core.buffers.EventLog;
 import snd.core.input.InputRegistry;
 import snd.core.loc.Loc;
 import snd.core.nav.GraphDefaults;
@@ -39,6 +40,7 @@ public class SndModule implements ModModule {
     private SndInput input;
     private HelpScreen help;
     private Buffers buffers;
+    private EventLog events;
     private PopupWatcher popups;
     private PhaseWatcher phases;
     private DiceWatcher dice;
@@ -77,17 +79,18 @@ public class SndModule implements ModModule {
         screens.register(new BookScreen(h));
         help = new HelpScreen(h, nav);
         screens.register(help);
-        buffers = new Buffers(nav, h.speech());
+        events = new EventLog(h.speech());
+        buffers = new Buffers(nav, events, h.speech());
         InputRegistry keys = SndKeys.build(help, nav, buffers, h.speech());
         help.setKeys(keys);
         input = new SndInput(screens, nav, help, keys);
-        popups = new PopupWatcher(h.speech());
-        phases = new PhaseWatcher(h.speech());
-        dice = new DiceWatcher(h.speech());
-        targeting = new TargetingWatcher(h.speech());
-        banners = new BannerWatcher(h.speech());
+        popups = new PopupWatcher(events);
+        phases = new PhaseWatcher(events);
+        dice = new DiceWatcher(h.speech(), events);
+        targeting = new TargetingWatcher(h.speech(), events);
+        banners = new BannerWatcher(events);
         textEntry = new TextEntryWatcher(h.speech());
-        tutorial = new snd.module.screens.TutorialWatcher(h.speech());
+        tutorial = new snd.module.screens.TutorialWatcher(events);
         SndLog.info("module generation " + h.generation() + " loaded");
         if (h.generation() > 1) {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
@@ -121,6 +124,9 @@ public class SndModule implements ModModule {
         if (screen != lastScreen) {
             boolean first = lastScreen == null;
             lastScreen = screen;
+            if (screen instanceof com.tann.dice.screens.titleScreen.TitleScreen) {
+                events.clear(); // a run's log is that run's alone
+            }
             host.speech().speak(spokenName(screen), !first);
         }
 

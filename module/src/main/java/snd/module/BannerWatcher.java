@@ -1,7 +1,7 @@
 package snd.module;
 
 import snd.core.Dispatcher;
-import snd.core.speech.SpeechPipeline;
+import snd.core.buffers.EventLog;
 
 /**
  * Speaks the game's transient banners and error flashes — the hooked
@@ -12,12 +12,12 @@ import snd.core.speech.SpeechPipeline;
  * Polled from the module tick.
  */
 final class BannerWatcher {
-    private final SpeechPipeline speech;
+    private final EventLog events;
     private String lastText;
     private long lastMs;
 
-    BannerWatcher(SpeechPipeline speech) {
-        this.speech = speech;
+    BannerWatcher(EventLog events) {
+        this.events = events;
     }
 
     void tick() {
@@ -30,7 +30,7 @@ final class BannerWatcher {
             }
             lastText = text;
             lastMs = now;
-            speech.speak(GameText.t(text), true);
+            events.say(GameText.t(text), true);
         }
     }
 }

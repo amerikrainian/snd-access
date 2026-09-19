@@ -16,6 +16,7 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 
 import snd.core.SndLog;
 import snd.core.loc.Loc;
+import snd.core.buffers.EventLog;
 import snd.core.speech.SpeechPipeline;
 import snd.module.screens.CombatScreen;
 
@@ -31,11 +32,13 @@ import snd.module.screens.CombatScreen;
  */
 final class TargetingWatcher {
     private final SpeechPipeline speech;
+    private final EventLog events;
     private Targetable lastSelected;
     private int lastCommandCount = -1;
 
-    TargetingWatcher(SpeechPipeline speech) {
+    TargetingWatcher(SpeechPipeline speech, EventLog events) {
         this.speech = speech;
+        this.events = events;
     }
 
     void tick() {
@@ -53,11 +56,11 @@ final class TargetingWatcher {
         if (applied) {
             Command last = commands.get(count - 1);
             if (last instanceof TargetableCommand) {
-                speech.speak(appliedText(ds, (TargetableCommand) last), false);
+                events.say(appliedText(ds, (TargetableCommand) last), false);
             }
         } else if (lastCommandCount >= 0 && count < lastCommandCount) {
             // The revert repaints previews silently otherwise.
-            speech.speak(GameText.t("Undo"), true);
+            events.say(GameText.t("Undo"), true);
         }
         lastCommandCount = count;
 

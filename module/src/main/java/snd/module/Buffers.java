@@ -11,6 +11,7 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 import snd.core.buffers.Buffer;
 import snd.core.buffers.BufferControls;
 import snd.core.buffers.BufferManager;
+import snd.core.buffers.EventLog;
 import snd.core.buffers.NodeLines;
 import snd.core.graph.ControlId;
 import snd.core.loc.Loc;
@@ -25,7 +26,9 @@ import snd.module.screens.UnitLines;
  * line instead of heard in one burst. In cycling order: the focused control's
  * own lines; the hero or the monster it concerns, whole (its sheet, without
  * opening it); the items that hero carries, or the focused item; the party
- * and the enemies, one line per unit. Every buffer reads live on each
+ * and the enemies, one line per unit; the log of what happened (banners,
+ * rolls, outcomes, phases, notifications), which follows its latest line.
+ * Every buffer reads live on each
  * keypress; a focus change re-homes review to the control's own buffer and
  * rewinds the focus-fed ones, since a new control is new content. An empty
  * buffer is skipped by the review keys.
@@ -37,6 +40,7 @@ final class Buffers {
     static final String ITEMS = "items";
     static final String PARTY = "party";
     static final String ENEMIES = "enemies";
+    static final String LOG = "log";
 
     private final GraphNavigator nav;
     private final BufferManager manager = new BufferManager();
@@ -44,7 +48,7 @@ final class Buffers {
     private ControlId homed;
     final BufferControls controls;
 
-    Buffers(final GraphNavigator nav, SpeechPipeline speech) {
+    Buffers(final GraphNavigator nav, final EventLog events, SpeechPipeline speech) {
         this.nav = nav;
         this.controls = new BufferControls(manager, speech);
         // The focused control's own lines: its head, then one per tooltip.
@@ -92,6 +96,13 @@ final class Buffers {
                 return inDungeon() ? UnitLines.side(false) : null;
             }
         });
+        // What happened, oldest first; switching to it lands on the latest.
+        add(LOG, new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                return events.lines();
+            }
+        }).followLatest = true;
     }
 
     private static boolean inDungeon() {

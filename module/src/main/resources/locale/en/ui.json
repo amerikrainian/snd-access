@@ -59,6 +59,7 @@
   "buffer.items": "items",
   "buffer.party": "party",
   "buffer.enemies": "enemies",
+  "buffer.log": "log",
 
   "key.escape": "Escape",
   "key.space": "Space",

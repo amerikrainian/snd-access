@@ -6,7 +6,7 @@ import java.util.WeakHashMap;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 
-import snd.core.speech.SpeechPipeline;
+import snd.core.buffers.EventLog;
 
 /**
  * Speaks the game's transient top-right popups (achievement toasts, stat
@@ -16,11 +16,11 @@ import snd.core.speech.SpeechPipeline;
  * module tick; seen-tracking is weak so removed popups don't accumulate.
  */
 final class PopupWatcher {
-    private final SpeechPipeline speech;
+    private final EventLog events;
     private final WeakHashMap<Actor, Boolean> seen = new WeakHashMap<Actor, Boolean>();
 
-    PopupWatcher(SpeechPipeline speech) {
-        this.speech = speech;
+    PopupWatcher(EventLog events) {
+        this.events = events;
     }
 
     void tick() {
@@ -52,7 +52,7 @@ final class PopupWatcher {
             if (description != null) {
                 sb.append(", ").append(description);
             }
-            speech.speak(snd.core.loc.Loc.get("ui", "notification", "text", sb), false);
+            events.say(snd.core.loc.Loc.get("ui", "notification", "text", sb), false);
         }
     }
 
