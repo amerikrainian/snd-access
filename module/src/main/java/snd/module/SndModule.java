@@ -44,6 +44,7 @@ public class SndModule implements ModModule {
     private PopupWatcher popups;
     private PhaseWatcher phases;
     private DiceWatcher dice;
+    private CommandWatcher commands;
     private TargetingWatcher targeting;
     private BannerWatcher banners;
     private TextEntryWatcher textEntry;
@@ -87,6 +88,7 @@ public class SndModule implements ModModule {
         popups = new PopupWatcher(events);
         phases = new PhaseWatcher(events);
         dice = new DiceWatcher(h.speech(), events);
+        commands = new CommandWatcher(events);
         targeting = new TargetingWatcher(h.speech(), events);
         banners = new BannerWatcher(events);
         textEntry = new TextEntryWatcher(h.speech());
@@ -135,6 +137,7 @@ public class SndModule implements ModModule {
         help.tick();
         buffers.tick();
         popups.tick();
+        commands.tick(); // ahead of the phases: a turn's last steps are said before the next turn's banner
         phases.tick();
         dice.tick();
         targeting.tick();

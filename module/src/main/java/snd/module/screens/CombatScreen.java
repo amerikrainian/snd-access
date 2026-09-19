@@ -672,7 +672,8 @@ public class CombatScreen extends AccessScreen {
         if (cut >= 0) {
             desc = desc.substring(0, cut);
         }
-        return p.buff != null ? desc + p.buff.getTurnsString() : desc;
+        // Markup can hide a trailing space from the reader ("Poisoned 1 ,").
+        return (p.buff != null ? desc + p.buff.getTurnsString() : desc).trim();
     }
 
     // The damage preview, computed the way the game's own hp grid computes

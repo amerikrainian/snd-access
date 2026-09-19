@@ -28,6 +28,16 @@
   "level": "level {n}",
   "caster_defeated": "caster defeated",
 
+  "change.clause": "{name}: {parts}",
+  "change.by": "{source} on {target}: {parts}",
+  "change.source": "{source}: {changes}",
+  "change.joins": "joins the fight",
+  "change.poison": "{n} poison damage",
+  "change.max_hp": "max hp {n}",
+  "change.ends": "{status} ends",
+  "change.flees": "flees",
+  "change.returns": "returns, {hp}",
+
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",
   "phase.targeting": "Targeting",
