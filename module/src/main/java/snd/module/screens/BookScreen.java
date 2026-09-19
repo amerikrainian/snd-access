@@ -130,9 +130,31 @@ public class BookScreen extends AccessScreen {
         } else if (!(tab instanceof com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType)
                 || !LedgerNodes.emit(b, content,
                         (com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType) tab)) {
-            ActorNodes.emit(b, content);
+            ActorNodes.emit(b, content, glyphs(tab));
         }
         b.popContext();
+    }
+
+    // The jukebox transport (JukeboxUtils.makeSongControls), also carried by
+    // the cog menu's sound panel.
+    static final java.util.Map<String, String> JUKEBOX_GLYPHS = new java.util.HashMap<String, String>();
+    // The "?" beside the achievements tab's two headings (LedgerPage.makeInfoButton).
+    private static final java.util.Map<String, String> UNLOCK_GLYPHS =
+            java.util.Collections.singletonMap("?", "glyph.help");
+    static {
+        JUKEBOX_GLYPHS.put("<-", "glyph.skip_back");
+        JUKEBOX_GLYPHS.put(">", "glyph.skip_forward");
+        JUKEBOX_GLYPHS.put("->", "glyph.next_song");
+    }
+
+    private static java.util.Map<String, String> glyphs(Object tab) {
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Jukebox) {
+            return JUKEBOX_GLYPHS;
+        }
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Unlock) {
+            return UNLOCK_GLYPHS;
+        }
+        return ActorNodes.NO_GLYPHS;
     }
 
     // The side-value curves, as numbers: the plot identifies series only by

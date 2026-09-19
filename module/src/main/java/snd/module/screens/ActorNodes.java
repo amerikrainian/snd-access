@@ -44,6 +44,17 @@ final class ActorNodes {
     // nothing beneath it is interactive — its TextWriters are then its label.
     // A plain TextWriter becomes a readable line.
     static void emit(GraphBuilder b, Actor actor) {
+        emit(b, actor, NO_GLYPHS);
+    }
+
+    static final java.util.Map<String, String> NO_GLYPHS = java.util.Collections.emptyMap();
+
+    /**
+     * {@code glyphs}: the shorthand captions of the place being read, whole
+     * caption to the ui key that names it ("fs" is "fullscreen" in the cog
+     * menu, and nowhere else). The place knows them; the walk does not.
+     */
+    static void emit(GraphBuilder b, Actor actor, java.util.Map<String, String> glyphs) {
         if (actor == null || !actor.isVisible()) {
             return;
         }
@@ -57,7 +68,7 @@ final class ActorNodes {
             return;
         }
         if (interactiveLeaf(actor)) {
-            b.addItem(actorId(actor), buttonFor(actor));
+            b.addItem(actorId(actor), buttonFor(actor, glyphs));
             return;
         }
         if (actor instanceof TextWriter) {
@@ -84,7 +95,7 @@ final class ActorNodes {
             String section = sectionTitle(group);
             if (section != null) {
                 b.pushContext(section, Loc.get("ui", "role.group"));
-                emit(b, group.getChild(0));
+                emit(b, group.getChild(0), glyphs);
                 b.popContext();
                 return;
             }
@@ -97,7 +108,7 @@ final class ActorNodes {
                 if (dieNet && child instanceof TextWriter) {
                     continue;
                 }
-                emit(b, child);
+                emit(b, child, glyphs);
             }
         }
     }
@@ -182,7 +193,11 @@ final class ActorNodes {
         return false;
     }
 
-    static NodeVtable buttonFor(final Actor actor) {
+    static NodeVtable buttonFor(Actor actor) {
+        return buttonFor(actor, NO_GLYPHS);
+    }
+
+    static NodeVtable buttonFor(final Actor actor, final java.util.Map<String, String> glyphs) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         // What the game's info popup said when this control was last asked
@@ -210,7 +225,7 @@ final class ActorNodes {
                             label = nowPlayingLabel(actor);
                         }
                         if (label == null) {
-                            label = crypticButtonName(GameUi.labelOf(actor));
+                            label = glyphName(GameUi.labelOf(actor), glyphs);
                         }
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
@@ -391,36 +406,13 @@ final class ActorNodes {
         return null;
     }
 
-    // The game's shorthand button glyphs, named: the cog menu's screen modes
-    // and UI-size steppers, the jukebox transport. Exact whole-label matches
+    // A caption the place reads as shorthand, named. Whole-caption matches
     // only, so ordinary text never remaps.
-    private static String crypticButtonName(String label) {
+    private static String glyphName(String label, java.util.Map<String, String> glyphs) {
         if (label == null) {
             return null;
         }
-        String clean = TextFilter.clean(label).trim();
-        String key = null;
-        if ("w".equals(clean)) {
-            key = "glyph.windowed";
-        } else if ("fs".equals(clean)) {
-            key = "glyph.fullscreen";
-        } else if ("fs2".equals(clean)) {
-            key = "glyph.fullscreen2";
-        } else if ("-".equals(clean)) {
-            key = "glyph.decrease";
-        } else if ("+".equals(clean)) {
-            key = "glyph.increase";
-        } else if ("<-".equals(clean)) {
-            key = "glyph.skip_back";
-        } else if (">".equals(clean)) {
-            key = "glyph.skip_forward";
-        } else if ("->".equals(clean)) {
-            key = "glyph.next_song";
-        } else if ("?".equals(clean)) {
-            // The explanation button (the surrender dialog's purple ?);
-            // punctuation alone is silent in speech.
-            key = "glyph.help";
-        }
+        String key = glyphs.get(TextFilter.clean(label).trim());
         return key != null ? Loc.get("ui", key) : label;
     }
 
