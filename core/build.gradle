@@ -1,8 +1,12 @@
-// snd-core: engine-agnostic, permanent-loader code. No game, no libGDX, no
-// Byte Buddy, no JNA — anything here must be unit-testable off-game and must
-// compile to Java 8 bytecode (the shipped build runs on the game's bundled
-// OpenJ9 1.8 JRE).
+// snd-core: the engine-agnostic mod logic — graph, navigator, key table,
+// localization, type-ahead. RELOADABLE: its classes ship inside the module jar
+// and load in the module's classloader, one fresh copy per generation, so a
+// change here hot-reloads like module code. No game, no libGDX — anything here
+// must be unit-testable off-game and must compile to Java 8 bytecode (the
+// shipped build runs on the game's bundled OpenJ9 1.8 JRE). Nothing permanent
+// may link against it: the host depends on :contracts alone.
 dependencies {
+    implementation project(':contracts')
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

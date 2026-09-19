@@ -3,7 +3,7 @@
 // The host discovers snd.devrepl.JShellEvaluator reflectively and degrades
 // gracefully when this jar is absent or the runtime is too old.
 dependencies {
-    implementation project(':core')
+    implementation project(':contracts')
 }
 compileJava.options.release = 21
 compileJava.options.compilerArgs += ['--add-modules', 'jdk.jshell']

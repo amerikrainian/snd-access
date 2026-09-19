@@ -1,0 +1,16 @@
+// snd-contracts: the PERMANENT half of snd.core — what the host links against
+// and what must keep one identity across module reloads: the ModModule /
+// HostServices contracts, the Dispatcher the hooked game methods call, the
+// SpeechPipeline + TextFilter, SndLog/LineLog, the dev-eval Bridge. Loaded
+// once by the app classloader (merged into the host's fat jar). No game, no
+// libGDX, no Byte Buddy, no JNA; Java 8 bytecode (the shipped build runs on
+// the game's bundled OpenJ9 1.8 JRE). Changing anything here costs a restart.
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+compileJava.options.release = 8
+// javac on the 21 toolchain calls release 8 obsolete; the game's bundled
+// OpenJ9 1.8 JRE fixes the target, so the [options] lint is noise here.
+compileJava.options.compilerArgs << '-Xlint:-options'

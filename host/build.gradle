@@ -1,11 +1,11 @@
 // snd-host: the permanent side — agent entry, Byte Buddy hooks, Prism (JNA),
-// dev HTTP server, module loader. The jar is a FAT agent jar (core + Byte Buddy
-// + JNA merged in) so `-javaagent:host-all.jar` is self-contained and the same
+// dev HTTP server, module loader. The jar is a FAT agent jar (contracts + Byte
+// Buddy + JNA merged in) so `-javaagent:host-all.jar` is self-contained and the same
 // jar sits on the classpath.
 def gameJar = "${gameDir}/dice.jar"
 
 dependencies {
-    implementation project(':core')
+    implementation project(':contracts')
     implementation 'net.bytebuddy:byte-buddy:1.15.10'
     implementation 'net.java.dev.jna:jna:5.14.0'
     compileOnly files(gameJar)

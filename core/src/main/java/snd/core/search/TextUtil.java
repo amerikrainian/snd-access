@@ -1,4 +1,4 @@
-package snd.core.util;
+package snd.core.search;
 
 import java.text.Normalizer;
 

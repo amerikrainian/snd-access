@@ -1,2 +1,2 @@
 rootProject.name = 'snd-access'
-include 'core', 'host', 'module', 'devrepl'
+include 'contracts', 'core', 'host', 'module', 'devrepl'

@@ -9,6 +9,7 @@ import snd.core.ModModule;
 import snd.core.SndLog;
 import snd.core.input.InputRegistry;
 import snd.core.loc.Loc;
+import snd.core.nav.GraphDefaults;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.core.nav.ScreenManager;
@@ -50,6 +51,14 @@ public class SndModule implements ModModule {
     @Override
     public void load(HostServices h) {
         this.host = h;
+        // Core reloads with the module: a copy resolved from a permanent
+        // loader (core merged into the host jar, or put on the classpath)
+        // would shadow every rebuilt one, and reloads would change nothing.
+        if (GraphNavigator.class.getClassLoader() != SndModule.class.getClassLoader()) {
+            throw new IllegalStateException("snd.core resolved from " + GraphNavigator.class.getClassLoader()
+                    + ", not the module loader — core must ship in the module jar only");
+        }
+        GraphDefaults.install();
         Locales.load(); // before anything speaks
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());

@@ -46,17 +46,18 @@ The game is a dice-battler roguelike: 2 real screens (title, dungeon) plus a dee
 ## Build & deploy
 
 ```
-gradle build          # all four modules + core unit tests
-gradle :module:build  # just the reloadable module (the hot-reload inner loop)
+gradle build          # all five modules + the contracts and core unit tests
+gradle :module:build  # the reloadable unit: core + module (the hot-reload inner loop)
 ```
 
-Four Gradle modules; artifact names are fixed (no version suffixes):
+Five Gradle modules; artifact names are fixed (no version suffixes):
 
 | Module    | Artifact           | Target  | Contents                                                                                         |
 | --------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------ |
-| `core`    | `core.jar`         | Java 8  | contracts, Dispatcher, SpeechPipeline, TextFilter, LineLog, Bridge — pure, unit-tested           |
-| `host`    | `snd-host-all.jar` | Java 8  | FAT agent jar (core + Byte Buddy + JNA merged): premain, hooks, Prism, dev server, module loader |
-| `module`  | `snd-module.jar`   | Java 8  | module classes ONLY — feature code, reloadable                                                   |
+| `contracts` | (merged into host) | Java 8  | PERMANENT half of `snd.core`: ModModule/HostServices, Dispatcher, SpeechPipeline, TextFilter, SndLog/LineLog, Bridge — pure, unit-tested |
+| `core`    | (merged into module) | Java 8  | RELOADABLE half of `snd.core`: graph, nav, input, loc, search — pure, unit-tested             |
+| `host`    | `snd-host-all.jar` | Java 8  | FAT agent jar (contracts + Byte Buddy + JNA merged): premain, hooks, Prism, dev server, module loader |
+| `module`  | `snd-module.jar`   | Java 8  | module classes + core's — feature code, reloadable; NEVER contracts classes                     |
 | `devrepl` | `snd-devrepl.jar`  | Java 21 | JShell evaluator; dev classpath only, never shipped                                              |
 
 - **Dev launch:** `scripts/run-dev.ps1` (builds, then runs the game under the system JDK with
@@ -84,7 +85,8 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   printed output, `[compile]`/`[exception]` diagnostics, `=> value`, then a `speech:` section
   with whatever the mod spoke as a consequence (waits for a quiet window; `?speech=0` skips,
   `?settle=MS` tunes, default 250) — act-then-listen in one request.
-  **JShell cannot see module-loader types** (game + core + host only); module internals are
+  **JShell cannot see module-loader types** — that is the module AND core (`snd.core.graph`,
+  `nav`, `input`, `loc`, `search`); it sees the game, the contracts and the host. Those internals are
   reached via `ModModule.devCommand` (the `/gui` path) or by adding a devCommand verb.
   **The GL context is NOT current in eval bodies**: JShell's local engine runs each snippet on a
   per-invocation worker thread (the render thread waits on it — game state is safe to touch, but
@@ -113,10 +115,11 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   lands with phase 3/4). `GET /typeinfo?name=<fqcn>` — reflection over app + module loaders.
   `GET /health` — liveness.
 
-Iteration loop for feature code, no game restart: edit `module/`, `gradle :module:build`, then
-`curl -X POST localhost:8771/reload`. **Host, core, or devrepl changes need a full restart**
-(kill game, `gradle build`, relaunch) — same boundary and same reason as the reference mods: those
-load permanently in the app classloader.
+Iteration loop for feature code, no game restart: edit `module/` or `core/`, `gradle :module:build`
+(it rebuilds core and merges it into the module jar), then `curl -X POST localhost:8771/reload`.
+**Host, contracts, or devrepl changes need a full restart** (kill game, `gradle build`, relaunch) —
+same boundary and same reason as the reference mods: those load permanently in the app
+classloader.
 
 Bring-up: `scripts/run-dev.ps1`, then poll
 `curl -s --retry 60 --retry-connrefused --retry-delay 1 http://127.0.0.1:8771/health`.
@@ -128,11 +131,21 @@ your curls are talking to the OLD process. Kill all java processes and relaunch.
 
 Permanent/reloadable split (verified end-to-end):
 
-- **`core`** (permanent, app loader) — engine-agnostic: the `ModModule`/`HostServices` contracts,
-  the **`Dispatcher`** (static fan-out the instrumented game methods call; owns the job queue,
-  frame waits, and the module reference), `SpeechPipeline` + `TextFilter`, **`Loc`** (the mod's
-  own strings, resolved from flat JSON tables), `LineLog`, the /wait `Bridge`. If code decides
-  what words the user hears, it belongs here, unit-tested.
+- **`contracts`** (permanent, app loader) — what the host links against and what must keep one
+  identity across reloads: the `ModModule`/`HostServices` contracts, the **`Dispatcher`** (static
+  fan-out the instrumented game methods call; owns the job queue, frame waits, and the module
+  reference), `SpeechPipeline` + `TextFilter`, `SndLog`/`LineLog`, the /wait `Bridge`. Packages
+  `snd.core`, `snd.core.speech`, `snd.core.util`, `snd.core.dev` — whole packages, never split
+  with core (classes of one package in two loaders lose package-private access). Keep it small;
+  every line here costs a restart to change.
+- **`core`** (reloadable, module loader) — engine-agnostic mod logic: the graph engine, the
+  navigator and screen stack, the key table (`snd.core.input`), **`Loc`** (the mod's own strings,
+  resolved from flat JSON tables), type-ahead. If code decides what words the user hears, it
+  belongs here, unit-tested. Its classes ship inside `snd-module.jar` and load with the module, a
+  fresh copy per generation — so its statics (`Loc` tables, the announcer's wording hooks) are
+  per-generation and the module installs them in `load`. Nothing permanent may link against it:
+  the host depends on `:contracts` alone, and `SndModule.load` refuses to start if core resolved
+  from any loader but its own (a permanent copy would shadow every rebuilt one).
 - **`host`** (permanent) — only what can never reload: `SndAgent` premain + Byte Buddy hook
   install, `PrismBackend` (native handle), `ModuleLoader`, `DevServer`, `GameDriver` (the host's
   few direct game touches). Keep it minimal; every line here costs a restart to change.

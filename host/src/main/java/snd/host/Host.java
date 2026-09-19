@@ -37,10 +37,6 @@ public final class Host implements HostServices {
             speech.setMuted(true);
             SndLog.info("speech muted (SND_NO_SPEECH)");
         }
-        // Announcer wording hooks live in core (app loader) — never assigned
-        // from the module, or the statics would pin old module loaders.
-        snd.core.nav.GraphDefaults.install();
-
         boolean dev = "1".equals(System.getProperty("snd.dev")) || "1".equals(System.getenv("SND_DEV"));
         if (dev) {
             devServer = new DevServer(loader, speechLog, logLog);

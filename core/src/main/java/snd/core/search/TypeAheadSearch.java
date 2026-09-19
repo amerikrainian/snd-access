@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-import snd.core.util.TextUtil;
 
 /**
  * Type-ahead search engine — ported from wotr-access, itself from OniAccess;

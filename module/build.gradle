@@ -1,10 +1,12 @@
-// snd-module: the reloadable side. The jar contains ONLY module classes — core
-// and the game resolve through the parent (app) classloader at runtime, which
-// is what keeps contract type identity stable across reloads. Entry class is
-// fixed by convention: snd.module.SndModule.
+// snd-module: the reloadable side. The jar holds the module classes AND core's
+// (one reloadable unit, one classloader per generation); contracts and the
+// game resolve through the parent loaders at runtime, which is what keeps
+// contract type identity stable across reloads — contracts classes must never
+// be merged in here. Entry class is fixed by convention: snd.module.SndModule.
 def gameJar = "${gameDir}/dice.jar"
 
 dependencies {
+    implementation project(':contracts')
     implementation project(':core')
     compileOnly files(gameJar)
 }
@@ -13,4 +15,7 @@ compileJava.options.release = 8
 // OpenJ9 1.8 JRE fixes the target, so the [options] lint is noise here.
 compileJava.options.compilerArgs << '-Xlint:-options'
 
-jar { archiveBaseName = 'snd-module' }
+jar {
+    archiveBaseName = 'snd-module'
+    from project(':core').sourceSets.main.output
+}
