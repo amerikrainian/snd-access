@@ -350,6 +350,8 @@ public class ChoiceScreen extends AccessScreen {
                 "target", GameText.t(Words.getTierString(ChoicePhases.targetValue(ct), false)));
     }
 
+    private boolean rerollMissReported;
+
     // The tiny unlabeled icon button top-right of first-fight offers: reroll
     // the starting party and options. Found by its texture under the offer
     // group; activation fires the game's own listener, warning dialogs and
@@ -370,8 +372,15 @@ public class ChoiceScreen extends AccessScreen {
             }
             final Actor button = findFlaffButton(group);
             if (button == null) {
+                // The game adds it under exactly the conditions above. Built
+                // every frame, so said once per miss.
+                if (!rerollMissReported) {
+                    rerollMissReported = true;
+                    SndLog.error("first-fight reroll button not found in the offer", null);
+                }
                 return;
             }
+            rerollMissReported = false;
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.BUTTON;
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
