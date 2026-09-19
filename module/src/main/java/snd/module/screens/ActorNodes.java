@@ -84,10 +84,37 @@ final class ActorNodes {
                 b.popContext();
                 return;
             }
+            boolean dieNet = isDieNetDiagram(group);
             for (Actor child : group.getChildren()) {
+                // Text laid over a die-net picture marks POSITIONS on it (the
+                // help page's L, M, T, B, r, R on the net's six faces): it
+                // means something only to the eye, and the legend beside the
+                // picture says the same in words ("L: leftmost").
+                if (dieNet && child instanceof TextWriter) {
+                    continue;
+                }
                 emit(b, child);
             }
         }
+    }
+
+    // A group drawn on one of the game's unfolded-die templates
+    // (SpecificSidesType.templateImage): HelpPage.makeDicePositionExplain's
+    // labelled net, CopySide's side-swap pictures.
+    private static boolean isDieNetDiagram(Group group) {
+        for (Actor child : group.getChildren()) {
+            if (!(child instanceof com.tann.dice.util.ImageActor)) {
+                continue;
+            }
+            com.badlogic.gdx.graphics.g2d.TextureRegion drawn = ((com.tann.dice.util.ImageActor) child).tr;
+            for (com.tann.dice.gameplay.trigger.personal.affectSideModular.condition.SpecificSidesType type
+                    : com.tann.dice.gameplay.trigger.personal.affectSideModular.condition.SpecificSidesType.values()) {
+                if (type.templateImage == drawn) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // DipPanel.makeTopPanelGroup — the game's titled-section idiom (the cog
