@@ -256,7 +256,7 @@ public class SheetScreen extends AccessScreen {
         return sb.toString();
     }
 
-    private static boolean isRolled(Ent ent, int index) {
+    static boolean isRolled(Ent ent, int index) {
         try {
             EntDie die = ent.getDie();
             return die.getState() != Die.DieState.Rolling

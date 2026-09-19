@@ -595,23 +595,30 @@ public class CombatScreen extends AccessScreen {
     // display-filtered keywords, each rules text parameterized by the source
     // effect — halved and treble rewrite their numbers from it.
     static String keywordRules(com.tann.dice.gameplay.effect.eff.Eff e) {
-        if (e == null) {
-            return null;
-        }
-        java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords =
-                e.getKeywordsForDisplay(true);
-        if (keywords == null || keywords.isEmpty()) {
-            return null;
-        }
         StringBuilder sb = new StringBuilder();
-        for (com.tann.dice.gameplay.effect.eff.keyword.Keyword keyword : keywords) {
+        for (String rule : keywordRuleLines(e)) {
             if (sb.length() > 0) {
                 sb.append(". ");
             }
-            sb.append(GameText.t(keyword.getColourTaggedString()))
-                    .append(": ").append(GameText.t(keyword.getRules(e)));
+            sb.append(rule);
         }
-        return sb.toString();
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // One line per keyword the effect displays: "ranged: can hit the back row".
+    static List<String> keywordRuleLines(com.tann.dice.gameplay.effect.eff.Eff e) {
+        List<String> lines = new java.util.ArrayList<String>();
+        if (e == null) {
+            return lines;
+        }
+        java.util.List<com.tann.dice.gameplay.effect.eff.keyword.Keyword> keywords =
+                e.getKeywordsForDisplay(true);
+        if (keywords != null) {
+            for (com.tann.dice.gameplay.effect.eff.keyword.Keyword keyword : keywords) {
+                lines.add(GameText.t(keyword.getColourTaggedString()) + ": " + GameText.t(keyword.getRules(e)));
+            }
+        }
+        return lines;
     }
 
     // "defeated" for a dead hero's greyed panel; "locked" while rolling (the
@@ -711,7 +718,7 @@ public class CombatScreen extends AccessScreen {
     // prefix: "incoming 6 damage from Bandit 2, 2 poison". The from-clause
     // stays on the damage part — poison ticks from the buff, not from a
     // current attacker.
-    private static String previewText(DungeonScreen ds, Ent ent) {
+    static String previewText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
         if (present == null || future == null || present.isDead()) {
@@ -785,7 +792,7 @@ public class CombatScreen extends AccessScreen {
     // stripes on the monster panel draw from (redirects resolved). A monster
     // supporting another monster shows the same arrow, so ally targets speak
     // too; only self stays on the side text.
-    private static String targetsText(DungeonScreen ds, Ent ent) {
+    static String targetsText(DungeonScreen ds, Ent ent) {
         List<Ent> targets = new java.util.ArrayList<Ent>(
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getAllTargeters(ent, false));
         StringBuilder sb = new StringBuilder();

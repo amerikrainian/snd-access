@@ -54,6 +54,11 @@
   "buffer.none": "nothing to review",
   "buffer.line": "{buffer}: {line}",
   "buffer.control": "control",
+  "buffer.hero": "hero",
+  "buffer.monster": "monster",
+  "buffer.items": "items",
+  "buffer.party": "party",
+  "buffer.enemies": "enemies",
 
   "key.escape": "Escape",
   "key.space": "Space",
