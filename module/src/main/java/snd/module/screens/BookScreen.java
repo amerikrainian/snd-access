@@ -286,13 +286,21 @@ public class BookScreen extends AccessScreen {
         }
     }
 
+    private final java.util.Set<Object> missingButtons = new java.util.HashSet<Object>();
+
     private void addFoundButton(GraphBuilder b, com.badlogic.gdx.scenes.scene2d.Group root,
             String text, Object key) {
         final com.tann.dice.util.ui.standardButton.StandardButton button =
                 GameUi.findButtonByText(root, text);
         if (button == null) {
+            // The game adds these unconditionally: a miss means its caption
+            // changed. Built every frame, so said once per miss.
+            if (missingButtons.add(key)) {
+                SndLog.error("almanac button not found: " + text, null);
+            }
             return;
         }
+        missingButtons.remove(key);
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
@@ -479,26 +487,9 @@ public class BookScreen extends AccessScreen {
             SndLog.error("numbers page build failed", t);
         }
 
-        final com.tann.dice.util.ui.standardButton.StandardButton reset =
-                content instanceof com.badlogic.gdx.scenes.scene2d.Group
-                        ? GameUi.findButtonByText((com.badlogic.gdx.scenes.scene2d.Group) content, "Reset Stats")
-                        : null;
-        if (reset != null) {
-            NodeVtable vt = new NodeVtable();
-            vt.controlType = ControlTypes.BUTTON;
-            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-                @Override
-                public String get() {
-                    return GameUi.labelOf(reset);
-                }
-            }, AnnouncementKinds.LABEL));
-            vt.onActivate = new Runnable() {
-                @Override
-                public void run() {
-                    GameUi.activate(reset); // its own confirm dialog follows
-                }
-            };
-            b.addItem(ControlId.referenced(reset, "book-reset-stats"), vt);
+        if (content instanceof com.badlogic.gdx.scenes.scene2d.Group) {
+            // Its own confirm dialog follows.
+            addFoundButton(b, (com.badlogic.gdx.scenes.scene2d.Group) content, "Reset Stats", "book-reset-stats");
         }
     }
 
