@@ -482,6 +482,17 @@ public final class GraphNavigator {
 
     // ---- reading the focus back ----
 
+    /** The focused node, or null. */
+    public GraphNode focusedNode() {
+        return graph != null ? graph.currentNode() : null;
+    }
+
+    /** What the focused control concerns ({@link snd.core.graph.NodeVtable#subject}), or null. */
+    public Object focusedSubject() {
+        GraphNode node = focusedNode();
+        return node != null ? node.vtable.subject : null;
+    }
+
     /** The focused node's identity, or null. */
     public ControlId focusedId() {
         GraphNode node = graph != null ? graph.currentNode() : null;

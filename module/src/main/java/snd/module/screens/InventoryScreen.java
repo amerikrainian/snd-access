@@ -132,6 +132,7 @@ public class InventoryScreen extends AccessScreen {
 
             NodeVtable heroNode = new NodeVtable();
             heroNode.controlType = ControlTypes.BUTTON;
+            heroNode.subject = hero;
             heroNode.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
@@ -160,6 +161,7 @@ public class InventoryScreen extends AccessScreen {
                 final int slot = si;
                 NodeVtable slotNode = new NodeVtable();
                 slotNode.controlType = ControlTypes.BUTTON;
+                slotNode.subject = hero;
                 slotNode.announcements = Arrays.asList(
                         NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
@@ -242,6 +244,7 @@ public class InventoryScreen extends AccessScreen {
             final Item item = bag.get(i);
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.BUTTON;
+            vt.subject = item;
             vt.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override

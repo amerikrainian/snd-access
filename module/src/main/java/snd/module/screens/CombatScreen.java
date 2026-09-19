@@ -76,16 +76,23 @@ public class CombatScreen extends AccessScreen {
                 || p instanceof SurrenderPhase;
     }
 
-    // ---- the vitals glance: on a hero or monster row, its hp display alone,
-    // without the rest of the row (side, targets, statuses) ----
+    // ---- the vitals glance: on a control that concerns a unit (a combat
+    // row, a line of its sheet, its inventory slots), the unit's hp display
+    // alone ----
 
-    /** The combatant whose row has the focus in the fight, or null anywhere else. */
+    /**
+     * The unit the focused control concerns ({@code NodeVtable.subject}),
+     * while the dungeon's FightLog holds a state to read for it; null
+     * anywhere else.
+     */
     public static Ent focusedUnit(GraphNavigator nav) {
-        if (!(nav.screen() instanceof CombatScreen) || !inFight()) {
+        Object subject = nav.focusedSubject();
+        if (!(subject instanceof Ent) || !(com.tann.dice.Main.getCurrentScreen() instanceof DungeonScreen)) {
             return null;
         }
-        ControlId focused = nav.focusedId();
-        return focused != null && focused.reference instanceof Ent ? (Ent) focused.reference : null;
+        FightLog log = DungeonScreen.get().getFightLog();
+        return log != null && log.getState(FightLog.Temporality.Present, (Ent) subject) != null
+                ? (Ent) subject : null;
     }
 
     /** "Ranger, 9 hp, shielded 2, incoming 6 damage from Bandit 2"; "Ranger, defeated" for a corpse. */
@@ -364,6 +371,7 @@ public class CombatScreen extends AccessScreen {
     private NodeVtable entNode(final DungeonScreen ds, final Ent ent) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
+        vt.subject = ent;
         vt.announcements = Arrays.asList(
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override

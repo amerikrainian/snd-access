@@ -93,6 +93,29 @@ class GraphNavigatorTest {
     }
 
     @Test
+    void theFocusedSubjectIsWhatTheFocusedControlConcerns() {
+        GraphNavigator nav = new GraphNavigator(new Capture().pipeline);
+        final Object ranger = new Object();
+        nav.attach(new ListScreen("plain", "about ranger") {
+            @Override
+            public void build(GraphBuilder b) {
+                for (String i : items) {
+                    NodeVtable vt = new NodeVtable();
+                    vt.announcements = Arrays.asList(NodeAnnouncement.of(i));
+                    vt.subject = i.startsWith("about") ? ranger : null;
+                    b.addItem(ControlId.structural(i), vt);
+                }
+            }
+        });
+        org.junit.jupiter.api.Assertions.assertNull(nav.focusedSubject()); // nothing focused yet
+        nav.ensureFocus();
+        org.junit.jupiter.api.Assertions.assertNull(nav.focusedSubject());
+        nav.onAction(NavAction.DOWN);
+        org.junit.jupiter.api.Assertions.assertSame(ranger, nav.focusedSubject());
+        assertEquals(ControlId.structural("about ranger"), nav.focusedNode().id);
+    }
+
+    @Test
     void moveAnnouncesInterrupting() {
         Capture cap = new Capture();
         GraphNavigator nav = new GraphNavigator(cap.pipeline);

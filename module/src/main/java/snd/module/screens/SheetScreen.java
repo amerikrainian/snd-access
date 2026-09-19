@@ -110,7 +110,7 @@ public class SheetScreen extends AccessScreen {
         final Ent ent = pan.ent;
         b.beginStop("sheet");
 
-        NodeVtable header = textVtable();
+        NodeVtable header = textVtable(ent);
         header.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
             @Override
             public String get() {
@@ -122,7 +122,7 @@ public class SheetScreen extends AccessScreen {
         final EntSide[] sides = ent.getSides();
         for (int i = 0; i < sides.length; i++) {
             final int index = i;
-            NodeVtable vt = textVtable();
+            NodeVtable vt = textVtable(ent);
             vt.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
@@ -159,7 +159,7 @@ public class SheetScreen extends AccessScreen {
         if (items != null) {
             for (int i = 0; i < items.size(); i++) {
                 final Item item = items.get(i);
-                NodeVtable vt = textVtable();
+                NodeVtable vt = textVtable(ent);
                 vt.announcements = Arrays.asList(
                         NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
@@ -187,7 +187,7 @@ public class SheetScreen extends AccessScreen {
                     continue; // invisible mechanics don't show on the panel either
                 }
                 final Personal personal = p;
-                NodeVtable vt = textVtable();
+                NodeVtable vt = textVtable(ent);
                 vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
@@ -267,9 +267,11 @@ public class SheetScreen extends AccessScreen {
         }
     }
 
-    private static NodeVtable textVtable() {
+    // Every line of a sheet concerns the unit the sheet is of.
+    private static NodeVtable textVtable(Ent ent) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.TEXT;
+        vt.subject = ent;
         // Backspace toggles the sheet closed — the same key that opened it.
         vt.onSecondary = CLOSE;
         return vt;

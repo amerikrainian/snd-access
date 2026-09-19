@@ -28,6 +28,15 @@ public final class NodeVtable {
     /** The control's type (registry value). Null = an untyped one-off. */
     public ControlType controlType;
 
+    /**
+     * Optional. The domain object the control CONCERNS: the combatant a row or
+     * a sheet line is about, the item in a slot. The glance keys and the
+     * subject-fed review buffers read it, so they answer from any control
+     * that concerns a unit, whatever screen declared it. Not identity — that
+     * is {@link ControlId#reference}, which follows focus across rebuilds.
+     */
+    public Object subject;
+
     /** Optional. Primary activation — the left-click equivalent (Enter). */
     public Runnable onActivate;
 
