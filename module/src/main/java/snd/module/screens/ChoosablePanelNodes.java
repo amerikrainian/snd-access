@@ -53,12 +53,8 @@ public final class ChoosablePanelNodes {
         }
         List<String> lines = new java.util.ArrayList<String>();
         String name = ChoiceScreen.nameOf(choosable);
-        try {
-            name += ", " + Loc.get("ui", "choice.tier", "tier", GameText.t(choosable.getTierString()));
-        } catch (Throwable t) {
-            // no tier to say
-        }
-        lines.add(name);
+        String tier = tierText(choosable);
+        lines.add(tier != null ? name + ", " + tier : name);
         String desc = fullDescription(panel);
         if (desc != null && !desc.trim().isEmpty()) {
             lines.add(GameText.t(desc));
@@ -70,6 +66,27 @@ public final class ChoosablePanelNodes {
             }
         }
         return lines;
+    }
+
+    /**
+     * "tier 3", or "tier -2" for a curse tier: the game draws both as a bare
+     * number and tells them apart by colour alone (purple), so the tier is
+     * read from the model, sign and all, in the game's own uncoloured form.
+     * Null where the game draws its "/" for no tier at all (an unrated
+     * modifier, a tierless item).
+     */
+    static String tierText(Choosable choosable) {
+        try {
+            String shown = snd.contracts.speech.TextFilter.clean(choosable.getTierString());
+            if (!shown.matches(".*[0-9IVXLC].*")) {
+                return null;
+            }
+            return Loc.get("ui", "choice.tier", "tier",
+                    GameText.t(com.tann.dice.util.lang.Words.getTierString(choosable.getTier())));
+        } catch (Throwable t) {
+            snd.contracts.SndLog.error("tier read failed", t);
+            return null;
+        }
     }
 
     static void emit(GraphBuilder b, final ConcisePanel panel) {
@@ -91,12 +108,7 @@ public final class ChoosablePanelNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        try {
-                            return Loc.get("ui", "choice.tier", "tier",
-                                    GameText.t(choosable.getTierString()));
-                        } catch (Throwable t) {
-                            return null;
-                        }
+                        return tierText(choosable);
                     }
                 }, AnnouncementKinds.VALUE));
         b.addItem(ControlId.structural(CompositeKey.of("choosable-panel", "name")), name);

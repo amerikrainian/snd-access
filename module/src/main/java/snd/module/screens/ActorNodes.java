@@ -86,12 +86,20 @@ final class ActorNodes {
                 return;
             }
             boolean dieNet = isDieNetDiagram(group);
-            for (Actor child : group.getChildren()) {
+            com.badlogic.gdx.utils.SnapshotArray<Actor> children = group.getChildren();
+            for (int i = 0; i < children.size; i++) {
+                Actor child = children.get(i);
                 // Text laid over a die-net picture marks POSITIONS on it (the
                 // help page's L, M, T, B, r, R on the net's six faces): it
                 // means something only to the eye, and the legend beside the
                 // picture says the same in words ("L: leftmost").
                 if (dieNet && child instanceof TextWriter) {
+                    continue;
+                }
+                String tier = child instanceof TextWriter && i + 1 < children.size
+                        ? itemTierHeading(children.get(i + 1)) : null;
+                if (tier != null) {
+                    b.addItem(actorId(child), textNode(tier));
                     continue;
                 }
                 emit(b, child);
@@ -426,11 +434,37 @@ final class ActorNodes {
         return false;
     }
 
+    // The almanac's item page heads each run of tiles with a bare number, the
+    // tier, a curse tier told from the rest only by its colour
+    // (LedgerUtils.makeItemsGroup). The tiles under it know their tier: the
+    // heading reads as the first one's, sign included.
+    private static String itemTierHeading(Actor next) {
+        com.tann.dice.gameplay.content.item.Item item = itemOf(next);
+        return item != null ? ChoosablePanelNodes.tierText(item) : null;
+    }
+
+    private static NodeVtable textNode(final String text) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.TEXT;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return text;
+            }
+        }, AnnouncementKinds.LABEL));
+        return vt;
+    }
+
     private static java.lang.reflect.Field itemTileField;
 
     // Item ledger tiles show only the item's art (locked ones a padlock the
     // icon naming already catches).
     private static String itemTileName(Actor actor) {
+        com.tann.dice.gameplay.content.item.Item item = itemOf(actor);
+        return item != null ? GameText.t(item.getName(true)) : null;
+    }
+
+    private static com.tann.dice.gameplay.content.item.Item itemOf(Actor actor) {
         if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView)) {
             return null;
         }
@@ -440,11 +474,9 @@ final class ActorNodes {
                         .getDeclaredField("item");
                 itemTileField.setAccessible(true);
             }
-            com.tann.dice.gameplay.content.item.Item item =
-                    (com.tann.dice.gameplay.content.item.Item) itemTileField.get(actor);
-            return item != null ? GameText.t(item.getName(true)) : null;
+            return (com.tann.dice.gameplay.content.item.Item) itemTileField.get(actor);
         } catch (Throwable t) {
-            snd.contracts.SndLog.error("item tile name failed", t);
+            snd.contracts.SndLog.error("item tile read failed", t);
             return null;
         }
     }
