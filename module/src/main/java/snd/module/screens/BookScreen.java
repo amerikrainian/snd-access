@@ -130,7 +130,7 @@ public class BookScreen extends AccessScreen {
         } else if (!(tab instanceof com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType)
                 || !LedgerNodes.emit(b, content,
                         (com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType) tab)) {
-            ActorNodes.emit(b, content, glyphs(tab));
+            ActorNodes.emit(b, content, place(tab));
         }
         b.popContext();
     }
@@ -147,14 +147,23 @@ public class BookScreen extends AccessScreen {
         JUKEBOX_GLYPHS.put("->", "glyph.next_song");
     }
 
-    private static java.util.Map<String, String> glyphs(Object tab) {
+    private static ActorNodes.Place place(Object tab) {
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Jukebox) {
-            return JUKEBOX_GLYPHS;
+            return ActorNodes.Place.glyphs(JUKEBOX_GLYPHS);
         }
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Unlock) {
-            return UNLOCK_GLYPHS;
+            return ActorNodes.Place.glyphs(UNLOCK_GLYPHS);
         }
-        return ActorNodes.NO_GLYPHS;
+        // The filter rows (LedgerUtils.makeModifiersGroup): the chosen filter
+        // is an argument the page was rebuilt with, drawn as a light border.
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Modifier) {
+            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_BORDER);
+        }
+        // The section, type and letter rows (APIUtils): a light caption among greyed ones.
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.TextMod) {
+            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_CAPTION);
+        }
+        return ActorNodes.Place.PLAIN;
     }
 
     // The side-value curves, as numbers: the plot identifies series only by

@@ -65,7 +65,7 @@ public class GameModalScreen extends AccessScreen {
             ChoosablePanelNodes.emit(b,
                     (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) modal);
         } else {
-            ActorNodes.emit(b, modal, glyphs(modal));
+            ActorNodes.emit(b, modal, place(modal));
         }
         b.popContext();
     }
@@ -87,15 +87,20 @@ public class GameModalScreen extends AccessScreen {
         COG_GLYPHS.putAll(BookScreen.JUKEBOX_GLYPHS);
     }
 
-    private static java.util.Map<String, String> glyphs(Actor modal) {
+    private static ActorNodes.Place place(Actor modal) {
         if (isCogMenu(modal)) {
-            return COG_GLYPHS;
+            return ActorNodes.Place.glyphs(COG_GLYPHS);
+        }
+        // The almanac's leaderboard picker, under the name the game pops it by
+        // (StuffPage.makeLeaderboard): the board on show has a light border.
+        if ("leaderboard_modal".equals(modal.getName())) {
+            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_BORDER);
         }
         if (com.tann.dice.gameplay.phase.PhaseManager.get().getPhase()
                 instanceof com.tann.dice.gameplay.phase.gameplay.SurrenderPhase) {
-            return SURRENDER_GLYPHS;
+            return ActorNodes.Place.glyphs(SURRENDER_GLYPHS);
         }
-        return ActorNodes.NO_GLYPHS;
+        return ActorNodes.Place.PLAIN;
     }
 
     // The cog/settings menu marks itself with a CogTag child — the same tag

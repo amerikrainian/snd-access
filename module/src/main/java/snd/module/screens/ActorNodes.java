@@ -44,17 +44,46 @@ final class ActorNodes {
     // nothing beneath it is interactive — its TextWriters are then its label.
     // A plain TextWriter becomes a readable line.
     static void emit(GraphBuilder b, Actor actor) {
-        emit(b, actor, NO_GLYPHS);
+        emit(b, actor, Place.PLAIN);
     }
 
-    static final java.util.Map<String, String> NO_GLYPHS = java.util.Collections.emptyMap();
+    /** How a place marks the chosen one of a row of plain buttons, colour being all it has. */
+    enum ChosenMark {
+        NONE,
+        /** A light border where the others keep their own colour. */
+        LIGHT_BORDER,
+        /** A light caption where every other one is greyed. */
+        LIGHT_CAPTION
+    }
 
     /**
-     * {@code glyphs}: the shorthand captions of the place being read, whole
-     * caption to the ui key that names it ("fs" is "fullscreen" in the cog
-     * menu, and nowhere else). The place knows them; the walk does not.
+     * What the place being read says of its own conventions. The screen that
+     * hands an actor to the walk knows where it is (the cog menu by its
+     * CogTag, an almanac tab by its identifier); the walk does not, and what
+     * holds in one place is applied in no other.
      */
-    static void emit(GraphBuilder b, Actor actor, java.util.Map<String, String> glyphs) {
+    static final class Place {
+        static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), ChosenMark.NONE);
+
+        /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
+        final java.util.Map<String, String> glyphs;
+        final ChosenMark chosen;
+
+        Place(java.util.Map<String, String> glyphs, ChosenMark chosen) {
+            this.glyphs = glyphs;
+            this.chosen = chosen;
+        }
+
+        static Place glyphs(java.util.Map<String, String> glyphs) {
+            return new Place(glyphs, ChosenMark.NONE);
+        }
+
+        static Place chosen(ChosenMark chosen) {
+            return new Place(java.util.Collections.<String, String>emptyMap(), chosen);
+        }
+    }
+
+    static void emit(GraphBuilder b, Actor actor, Place place) {
         if (actor == null || !actor.isVisible()) {
             return;
         }
@@ -68,7 +97,7 @@ final class ActorNodes {
             return;
         }
         if (interactiveLeaf(actor)) {
-            b.addItem(actorId(actor), buttonFor(actor, glyphs));
+            b.addItem(actorId(actor), buttonFor(actor, place));
             return;
         }
         if (actor instanceof TextWriter) {
@@ -95,7 +124,7 @@ final class ActorNodes {
             String section = sectionTitle(group);
             if (section != null) {
                 b.pushContext(section, Loc.get("ui", "role.group"));
-                emit(b, group.getChild(0), glyphs);
+                emit(b, group.getChild(0), place);
                 b.popContext();
                 return;
             }
@@ -108,7 +137,7 @@ final class ActorNodes {
                 if (dieNet && child instanceof TextWriter) {
                     continue;
                 }
-                emit(b, child, glyphs);
+                emit(b, child, place);
             }
         }
     }
@@ -194,10 +223,10 @@ final class ActorNodes {
     }
 
     static NodeVtable buttonFor(Actor actor) {
-        return buttonFor(actor, NO_GLYPHS);
+        return buttonFor(actor, Place.PLAIN);
     }
 
-    static NodeVtable buttonFor(final Actor actor, final java.util.Map<String, String> glyphs) {
+    static NodeVtable buttonFor(final Actor actor, final Place place) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         // What the game's info popup said when this control was last asked
@@ -225,7 +254,7 @@ final class ActorNodes {
                             label = nowPlayingLabel(actor);
                         }
                         if (label == null) {
-                            label = glyphName(GameUi.labelOf(actor), glyphs);
+                            label = glyphName(GameUi.labelOf(actor), place.glyphs);
                         }
                         if (label == null) {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
@@ -258,12 +287,12 @@ final class ActorNodes {
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }
                 }, AnnouncementKinds.LABEL),
-                // A row of the game's buttons that works as a radio group:
-                // the chosen one is drawn with a light border.
+                // A row of the game's buttons that works as a radio group,
+                // in a place that marks the chosen one by colour.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return chosenAmongButtons(actor) ? Loc.get("ui", "state.selected") : null;
+                        return chosenAmongButtons(actor, place.chosen) ? Loc.get("ui", "state.selected") : null;
                     }
                 }, AnnouncementKinds.SELECTED),
                 // Checkbox rows (options, jukebox songs): the box's state.
@@ -473,45 +502,42 @@ final class ActorNodes {
     }
 
     // The game builds a choose-one row out of plain StandardButtons and marks
-    // the chosen one by colour alone, in one of two ways.
+    // the chosen one by colour alone: which button is chosen it keeps in no
+    // field, only in the arguments the page was built with. How a place does
+    // it is the place's to say (ChosenMark); a light button anywhere else is
+    // just a light button.
     //
-    // A light BORDER where the others keep their own colour: the almanac's
-    // modifier filters (Curses / Blessings / Both), the leaderboard picker.
+    // LIGHT_BORDER: the almanac's modifier filters (Curses / Blessings / Both,
+    // and the generation row under them), the leaderboard picker.
     //
-    // A light CAPTION where every other one is greyed: the TextMod page's
-    // info / api / api-2 sections, its type row and its letter row
-    // ("[notranslate][light]api" among "[notranslate][grey]info"). The greyed
-    // siblings are what tells this from a list that merely has light entries
-    // in it — the keyword index captions "cleave" in its keyword colour,
-    // light, among others in theirs.
-    private static boolean chosenAmongButtons(Actor actor) {
-        if (!(actor instanceof StandardButton) || actor.getParent() == null) {
+    // LIGHT_CAPTION: the TextMod page's info / api / api-2 sections, its type
+    // row and its letter row ("[notranslate][light]api" among
+    // "[notranslate][grey]info"). The greyed siblings are what tells a row of
+    // this kind from the page's other buttons.
+    private static boolean chosenAmongButtons(Actor actor, ChosenMark mark) {
+        if (mark == ChosenMark.NONE || !(actor instanceof StandardButton) || actor.getParent() == null) {
             return false;
         }
         try {
             StandardButton button = (StandardButton) actor;
-            boolean border = buttonCol(button) == com.tann.dice.util.Colours.light;
-            boolean caption = openingTags(button).endsWith("[light]");
-            if (border == caption) {
+            if (mark == ChosenMark.LIGHT_BORDER) {
+                return buttonCol(button) == com.tann.dice.util.Colours.light;
+            }
+            if (!openingTags(button).endsWith("[light]")) {
                 return false;
             }
-            boolean unlitSibling = false;
+            boolean greyedSibling = false;
             for (Actor sibling : actor.getParent().getChildren()) {
                 if (sibling == actor || !(sibling instanceof StandardButton)) {
-                    continue;
-                }
-                if (border) {
-                    // Two filter rows share a parent, each with its own chosen one.
-                    unlitSibling |= buttonCol(sibling) != com.tann.dice.util.Colours.light;
                     continue;
                 }
                 String tags = openingTags((StandardButton) sibling);
                 if (!tags.contains("[grey]") || tags.endsWith("[light]")) {
                     return false;
                 }
-                unlitSibling = true;
+                greyedSibling = true;
             }
-            return unlitSibling;
+            return greyedSibling;
         } catch (Throwable t) {
             snd.contracts.SndLog.error("button colour read failed", t);
             return false;
