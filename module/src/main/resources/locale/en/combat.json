@@ -37,6 +37,8 @@
   "change.ends": "{status} ends",
   "change.flees": "flees",
   "change.returns": "returns, {hp}",
+  "intent": "{name}: {side}",
+  "intent.fate": "{name}: {fate}",
 
   "phase.enemy_rolling": "Enemies rolling",
   "phase.player_rolling": "Your roll",

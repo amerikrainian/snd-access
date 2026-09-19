@@ -95,6 +95,48 @@ public class CombatScreen extends AccessScreen {
                 ? (Ent) subject : null;
     }
 
+    /**
+     * What the monsters are about to do, a sentence each ("Bandit 1: 5 damage,
+     * targets Defender 1"), then every hero that leaves dead ("Defender 1:
+     * overkill 2") — what the targeting arrows and the flashing hp bars tell
+     * the eye the moment the enemy dice land. Null with no monster standing.
+     */
+    public static String enemyIntents() {
+        DungeonScreen ds = DungeonScreen.get();
+        com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+        StringBuilder sb = new StringBuilder();
+        for (Ent monster : present.getEntities(false, false)) {
+            EntState state = present.getState(monster);
+            if (state.skipTurn() || state.isSummonedSoNotAttacking()) {
+                continue; // stunned or just summoned: its die is no threat this turn
+            }
+            String side = currentSideText(monster);
+            String targets = targetsText(ds, monster);
+            sentence(sb, Loc.get("combat", "intent", "name", GameUi.entName(monster),
+                    "side", targets != null ? side + ", " + targets : side));
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        for (Ent hero : present.getEntities(true, false)) {
+            EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, hero);
+            if (future != null && future.isDead()) {
+                String fate = future.isFled() ? Loc.get("combat", "flees")
+                        : future.getHp() < 0 ? Loc.get("combat", "overkill", "n", -future.getHp())
+                        : Loc.get("combat", "dies");
+                sentence(sb, Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", fate));
+            }
+        }
+        return sb.toString();
+    }
+
+    private static void sentence(StringBuilder sb, String sentence) {
+        if (sb.length() > 0) {
+            sb.append(". ");
+        }
+        sb.append(sentence);
+    }
+
     /** "Ranger, 9 hp, shielded 2, incoming 6 damage from Bandit 2"; "Ranger, defeated" for a corpse. */
     public static String vitalsLine(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();

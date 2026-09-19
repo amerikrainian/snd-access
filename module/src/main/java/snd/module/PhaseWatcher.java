@@ -15,6 +15,7 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
+import snd.module.screens.CombatScreen;
 
 /**
  * Speaks the combat turn structure: the current phase of the
@@ -36,6 +37,10 @@ final class PhaseWatcher {
     // in-combat phase first speaks after the value changes.
     private String lastFight;
     private int lastTurn = -1;
+    // The turn whose enemy intents were spoken: once per turn, however
+    // often an undo rewinds targeting into rolling and back.
+    private int intentsTurn = -1;
+    private String intentsFight;
 
     PhaseWatcher(EventLog events) {
         this.events = events;
@@ -48,6 +53,21 @@ final class PhaseWatcher {
         }
         lastPhase = p;
         String line = lineFor(p);
+        // The player's first phase of a turn: the enemy dice have landed.
+        // What they threaten leads, since the roll about to be read is
+        // judged against it.
+        if (p instanceof PlayerRollingPhase || p instanceof TargetingPhase) {
+            int turn = currentTurn();
+            String fight = fightProgress();
+            if (turn != intentsTurn || (fight != null && !fight.equals(intentsFight))) {
+                intentsTurn = turn;
+                intentsFight = fight;
+                String intents = CombatScreen.enemyIntents();
+                if (intents != null) {
+                    events.say(intents, false);
+                }
+            }
+        }
         if (line != null) {
             events.say(line, false);
         }
