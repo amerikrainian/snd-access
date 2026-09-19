@@ -459,6 +459,11 @@ public class CombatScreen extends AccessScreen {
                                     && PhaseManager.get().getPhase() instanceof TargetingPhase) {
                                 return null;
                             }
+                            // Summoned this turn: the panel draws no face, and
+                            // the die it holds is not an intent.
+                            if (present.isSummonedSoNotAttacking()) {
+                                return null;
+                            }
                         }
                         return currentSideText(ent);
                     }
@@ -673,6 +678,7 @@ public class CombatScreen extends AccessScreen {
             return null;
         }
         StringBuilder sb = new StringBuilder();
+        boolean backRowSaid = false;
         for (Personal p : present.getActivePersonals()) {
             if (!p.showInEntPanel() || p.skipNetAndIcon()) {
                 continue;
@@ -681,6 +687,17 @@ public class CombatScreen extends AccessScreen {
                 sb.append(", ");
             }
             sb.append(GameText.t(statusName(p)));
+            backRowSaid |= p.backRow();
+        }
+        // Standing in the back row draws an icon only for those who START
+        // there; one who retreats mid-fight just slides away from the front
+        // (BackRow(false) hides its icon). Out of reach either way, so it is
+        // said either way, in the game's word for it.
+        if (!present.isForwards() && !backRowSaid) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(GameText.t("Back-row"));
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
