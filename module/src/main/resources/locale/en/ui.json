@@ -142,6 +142,8 @@
   "book.not_achieved": "not achieved",
   "book.value_table": "Side values",
   "book.pips_col": "{n} pips",
+  "book.hero_group": "{colour}, tier {tier}",
+  "book.no_tier": "no tier",
 
   "state.checked": "checked",
   "state.unchecked": "unchecked",

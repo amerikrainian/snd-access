@@ -89,20 +89,12 @@ final class ActorNodes {
                 return;
             }
             boolean dieNet = isDieNetDiagram(group);
-            com.badlogic.gdx.utils.SnapshotArray<Actor> children = group.getChildren();
-            for (int i = 0; i < children.size; i++) {
-                Actor child = children.get(i);
+            for (Actor child : group.getChildren()) {
                 // Text laid over a die-net picture marks POSITIONS on it (the
                 // help page's L, M, T, B, r, R on the net's six faces): it
                 // means something only to the eye, and the legend beside the
                 // picture says the same in words ("L: leftmost").
                 if (dieNet && child instanceof TextWriter) {
-                    continue;
-                }
-                String tier = child instanceof TextWriter && i + 1 < children.size
-                        ? itemTierHeading(children.get(i + 1)) : null;
-                if (tier != null) {
-                    b.addItem(actorId(child), textNode(tier));
                     continue;
                 }
                 emit(b, child);
@@ -257,12 +249,10 @@ final class ActorNodes {
                     }
                 }, AnnouncementKinds.SELECTED),
                 // Checkbox rows (options, jukebox songs): the box's state.
-                // Ledger tiles: the dark veil over one not met yet.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        String state = checkboxState(actor);
-                        return state != null ? state : unencounteredState(actor);
+                        return checkboxState(actor);
                     }
                 }, AnnouncementKinds.VALUE),
                 // Item/modifier cards (ConcisePanel) draw their effect text as
@@ -397,30 +387,43 @@ final class ActorNodes {
 
     // Ledger tiles are portrait-only; their entity type is a field.
     private static String monsterTileName(Actor actor) {
-        try {
-            if (actor instanceof com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView) {
-                if (monsterTypeField == null) {
-                    monsterTypeField = com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView.class
-                            .getDeclaredField("type");
-                    monsterTypeField.setAccessible(true);
-                }
-                com.tann.dice.gameplay.content.ent.type.MonsterType type =
-                        (com.tann.dice.gameplay.content.ent.type.MonsterType) monsterTypeField.get(actor);
-                return type != null ? GameText.t(type.getName(true)) : null;
-            }
-            if (actor instanceof com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView) {
-                if (heroTypeField == null) {
-                    heroTypeField = com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView.class
-                            .getDeclaredField("h");
-                    heroTypeField.setAccessible(true);
-                }
-                com.tann.dice.gameplay.content.ent.type.HeroType type =
-                        (com.tann.dice.gameplay.content.ent.type.HeroType) heroTypeField.get(actor);
-                return type != null ? GameText.t(type.getName(true)) : null;
-            }
+        com.tann.dice.gameplay.content.ent.type.EntType type = monsterTypeOf(actor);
+        if (type == null) {
+            type = heroTypeOf(actor);
+        }
+        return type != null ? GameText.t(type.getName(true)) : null;
+    }
+
+    static com.tann.dice.gameplay.content.ent.type.MonsterType monsterTypeOf(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView)) {
             return null;
+        }
+        try {
+            if (monsterTypeField == null) {
+                monsterTypeField = com.tann.dice.screens.dungeon.panels.book.views.MonsterLedgerView.class
+                        .getDeclaredField("type");
+                monsterTypeField.setAccessible(true);
+            }
+            return (com.tann.dice.gameplay.content.ent.type.MonsterType) monsterTypeField.get(actor);
         } catch (Throwable t) {
-            snd.contracts.SndLog.error("ledger tile name failed", t);
+            snd.contracts.SndLog.error("monster tile read failed", t);
+            return null;
+        }
+    }
+
+    static com.tann.dice.gameplay.content.ent.type.HeroType heroTypeOf(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView)) {
+            return null;
+        }
+        try {
+            if (heroTypeField == null) {
+                heroTypeField = com.tann.dice.screens.dungeon.panels.book.views.HeroLedgerView.class
+                        .getDeclaredField("h");
+                heroTypeField.setAccessible(true);
+            }
+            return (com.tann.dice.gameplay.content.ent.type.HeroType) heroTypeField.get(actor);
+        } catch (Throwable t) {
+            snd.contracts.SndLog.error("hero tile read failed", t);
             return null;
         }
     }
@@ -496,50 +499,6 @@ final class ActorNodes {
         return tags.find() ? tags.group() : "";
     }
 
-    // The almanac dims a hero, monster or item the player has not met in a
-    // run with a translucent dark rectangle over its art
-    // (HeroLedgerView.addUnencountered) and says so only once the tile is
-    // opened. Said on the tile, in the game's own words for it.
-    private static String unencounteredState(Actor actor) {
-        boolean tile = actor instanceof com.tann.dice.screens.dungeon.panels.book.views.EntityLedgerView
-                || actor instanceof com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView;
-        return tile && veiled((Group) actor) ? GameText.t("Not encountered yet...") : null;
-    }
-
-    private static boolean veiled(Group group) {
-        for (Actor child : group.getChildren()) {
-            if (child instanceof com.tann.dice.util.Rectactor
-                    && child.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled) {
-                return true;
-            }
-            if (child instanceof Group && veiled((Group) child)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // The almanac's item page heads each run of tiles with a bare number, the
-    // tier, a curse tier told from the rest only by its colour
-    // (LedgerUtils.makeItemsGroup). The tiles under it know their tier: the
-    // heading reads as the first one's, sign included.
-    private static String itemTierHeading(Actor next) {
-        com.tann.dice.gameplay.content.item.Item item = itemOf(next);
-        return item != null ? ChoosablePanelNodes.tierText(item) : null;
-    }
-
-    private static NodeVtable textNode(final String text) {
-        NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.TEXT;
-        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-            @Override
-            public String get() {
-                return text;
-            }
-        }, AnnouncementKinds.LABEL));
-        return vt;
-    }
-
     private static java.lang.reflect.Field abilityTileField;
 
     // A spell or tactic drawn as its round icon alone (the keyword page's
@@ -572,7 +531,7 @@ final class ActorNodes {
         return item != null ? GameText.t(item.getName(true)) : null;
     }
 
-    private static com.tann.dice.gameplay.content.item.Item itemOf(Actor actor) {
+    static com.tann.dice.gameplay.content.item.Item itemOf(Actor actor) {
         if (!(actor instanceof com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView)) {
             return null;
         }
