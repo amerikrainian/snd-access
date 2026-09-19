@@ -29,7 +29,8 @@ final class SndKeys {
     private SndKeys() {
     }
 
-    static InputRegistry build(final HelpScreen help, final GraphNavigator nav, final SpeechPipeline speech) {
+    static InputRegistry build(final HelpScreen help, final GraphNavigator nav, final Buffers buffers,
+            final SpeechPipeline speech) {
         InputRegistry keys = new InputRegistry();
 
         keys.register(InputAction.of("help", "help.title")
@@ -82,6 +83,45 @@ final class SndKeys {
                         speech.speak(CombatScreen.vitalsLine(CombatScreen.focusedUnit(nav)), true);
                     }
                 }));
+        // Review: Ctrl+Left/Right switch buffers, Ctrl+Up/Down step lines.
+        // They only read, so they answer over the help overlay too.
+        keys.register(InputAction.of("buffer.next", "help.buffer.next")
+                .bind(KeyChord.of(22, "key.right").ctrl())
+                .overOverlay()
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        buffers.controls.nextBuffer();
+                    }
+                }));
+        keys.register(InputAction.of("buffer.prev", "help.buffer.prev")
+                .bind(KeyChord.of(21, "key.left").ctrl())
+                .overOverlay()
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        buffers.controls.previousBuffer();
+                    }
+                }));
+        keys.register(InputAction.of("buffer.line.next", "help.buffer.line.next")
+                .bind(KeyChord.of(20, "key.down").ctrl())
+                .overOverlay()
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        buffers.controls.nextLine();
+                    }
+                }));
+        keys.register(InputAction.of("buffer.line.prev", "help.buffer.line.prev")
+                .bind(KeyChord.of(19, "key.up").ctrl())
+                .overOverlay()
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        buffers.controls.previousLine();
+                    }
+                }));
+
         // The rest of the Ctrl tiers of the digits: held for the glances to
         // come, and silent until then. Fallen through, Ctrl+2 is the game's 2.
         keys.register(InputAction.of("reserved.ctrl-digits", null)

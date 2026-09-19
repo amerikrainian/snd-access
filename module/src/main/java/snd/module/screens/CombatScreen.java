@@ -273,6 +273,20 @@ public class CombatScreen extends AccessScreen {
                                 ? Loc.get("combat", "caster_defeated") : null;
                     }
                 }, AnnouncementKinds.ENABLED));
+        vt.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                // What Backspace and Shift+Backspace speak, a line each.
+                List<String> lines = new java.util.ArrayList<String>();
+                lines.add(GameText.t(a.getDerivedEffects().describe(false)));
+                try {
+                    lines.add(keywordRules(a.getDerivedEffects()));
+                } catch (Throwable t) {
+                    snd.core.SndLog.error("ability keyword rules failed", t);
+                }
+                return lines;
+            }
+        };
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
@@ -372,6 +386,12 @@ public class CombatScreen extends AccessScreen {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         vt.subject = ent;
+        vt.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                return entTooltipLines(ds, ent);
+            }
+        };
         vt.announcements = Arrays.asList(
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
@@ -525,9 +545,22 @@ public class CombatScreen extends AccessScreen {
 
     private static String entTooltipText(DungeonScreen ds, Ent ent) {
         StringBuilder sb = new StringBuilder();
+        for (String line : entTooltipLines(ds, ent)) {
+            if (sb.length() > 0) {
+                sb.append(". ");
+            }
+            sb.append(line);
+        }
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // One line per tooltip: the current side's keyword rules, then each
+    // status the panel draws, in full.
+    static List<String> entTooltipLines(DungeonScreen ds, Ent ent) {
+        List<String> lines = new java.util.ArrayList<String>();
         String rules = sideKeywordRules(ent);
         if (rules != null) {
-            sb.append(rules);
+            lines.add(rules);
         }
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null) {
@@ -535,13 +568,10 @@ public class CombatScreen extends AccessScreen {
                 if (!p.showInEntPanel() || p.skipNetAndIcon()) {
                     continue;
                 }
-                if (sb.length() > 0) {
-                    sb.append(". ");
-                }
-                sb.append(GameText.t(p.describeForTriggerPanel()));
+                lines.add(GameText.t(p.describeForTriggerPanel()));
             }
         }
-        return sb.length() > 0 ? sb.toString() : null;
+        return lines;
     }
 
     // "bloodlust: +1 pip for each damaged enemy" for every keyword on the

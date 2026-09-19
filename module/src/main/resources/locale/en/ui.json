@@ -46,6 +46,14 @@
   "help.nav.REGION_NEXT": "Next section",
   "help.nav.CANCEL": "Cancel search",
   "help.glance.vitals": "hp and shields",
+  "help.buffer.next": "Next buffer",
+  "help.buffer.prev": "Previous buffer",
+  "help.buffer.line.next": "Next buffer line",
+  "help.buffer.line.prev": "Previous buffer line",
+
+  "buffer.none": "nothing to review",
+  "buffer.line": "{buffer}: {line}",
+  "buffer.control": "control",
 
   "key.escape": "Escape",
   "key.space": "Space",

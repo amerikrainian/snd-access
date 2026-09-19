@@ -141,8 +141,24 @@ public final class DevServer {
         } else if (path.equals("/typeinfo")) {
             respond(ex, 200, typeInfo(q.get("name")));
         } else {
-            respond(ex, 404, "unknown endpoint " + path
-                    + "\nendpoints: /health /eval /reload /module /speech /log /input /wait /screenshot /gui /typeinfo");
+            // Anything else is the module's to answer (devCommand, the path
+            // as the verb, the body as its argument): a new module dev verb
+            // needs no host change, so no restart.
+            final String verb = path.substring(1);
+            final String arg = body.trim().isEmpty() ? null : body.trim();
+            String result = onMainThread(new Callable<String>() {
+                @Override
+                public String call() {
+                    ModModule m = Dispatcher.current();
+                    return m != null ? m.devCommand(verb, arg) : null;
+                }
+            }, 15000);
+            if (result != null) {
+                respond(ex, 200, result);
+            } else {
+                respond(ex, 404, "unknown endpoint " + path + "\nendpoints: /health /eval /reload /module /speech"
+                        + " /log /input /wait /screenshot /gui /typeinfo, plus the module's own dev verbs");
+            }
         }
     }
 

@@ -116,6 +116,9 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
 - `GET /gui` — the module's dev-driver view of the UI (currently: screen + phase; the graph dump
   lands with phase 3/4). `GET /typeinfo?name=<fqcn>` — reflection over app + module loaders.
   `GET /health` — liveness.
+- Any other path is the module's to answer: `ModModule.devCommand(<path>, <body>)`, so a new
+  module dev verb needs no host change and no restart. `GET /buffers` — every review buffer with
+  its live lines, the review cursor marked.
 
 Iteration loop for feature code, no game restart: edit `module/` or `core/`, `gradle :module:build`
 (it rebuilds core and merges it into the module jar), then `curl -X POST localhost:8771/reload`.

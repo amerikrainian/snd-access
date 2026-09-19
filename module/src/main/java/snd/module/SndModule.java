@@ -38,6 +38,7 @@ public class SndModule implements ModModule {
     private ScreenManager screens;
     private SndInput input;
     private HelpScreen help;
+    private Buffers buffers;
     private PopupWatcher popups;
     private PhaseWatcher phases;
     private DiceWatcher dice;
@@ -76,7 +77,8 @@ public class SndModule implements ModModule {
         screens.register(new BookScreen(h));
         help = new HelpScreen(h, nav);
         screens.register(help);
-        InputRegistry keys = SndKeys.build(help, nav, h.speech());
+        buffers = new Buffers(nav, h.speech());
+        InputRegistry keys = SndKeys.build(help, nav, buffers, h.speech());
         help.setKeys(keys);
         input = new SndInput(screens, nav, help, keys);
         popups = new PopupWatcher(h.speech());
@@ -125,6 +127,7 @@ public class SndModule implements ModModule {
         reassertInput();
         screens.tick();
         help.tick();
+        buffers.tick();
         popups.tick();
         phases.tick();
         dice.tick();
@@ -186,6 +189,9 @@ public class SndModule implements ModModule {
             }
             sb.append(nav.devDump());
             return sb.toString();
+        }
+        if ("buffers".equals(command)) {
+            return buffers.devDump();
         }
         if ("nav".equals(command) && arg != null) {
             try {

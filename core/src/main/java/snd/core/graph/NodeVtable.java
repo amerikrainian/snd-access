@@ -37,6 +37,13 @@ public final class NodeVtable {
      */
     public Object subject;
 
+    /**
+     * Optional. What the control carries beyond its focus line, one line per
+     * tooltip, for the control review buffer to step through. Read live on
+     * every buffer keypress; a line is never several tooltips joined.
+     */
+    public Supplier<List<String>> details;
+
     /** Optional. Primary activation — the left-click equivalent (Enter). */
     public Runnable onActivate;
 
