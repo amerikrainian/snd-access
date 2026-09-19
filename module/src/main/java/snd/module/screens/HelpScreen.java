@@ -5,8 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-import snd.core.HostServices;
-import snd.core.SndLog;
+import snd.contracts.HostServices;
+import snd.contracts.SndLog;
+import snd.contracts.speech.TextFilter;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -18,7 +19,6 @@ import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.KeyHelp;
-import snd.core.speech.TextFilter;
 
 /**
  * "Keys here" (F1 anywhere): the keys that would do something right now, for

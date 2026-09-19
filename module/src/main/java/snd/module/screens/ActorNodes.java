@@ -15,7 +15,7 @@ import snd.core.graph.ControlTypes;
 import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
-import snd.core.speech.TextFilter;
+import snd.contracts.speech.TextFilter;
 import snd.module.GameText;
 import snd.module.GameUi;
 
@@ -288,7 +288,7 @@ final class ActorNodes {
                     return Loc.get("ui", "jukebox.now_playing", "song",
                             ((com.tann.dice.util.ui.LiveText) child).fetchText());
                 } catch (Throwable t) {
-                    snd.core.SndLog.error("now-playing label failed", t);
+                    snd.contracts.SndLog.error("now-playing label failed", t);
                     return null;
                 }
             }
@@ -357,7 +357,7 @@ final class ActorNodes {
             }
             return null;
         } catch (Throwable t) {
-            snd.core.SndLog.error("ledger tile name failed", t);
+            snd.contracts.SndLog.error("ledger tile name failed", t);
             return null;
         }
     }
@@ -380,7 +380,7 @@ final class ActorNodes {
                     (com.tann.dice.gameplay.content.item.Item) itemTileField.get(actor);
             return item != null ? GameText.t(item.getName(true)) : null;
         } catch (Throwable t) {
-            snd.core.SndLog.error("item tile name failed", t);
+            snd.contracts.SndLog.error("item tile name failed", t);
             return null;
         }
     }
@@ -399,7 +399,7 @@ final class ActorNodes {
             }
             return (com.tann.dice.gameplay.progress.chievo.Achievement) achievementField.get(actor);
         } catch (Throwable t) {
-            snd.core.SndLog.error("achievement tile read failed", t);
+            snd.contracts.SndLog.error("achievement tile read failed", t);
             return null;
         }
     }
@@ -457,7 +457,7 @@ final class ActorNodes {
             }
             return sidesByTexture.get(((com.tann.dice.util.ImageActor) actor).tr);
         } catch (Throwable t) {
-            snd.core.SndLog.error("side icon lookup failed", t);
+            snd.contracts.SndLog.error("side icon lookup failed", t);
             return null;
         }
     }
@@ -507,7 +507,7 @@ final class ActorNodes {
             }
             return null;
         } catch (Throwable t) {
-            snd.core.SndLog.error("choosable panel effect failed", t);
+            snd.contracts.SndLog.error("choosable panel effect failed", t);
             return null;
         }
     }

@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.FlatJson;
 import snd.core.loc.Loc;
 

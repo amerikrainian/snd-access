@@ -3,10 +3,10 @@ package snd.host;
 /**
  * Parent for the module's classloader: resolves game classes from the game's
  * own loader (the shipped shim keeps them out of the system loader) and
- * everything else — the snd.core contracts, JNA, the JDK — from the host's
- * loader. The reloadable half of snd.core is in neither: it ships in the module
- * jar and resolves from the module's own loader. Under the dev launch both
- * are the system loader and this is a plain pass-through.
+ * everything else — snd.contracts, JNA, the JDK — from the host's loader.
+ * snd.core is in neither: it ships in the module jar and resolves from the
+ * module's own loader. Under the dev launch both are the system loader and
+ * this is a plain pass-through.
  */
 final class BridgeLoader extends ClassLoader {
     private final ClassLoader game;

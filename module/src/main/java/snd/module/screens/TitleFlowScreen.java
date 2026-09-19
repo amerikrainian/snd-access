@@ -17,7 +17,7 @@ import com.tann.dice.screens.titleScreen.GameStart;
 import com.tann.dice.screens.titleScreen.ModesPanel;
 import com.tann.dice.screens.titleScreen.TitleScreen;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
@@ -43,9 +43,9 @@ import snd.module.GameUi;
  * own unlock-requirement panel, which the modal screen reads.
  */
 public class TitleFlowScreen extends AccessScreen {
-    private final snd.core.HostServices host;
+    private final snd.contracts.HostServices host;
 
-    public TitleFlowScreen(snd.core.HostServices host) {
+    public TitleFlowScreen(snd.contracts.HostServices host) {
         this.host = host;
     }
 

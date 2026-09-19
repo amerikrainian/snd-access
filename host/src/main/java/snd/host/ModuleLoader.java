@@ -11,10 +11,10 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import snd.core.Dispatcher;
-import snd.core.HostServices;
-import snd.core.ModModule;
-import snd.core.SndLog;
+import snd.contracts.Dispatcher;
+import snd.contracts.HostServices;
+import snd.contracts.ModModule;
+import snd.contracts.SndLog;
 
 /**
  * Loads snd.module.SndModule from the jar named by -Dsnd.module into a fresh

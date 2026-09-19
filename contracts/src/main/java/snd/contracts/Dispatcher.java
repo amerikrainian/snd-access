@@ -1,4 +1,4 @@
-package snd.core;
+package snd.contracts;
 
 import java.util.Iterator;
 import java.util.Map;

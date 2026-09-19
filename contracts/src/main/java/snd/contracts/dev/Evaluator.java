@@ -1,4 +1,4 @@
-package snd.core.dev;
+package snd.contracts.dev;
 
 /**
  * The /eval engine contract. Implemented by snd.devrepl.JShellEvaluator (JDK

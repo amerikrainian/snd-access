@@ -19,8 +19,8 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choi
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.util.lang.Words;
 
-import snd.core.HostServices;
-import snd.core.SndLog;
+import snd.contracts.HostServices;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;

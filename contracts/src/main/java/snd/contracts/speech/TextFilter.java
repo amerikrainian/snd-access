@@ -1,4 +1,4 @@
-package snd.core.speech;
+package snd.contracts.speech;
 
 /**
  * Cleans Slice &amp; Dice's inline markup out of text before it is spoken. The

@@ -12,7 +12,7 @@ import com.tann.dice.gameplay.fightLog.FightLog;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.generalPanels.PartyManagementPanel;
 
-import snd.core.HostServices;
+import snd.contracts.HostServices;
 import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;

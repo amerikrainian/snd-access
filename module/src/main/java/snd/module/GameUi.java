@@ -14,7 +14,7 @@ import com.tann.dice.util.listener.TannListener;
 import com.tann.dice.util.ui.TextWriter;
 import com.tann.dice.util.ui.standardButton.StandardButton;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 
 /**
@@ -357,11 +357,11 @@ public final class GameUi {
      * failure.
      */
     public static StandardButton findButtonByText(Group root, String needle) {
-        String clean = snd.core.speech.TextFilter.clean(needle);
+        String clean = snd.contracts.speech.TextFilter.clean(needle);
         for (Actor child : root.getChildren()) {
             if (child instanceof StandardButton) {
                 String text = ((StandardButton) child).getText();
-                if (text != null && snd.core.speech.TextFilter.clean(text).equalsIgnoreCase(clean)) {
+                if (text != null && snd.contracts.speech.TextFilter.clean(text).equalsIgnoreCase(clean)) {
                     return (StandardButton) child;
                 }
             }

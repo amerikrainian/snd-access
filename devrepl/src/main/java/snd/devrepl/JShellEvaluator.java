@@ -11,7 +11,7 @@ import jdk.jshell.Diag;
 import jdk.jshell.JShell;
 import jdk.jshell.SnippetEvent;
 import jdk.jshell.SourceCodeAnalysis;
-import snd.core.dev.Evaluator;
+import snd.contracts.dev.Evaluator;
 
 /**
  * The /eval engine: JShell with the in-process "local" execution provider, so
@@ -38,7 +38,7 @@ public final class JShellEvaluator implements Evaluator {
             // classLOADER but not to java.class.path — add it explicitly so
             // snippets compile against snd.core (Bridge, Dispatcher, ...).
             try {
-                java.net.URL loc = snd.core.dev.Bridge.class.getProtectionDomain()
+                java.net.URL loc = snd.contracts.dev.Bridge.class.getProtectionDomain()
                         .getCodeSource().getLocation();
                 shell.addToClasspath(new File(loc.toURI()).getAbsolutePath());
             } catch (Exception e) {

@@ -12,7 +12,7 @@ import com.tann.dice.screens.dungeon.panels.book.SideBar;
 import com.tann.dice.screens.dungeon.panels.book.TopTab;
 import com.tann.dice.screens.dungeon.panels.book.page.BookPage;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -37,9 +37,9 @@ import snd.module.GameUi;
  * don't read (options, lifetime numbers).
  */
 public class BookScreen extends AccessScreen {
-    private final snd.core.HostServices host;
+    private final snd.contracts.HostServices host;
 
-    public BookScreen(snd.core.HostServices host) {
+    public BookScreen(snd.contracts.HostServices host) {
         this.host = host;
     }
 
@@ -520,7 +520,7 @@ public class BookScreen extends AccessScreen {
     }
 
     private static String stripMarkup(String text) {
-        return snd.core.speech.TextFilter.clean(text);
+        return snd.contracts.speech.TextFilter.clean(text);
     }
 
     // ---- the Book's non-public structure: its page bar, the focused page,

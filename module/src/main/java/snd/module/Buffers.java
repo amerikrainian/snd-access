@@ -8,6 +8,7 @@ import com.tann.dice.gameplay.content.ent.Ent;
 import com.tann.dice.gameplay.content.item.Item;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.buffers.Buffer;
 import snd.core.buffers.BufferControls;
 import snd.core.buffers.BufferManager;
@@ -16,7 +17,6 @@ import snd.core.buffers.NodeLines;
 import snd.core.graph.ControlId;
 import snd.core.loc.Loc;
 import snd.core.nav.GraphNavigator;
-import snd.core.speech.SpeechPipeline;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.UnitLines;
 

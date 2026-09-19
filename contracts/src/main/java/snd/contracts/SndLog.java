@@ -1,4 +1,4 @@
-package snd.core;
+package snd.contracts;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

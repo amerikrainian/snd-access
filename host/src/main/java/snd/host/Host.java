@@ -1,10 +1,10 @@
 package snd.host;
 
-import snd.core.Dispatcher;
-import snd.core.HostServices;
-import snd.core.SndLog;
-import snd.core.speech.SpeechPipeline;
-import snd.core.util.LineLog;
+import snd.contracts.Dispatcher;
+import snd.contracts.HostServices;
+import snd.contracts.SndLog;
+import snd.contracts.speech.SpeechPipeline;
+import snd.contracts.util.LineLog;
 import snd.host.dev.DevServer;
 
 /**

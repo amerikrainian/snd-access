@@ -3,8 +3,8 @@ package snd.host;
 import java.nio.charset.StandardCharsets;
 
 import com.sun.jna.Pointer;
-import snd.core.SndLog;
-import snd.core.speech.SpeechPipeline;
+import snd.contracts.SndLog;
+import snd.contracts.speech.SpeechPipeline;
 
 /**
  * The Prism-backed speech sink. Acquire-then-adopt like the reference

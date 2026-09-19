@@ -1,4 +1,4 @@
-package snd.core;
+package snd.contracts;
 
 /**
  * The reloadable module's contract. Implemented by exactly one class in the

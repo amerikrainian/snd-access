@@ -12,7 +12,7 @@ import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.LevelEndPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
 

@@ -1,4 +1,4 @@
-package snd.core.util;
+package snd.contracts.util;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

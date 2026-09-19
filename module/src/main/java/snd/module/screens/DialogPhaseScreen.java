@@ -17,7 +17,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.reveal.RandomRevealPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.trade.TradePhase;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.GraphBuilder;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;

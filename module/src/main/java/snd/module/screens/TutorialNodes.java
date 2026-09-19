@@ -12,7 +12,7 @@ import com.tann.dice.screens.dungeon.panels.tutorial.TutorialHolder;
 import com.tann.dice.screens.dungeon.panels.tutorial.TutorialItem;
 import com.tann.dice.screens.dungeon.panels.tutorial.TutorialQuest;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;

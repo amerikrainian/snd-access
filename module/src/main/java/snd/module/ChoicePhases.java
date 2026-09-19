@@ -9,7 +9,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choi
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.ChoiceType;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 
 /**
  * Reflective access to ChoicePhase / ChoiceType internals. The offer, the

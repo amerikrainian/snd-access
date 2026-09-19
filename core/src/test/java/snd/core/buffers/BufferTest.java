@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.GraphNode;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

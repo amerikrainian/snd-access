@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import snd.core.speech.SpeechPipeline;
-import snd.core.speech.TextFilter;
+import snd.contracts.speech.SpeechPipeline;
+import snd.contracts.speech.TextFilter;
 
 /**
  * What happened, as it was spoken: the lines the game's own events produce

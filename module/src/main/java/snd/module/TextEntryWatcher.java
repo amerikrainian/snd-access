@@ -5,8 +5,8 @@ import java.util.List;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.tann.dice.util.ui.TextInput;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
 
 /**
  * Speaks the game's in-game text input (rename, scenario names): announces

@@ -14,10 +14,10 @@ import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.gameplay.trigger.personal.Personal;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
-import snd.core.speech.SpeechPipeline;
+import snd.contracts.speech.SpeechPipeline;
 import snd.module.screens.CombatScreen;
 
 /**

@@ -54,8 +54,8 @@ Five Gradle modules; artifact names are fixed (no version suffixes):
 
 | Module    | Artifact           | Target  | Contents                                                                                         |
 | --------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------ |
-| `contracts` | (merged into host) | Java 8  | PERMANENT half of `snd.core`: ModModule/HostServices, Dispatcher, SpeechPipeline, TextFilter, SndLog/LineLog, Bridge — pure, unit-tested |
-| `core`    | (merged into module) | Java 8  | RELOADABLE half of `snd.core`: graph, nav, input, loc, search — pure, unit-tested             |
+| `contracts` | (merged into host) | Java 8  | PERMANENT, package `snd.contracts`: ModModule/HostServices, Dispatcher, SpeechPipeline, TextFilter, SndLog/LineLog, Bridge — pure, unit-tested |
+| `core`    | (merged into module) | Java 8  | RELOADABLE, package `snd.core`: graph, nav, buffers, input, loc, search — pure, unit-tested             |
 | `host`    | `snd-host-all.jar` | Java 8  | FAT agent jar (contracts + Byte Buddy + JNA merged): premain, hooks, Prism, dev server, module loader |
 | `module`  | `snd-module.jar`   | Java 8  | module classes + core's — feature code, reloadable; NEVER contracts classes                     |
 | `devrepl` | `snd-devrepl.jar`  | Java 21 | JShell evaluator; dev classpath only, never shipped                                              |
@@ -91,7 +91,7 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   **The GL context is NOT current in eval bodies**: JShell's local engine runs each snippet on a
   per-invocation worker thread (the render thread waits on it — game state is safe to touch, but
   any code that triggers GL work hard-aborts the JVM; `OptionLib.LANGUAGE.setValue` →
-  `Main.setupScale` is a known case). Wrap such calls in `snd.core.Dispatcher.post(...)` so they
+  `Main.setupScale` is a known case). Wrap such calls in `snd.contracts.Dispatcher.post(...)` so they
   run on a real render frame, or drive them via `/input`.
 - `POST /reload` — rebuild-and-swap the module from its freshly built jar, no restart. Responds
   with the reload status plus the full `/module` readout.
@@ -139,10 +139,11 @@ Permanent/reloadable split (verified end-to-end):
 - **`contracts`** (permanent, app loader) — what the host links against and what must keep one
   identity across reloads: the `ModModule`/`HostServices` contracts, the **`Dispatcher`** (static
   fan-out the instrumented game methods call; owns the job queue, frame waits, and the module
-  reference), `SpeechPipeline` + `TextFilter`, `SndLog`/`LineLog`, the /wait `Bridge`. Packages
-  `snd.core`, `snd.core.speech`, `snd.core.util`, `snd.core.dev` — whole packages, never split
-  with core (classes of one package in two loaders lose package-private access). Keep it small;
-  every line here costs a restart to change.
+  reference), `SpeechPipeline` + `TextFilter`, `SndLog`/`LineLog`, the /wait `Bridge`. Package
+  `snd.contracts` (`.speech`, `.util`, `.dev`): the package name IS the boundary — an import of
+  `snd.contracts.*` is a dependency that costs a restart to change, and permanent code importing
+  `snd.core.*` is wrong on sight (and a compile error: the host depends on `:contracts` alone).
+  Keep it small.
 - **`core`** (reloadable, module loader) — engine-agnostic mod logic: the graph engine, the
   navigator and screen stack, the key table (`snd.core.input`), **`Loc`** (the mod's own strings,
   resolved from flat JSON tables), type-ahead. If code decides what words the user hears, it
@@ -175,7 +176,7 @@ Permanent/reloadable split (verified end-to-end):
 
 ## Conventions & invariants
 
-- **All speech goes through `SpeechPipeline`** (`snd.core.speech`); never call the Prism backend
+- **All speech goes through `SpeechPipeline`** (`snd.contracts.speech`); never call the Prism backend
   or JNA directly. All logging goes through `SndLog`; no bare `System.out`.
 - **No silent failures.** The pump, hooks, and reloads fail invisibly unless logged: every catch
   logs what failed and where; no empty catches; no catch-and-return-default without logging.

@@ -3,12 +3,12 @@ package snd.module;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.input.InputAction;
 import snd.core.input.InputRegistry;
 import snd.core.input.KeyChord;
 import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
-import snd.core.speech.SpeechPipeline;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.HelpScreen;
 

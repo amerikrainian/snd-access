@@ -1,6 +1,6 @@
 package snd.module;
 
-import snd.core.Dispatcher;
+import snd.contracts.Dispatcher;
 import snd.core.buffers.EventLog;
 
 /**

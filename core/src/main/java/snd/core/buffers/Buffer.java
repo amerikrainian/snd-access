@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 
 /**
  * A named, ordered list of text lines the player reviews on demand

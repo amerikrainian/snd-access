@@ -2,8 +2,8 @@ package snd.host;
 
 import java.lang.reflect.Method;
 
-import snd.core.Dispatcher;
-import snd.core.SndLog;
+import snd.contracts.Dispatcher;
+import snd.contracts.SndLog;
 
 /**
  * Wakes the game's possibly-idle non-continuous render loop so posted dev

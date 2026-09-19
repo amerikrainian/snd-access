@@ -4,9 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 
-import snd.core.HostServices;
-import snd.core.ModModule;
-import snd.core.SndLog;
+import snd.contracts.HostServices;
+import snd.contracts.ModModule;
+import snd.contracts.SndLog;
 import snd.core.buffers.EventLog;
 import snd.core.input.InputRegistry;
 import snd.core.loc.Loc;

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.graph.ControlId;
 import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
@@ -18,7 +19,6 @@ import snd.core.input.InputAction;
 import snd.core.input.InputRegistry;
 import snd.core.input.KeyChord;
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

@@ -7,7 +7,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 
 /**
  * The -javaagent entry point. Installs the frame-pump hook before any game

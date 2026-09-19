@@ -1,4 +1,4 @@
-package snd.core.dev;
+package snd.contracts.dev;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

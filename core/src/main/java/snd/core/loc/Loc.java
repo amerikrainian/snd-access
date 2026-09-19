@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 
 /**
  * The mod's own strings — role words, glue text, structural phrases — loaded

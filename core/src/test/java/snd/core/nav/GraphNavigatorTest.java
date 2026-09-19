@@ -7,12 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.ControlId;
 import snd.core.graph.GraphBuilder;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
-import snd.core.speech.SpeechPipeline;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

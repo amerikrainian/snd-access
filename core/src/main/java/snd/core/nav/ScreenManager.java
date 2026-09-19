@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import snd.core.SndLog;
-import snd.core.speech.SpeechPipeline;
+import snd.contracts.SndLog;
+import snd.contracts.speech.SpeechPipeline;
 
 /**
  * Poll-and-diff screen stack: every frame, resolve which registered screens

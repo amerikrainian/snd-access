@@ -1,7 +1,7 @@
 package snd.core.buffers;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.loc.Loc;
-import snd.core.speech.SpeechPipeline;
 
 /**
  * The four buffer review commands, composed and spoken here so every screen

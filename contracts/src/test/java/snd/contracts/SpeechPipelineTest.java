@@ -1,7 +1,7 @@
-package snd.core;
+package snd.contracts;
 
 import org.junit.jupiter.api.Test;
-import snd.core.speech.SpeechPipeline;
+import snd.contracts.speech.SpeechPipeline;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package snd.host;
 
 import net.bytebuddy.asm.Advice;
-import snd.core.Dispatcher;
+import snd.contracts.Dispatcher;
 
 /**
  * Inlined into {@code com.tann.dice.Main.render()}. The copied bytecode

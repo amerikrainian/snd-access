@@ -1,4 +1,4 @@
-package snd.core.speech;
+package snd.contracts.speech;
 
 /**
  * The single choke point for everything the mod speaks. Never call a backend
@@ -139,7 +139,7 @@ public final class SpeechPipeline {
         StackTraceElement[] stack = new Throwable().getStackTrace();
         for (StackTraceElement e : stack) {
             String cls = e.getClassName();
-            if (!cls.startsWith("snd.core.speech.")) {
+            if (!cls.startsWith("snd.contracts.speech.")) {
                 int dot = cls.lastIndexOf('.');
                 return dot >= 0 ? cls.substring(dot + 1) : cls;
             }

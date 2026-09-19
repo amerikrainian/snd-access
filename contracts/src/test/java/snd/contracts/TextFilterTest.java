@@ -1,7 +1,7 @@
-package snd.core;
+package snd.contracts;
 
 import org.junit.jupiter.api.Test;
-import snd.core.speech.TextFilter;
+import snd.contracts.speech.TextFilter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

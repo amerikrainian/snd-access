@@ -1,4 +1,4 @@
-package snd.core;
+package snd.contracts;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

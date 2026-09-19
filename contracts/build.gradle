@@ -1,4 +1,4 @@
-// snd-contracts: the PERMANENT half of snd.core — what the host links against
+// snd-contracts (package snd.contracts): the PERMANENT side — what the host links against
 // and what must keep one identity across module reloads: the ModModule /
 // HostServices contracts, the Dispatcher the hooked game methods call, the
 // SpeechPipeline + TextFilter, SndLog/LineLog, the dev-eval Bridge. Loaded

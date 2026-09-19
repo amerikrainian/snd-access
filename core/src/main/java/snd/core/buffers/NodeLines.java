@@ -5,12 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
+import snd.contracts.speech.TextFilter;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.GraphAnnouncer;
 import snd.core.graph.GraphNode;
 import snd.core.graph.NodeAnnouncement;
-import snd.core.speech.TextFilter;
 
 /**
  * The control buffer's lines for a focused node: its head line (the state,

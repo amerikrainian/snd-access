@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.ControlId;
 import snd.core.graph.GraphAnnouncer;
 import snd.core.graph.GraphBuilder;
@@ -20,8 +20,8 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.GraphDir;
 import snd.core.graph.Transition;
 import snd.core.search.TypeAheadSearch;
-import snd.core.speech.SpeechPipeline;
-import snd.core.speech.TextFilter;
+import snd.contracts.speech.SpeechPipeline;
+import snd.contracts.speech.TextFilter;
 
 /**
  * The graph navigator: pull-based diffing over an immediate-mode graph. The
@@ -458,7 +458,7 @@ public final class GraphNavigator {
     private FrameClock frames = new FrameClock() {
         @Override
         public long frame() {
-            return snd.core.Dispatcher.frameCount();
+            return snd.contracts.Dispatcher.frameCount();
         }
     };
 

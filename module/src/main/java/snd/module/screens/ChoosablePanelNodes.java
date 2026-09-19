@@ -11,7 +11,7 @@ import com.tann.dice.gameplay.effect.eff.keyword.Keyword;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
 import com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;

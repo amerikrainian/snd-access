@@ -1,7 +1,7 @@
-package snd.core;
+package snd.contracts;
 
 import org.junit.jupiter.api.Test;
-import snd.core.util.LineLog;
+import snd.contracts.util.LineLog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

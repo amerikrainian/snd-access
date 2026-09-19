@@ -22,7 +22,7 @@ import com.tann.dice.gameplay.progress.stats.stat.miscStat.UndoCountStat;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.util.Tann;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;

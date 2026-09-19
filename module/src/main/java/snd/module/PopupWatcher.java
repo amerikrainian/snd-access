@@ -61,13 +61,13 @@ final class PopupWatcher {
         try {
             for (com.tann.dice.gameplay.progress.chievo.Achievement achievement : allAchievements()) {
                 for (String text : texts) {
-                    if (achievement.getName().equals(snd.core.speech.TextFilter.clean(text))) {
+                    if (achievement.getName().equals(snd.contracts.speech.TextFilter.clean(text))) {
                         return GameText.t(achievement.getDescription());
                     }
                 }
             }
         } catch (Throwable t) {
-            snd.core.SndLog.error("achievement toast lookup failed", t);
+            snd.contracts.SndLog.error("achievement toast lookup failed", t);
         }
         return null;
     }

@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 
 /**
  * Game-touching dev-driver verbs, module-side: the host routes /input and

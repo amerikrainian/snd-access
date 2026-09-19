@@ -14,7 +14,7 @@ import com.tann.dice.gameplay.leaderboard.LeaderboardEntry;
 import com.tann.dice.util.Tann;
 import com.tann.dice.util.ui.standardButton.StandardButton;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.ControlTypes;
 import snd.core.graph.GraphBuilder;

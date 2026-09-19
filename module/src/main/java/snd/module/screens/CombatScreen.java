@@ -23,7 +23,7 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.dungeon.TargetingManager;
 import com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager;
 
-import snd.core.HostServices;
+import snd.contracts.HostServices;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -282,7 +282,7 @@ public class CombatScreen extends AccessScreen {
                 try {
                     lines.add(keywordRules(a.getDerivedEffects()));
                 } catch (Throwable t) {
-                    snd.core.SndLog.error("ability keyword rules failed", t);
+                    snd.contracts.SndLog.error("ability keyword rules failed", t);
                 }
                 return lines;
             }
@@ -308,7 +308,7 @@ public class CombatScreen extends AccessScreen {
                 try {
                     rules = keywordRules(a.getDerivedEffects());
                 } catch (Throwable t) {
-                    snd.core.SndLog.error("ability keyword rules failed", t);
+                    snd.contracts.SndLog.error("ability keyword rules failed", t);
                     rules = null;
                 }
                 host.speech().speak(rules, false);
@@ -586,7 +586,7 @@ public class CombatScreen extends AccessScreen {
             return keywordRules(side.findState(FightLog.Temporality.Present, ent)
                     .getCalculatedEffect());
         } catch (Throwable t) {
-            snd.core.SndLog.error("side keyword rules failed", t);
+            snd.contracts.SndLog.error("side keyword rules failed", t);
             return null;
         }
     }

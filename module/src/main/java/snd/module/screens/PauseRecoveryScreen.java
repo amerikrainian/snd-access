@@ -7,7 +7,7 @@ import com.tann.dice.Main;
 import com.tann.dice.screens.pauseScreen.PauseScreen;
 import com.tann.dice.screens.titleScreen.TitleScreen;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;

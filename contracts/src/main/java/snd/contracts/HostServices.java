@@ -1,6 +1,6 @@
-package snd.core;
+package snd.contracts;
 
-import snd.core.speech.SpeechPipeline;
+import snd.contracts.speech.SpeechPipeline;
 
 /** What the permanent host offers the reloadable module. */
 public interface HostServices {

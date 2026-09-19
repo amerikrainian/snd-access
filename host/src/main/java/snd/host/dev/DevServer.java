@@ -24,12 +24,12 @@ import java.util.function.BooleanSupplier;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import snd.core.Dispatcher;
-import snd.core.ModModule;
-import snd.core.SndLog;
-import snd.core.dev.Bridge;
-import snd.core.dev.Evaluator;
-import snd.core.util.LineLog;
+import snd.contracts.Dispatcher;
+import snd.contracts.ModModule;
+import snd.contracts.SndLog;
+import snd.contracts.dev.Bridge;
+import snd.contracts.dev.Evaluator;
+import snd.contracts.util.LineLog;
 import snd.host.HostWake;
 import snd.host.ModuleLoader;
 
@@ -227,7 +227,7 @@ public final class DevServer {
             return "[error] body must be a boolean Java expression";
         }
         final String id = "wait-" + waitIds.incrementAndGet();
-        final String code = "snd.core.dev.Bridge.put(\"" + id + "\", (java.util.function.BooleanSupplier)(() -> ("
+        final String code = "snd.contracts.dev.Bridge.put(\"" + id + "\", (java.util.function.BooleanSupplier)(() -> ("
                 + expr + ")));";
         String evalOut = onMainThread(new Callable<String>() {
             @Override

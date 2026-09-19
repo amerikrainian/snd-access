@@ -1,7 +1,7 @@
 package snd.host;
 
 import net.bytebuddy.asm.Advice;
-import snd.core.Dispatcher;
+import snd.contracts.Dispatcher;
 
 /**
  * Inlined into the game's transient-text methods — the error/notice banner

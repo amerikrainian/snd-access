@@ -19,8 +19,8 @@ import com.tann.dice.screens.Screen;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory;
 
-import snd.core.HostServices;
-import snd.core.SndLog;
+import snd.contracts.HostServices;
+import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;

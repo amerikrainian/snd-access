@@ -14,7 +14,7 @@ import com.tann.dice.gameplay.fightLog.FightLog;
 import com.tann.dice.gameplay.trigger.personal.Personal;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.module.GameText;
 

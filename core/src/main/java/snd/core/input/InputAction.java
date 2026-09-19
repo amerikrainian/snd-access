@@ -6,7 +6,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.nav.NavAction;
 
 /**

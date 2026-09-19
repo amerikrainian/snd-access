@@ -3,7 +3,7 @@ package snd.core.nav;
 import java.util.ArrayList;
 import java.util.List;
 
-import snd.core.SndLog;
+import snd.contracts.SndLog;
 import snd.core.input.InputAction;
 import snd.core.input.InputRegistry;
 import snd.core.loc.Loc;
