@@ -77,8 +77,7 @@ public final class ChoosablePanelNodes {
      */
     static String tierText(Choosable choosable) {
         try {
-            String shown = snd.contracts.speech.TextFilter.clean(choosable.getTierString());
-            if (!shown.matches(".*[0-9IVXLC].*")) {
+            if (!hasTier(choosable)) {
                 return null;
             }
             return Loc.get("ui", "choice.tier", "tier",
@@ -87,6 +86,20 @@ public final class ChoosablePanelNodes {
             snd.contracts.SndLog.error("tier read failed", t);
             return null;
         }
+    }
+
+    // An item and a modifier say whether they are rated. The game's composite
+    // choosables (and/or, random-tier, skip) have no such answer, only what
+    // they draw for a tier: a number, or not.
+    private static boolean hasTier(Choosable choosable) {
+        if (choosable instanceof com.tann.dice.gameplay.content.item.Item) {
+            return ((com.tann.dice.gameplay.content.item.Item) choosable).hasTier();
+        }
+        if (choosable instanceof com.tann.dice.gameplay.modifier.Modifier) {
+            return ((com.tann.dice.gameplay.modifier.Modifier) choosable).getMType()
+                    != com.tann.dice.gameplay.modifier.ModifierType.Unrated;
+        }
+        return snd.contracts.speech.TextFilter.clean(choosable.getTierString()).matches(".*[0-9IVXLC].*");
     }
 
     static void emit(GraphBuilder b, final ConcisePanel panel) {
