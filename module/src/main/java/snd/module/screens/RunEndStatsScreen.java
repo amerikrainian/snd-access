@@ -66,27 +66,14 @@ public class RunEndStatsScreen extends AccessScreen {
         return statsPanel() != null;
     }
 
-    // The pushed actor may be the panel or a ScrollPane wrapping it.
+    // The pushed actor is the panel, or whatever the game wrapped it in to
+    // fit (Tann.makeScrollpaneIfNecessary).
     private static GameEndStatsPanel statsPanel() {
         Actor modal = GameUi.topModal();
         if (modal instanceof GameEndStatsPanel) {
             return (GameEndStatsPanel) modal;
         }
-        if (modal instanceof Group) {
-            for (Actor child : ((Group) modal).getChildren()) {
-                if (child instanceof GameEndStatsPanel) {
-                    return (GameEndStatsPanel) child;
-                }
-                if (child instanceof Group) {
-                    for (Actor grandchild : ((Group) child).getChildren()) {
-                        if (grandchild instanceof GameEndStatsPanel) {
-                            return (GameEndStatsPanel) grandchild;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+        return modal instanceof Group ? Tann.findByClass((Group) modal, GameEndStatsPanel.class) : null;
     }
 
     @Override
