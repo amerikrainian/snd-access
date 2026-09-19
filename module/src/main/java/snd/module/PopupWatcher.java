@@ -27,7 +27,8 @@ final class PopupWatcher {
         if (com.tann.dice.Main.stage == null) {
             return;
         }
-        Actor holder = com.tann.dice.Main.stage.getRoot().findActor("alwaysontop");
+        Actor holder = com.tann.dice.Main.stage.getRoot().findActor(
+                com.tann.dice.screens.dungeon.panels.popup.PopupHolder.ALWAYS_ON_TOP);
         if (!(holder instanceof Group)) {
             return;
         }
