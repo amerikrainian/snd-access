@@ -13,6 +13,7 @@ import com.tann.dice.gameplay.phase.PhaseManager;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.ChoicePhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.ChoiceType;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.ChoosableType;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.special.LevelupHeroChoosable;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.special.OrChoosable;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.special.ReplaceChoosable;
@@ -436,6 +437,16 @@ public class ChoiceScreen extends AccessScreen {
     // children, level-ups name the upgraded class).
     static String nameOf(Choosable option) {
         try {
+            // An enum choosable's name is the word "enum" and a replacement's a
+            // lookup key ("Replace X?name"): what either one is, and what its
+            // panel draws, is its description.
+            ChoosableType kind = option.getType();
+            if (kind == ChoosableType.Enu || kind == ChoosableType.Replace) {
+                String described = safeDescribe(option);
+                if (described != null) {
+                    return described;
+                }
+            }
             String name = option.getName();
             if (name != null && !name.trim().isEmpty()) {
                 return GameText.t(name);
@@ -462,10 +473,11 @@ public class ChoiceScreen extends AccessScreen {
                 SndLog.error("failed to find level-up target hero", t);
             }
         }
-        String type = safeDescribe(option);
-        // Composite choosables' describe() repeats their full name; only the
-        // short type words qualify.
-        if (type != null && !type.equals(option.getName()) && type.length() <= 40) {
+        // The kinds whose describe() is a type word ("item", "hero",
+        // "level-up", a modifier's "curse" or "blessing"); every other kind
+        // describes itself whole, which is its name already.
+        String type = hasTypeWord(option.getType()) ? safeDescribe(option) : null;
+        if (type != null) {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
@@ -479,6 +491,11 @@ public class ChoiceScreen extends AccessScreen {
             sb.append(Loc.get("ui", "choice.tier", "tier", tier));
         }
         return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    private static boolean hasTypeWord(ChoosableType kind) {
+        return kind == ChoosableType.Item || kind == ChoosableType.Hero
+                || kind == ChoosableType.Levelup || kind == ChoosableType.Modifier;
     }
 
     // The full effect text — the same content the visual panels render.
