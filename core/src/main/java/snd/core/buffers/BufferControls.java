@@ -6,8 +6,9 @@ import snd.core.loc.Loc;
 /**
  * The four buffer review commands, composed and spoken here so every screen
  * shares one behavior: switching a buffer speaks its name and current line;
- * stepping speaks just the line; an edge re-reads the current line rather
- * than going silent. Everything interrupts, as an answer to a key press.
+ * stepping speaks just the line — next is further from the buffer's home
+ * line (Ctrl+Up), previous back toward it (Ctrl+Down) — and an edge re-reads
+ * the current line rather than going silent. Everything interrupts, as an answer to a key press.
  */
 public final class BufferControls {
     private final BufferManager buffers;

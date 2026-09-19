@@ -14,6 +14,15 @@ import snd.contracts.SndLog;
  * stale; the cursor survives a re-read while still in range. Detail is not
  * nested: one focused control explodes into several flat lines (its own line,
  * then one line per tooltip), and the player steps line by line.
+ *
+ * <p>Review lands on the buffer's HOME line and walks away from it: Ctrl+Up is
+ * {@link #moveNext} (one line further from home), Ctrl+Down
+ * {@link #movePrevious} (one line back toward it). Home is the source's first
+ * line — a control's own readout, with its tooltips further on — or, for a
+ * buffer that {@link #followLatest follows its latest line}, the last: the
+ * newest event, with older ones further on. Which way that runs through the
+ * source's list is this class's business alone; a source just lists its
+ * lines in their natural order, head first or oldest first.
  */
 public final class Buffer {
     public final String key;
@@ -22,7 +31,10 @@ public final class Buffer {
     private Supplier<? extends Iterable<String>> source;
     private int position;
 
-    /** Switching to this buffer jumps to its last line (an event log). */
+    /**
+     * An event log: home is the LAST line (the latest), switching to the
+     * buffer lands there, and review walks back through the older ones.
+     */
     public boolean followLatest;
 
     /** label: the buffer's spoken name, resolved at speak time. */
@@ -42,9 +54,9 @@ public final class Buffer {
         return this;
     }
 
-    /** Back to the first line: the source stayed, its subject changed (a new focus). */
+    /** Back to the home line: the source stayed, its subject changed (a new focus). */
     public void reset() {
-        position = 0;
+        moveHome();
     }
 
     // Re-read the source, keeping the cursor while still in range. A source
@@ -67,8 +79,24 @@ public final class Buffer {
             }
         }
         if (position >= lines.size()) {
-            position = 0;
+            position = homeIndex();
         }
+    }
+
+    private int homeIndex() {
+        return followLatest && !lines.isEmpty() ? lines.size() - 1 : 0;
+    }
+
+    // One line further from home (+1) or back toward it (-1), as an index
+    // step through the source's list.
+    private boolean step(int awayFromHome) {
+        refresh();
+        int target = position + (followLatest ? -awayFromHome : awayFromHome);
+        if (target < 0 || target >= lines.size()) {
+            return false;
+        }
+        position = target;
+        return true;
     }
 
     public boolean isEmpty() {
@@ -91,26 +119,18 @@ public final class Buffer {
         return lines.isEmpty() ? null : lines.get(position);
     }
 
+    /** One line further from home. False at the far end. */
     public boolean moveNext() {
-        refresh();
-        if (position + 1 >= lines.size()) {
-            return false;
-        }
-        position++;
-        return true;
+        return step(1);
     }
 
+    /** One line back toward home. False on the home line. */
     public boolean movePrevious() {
-        refresh();
-        if (position == 0) {
-            return false;
-        }
-        position--;
-        return true;
+        return step(-1);
     }
 
-    public void moveToEnd() {
+    public void moveHome() {
         refresh();
-        position = lines.isEmpty() ? 0 : lines.size() - 1;
+        position = homeIndex();
     }
 }

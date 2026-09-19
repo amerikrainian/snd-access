@@ -18,7 +18,7 @@ The mod adds a virtual cursor over the game's own UI. The game's native hotkeys
 | Home / End                           | First / last control                                                                 |
 | Enter                                | Activate (left-click equivalent)                                                     |
 | Backspace                            | Details (right-click equivalent: character sheets, item text, delete/detail actions) |
-| Ctrl+Up / Ctrl+Down                  | Review: previous / next line of the current buffer (see below)                       |
+| Ctrl+Up / Ctrl+Down                  | Review: further through the current buffer / back toward where it starts (see below) |
 | Ctrl+Left / Ctrl+Right               | Review: previous / next buffer                                                       |
 | Ctrl+1                               | On anything that concerns a hero or monster: its hp, shields and incoming damage     |
 | F1                                   | Keys here: every key that would do something right now; Enter on a row runs it      |
@@ -33,7 +33,10 @@ typing echoes, Backspace deletes, Enter submits, Escape cancels.
 
 Moving onto a control speaks one line. Everything else it carries — keyword rules, status
 rules, item text, a difficulty's rules — waits in a buffer you step through a line at a time
-with Ctrl+Up/Down, so nothing has to be heard in one burst or caught the first time.
+with Ctrl+Up, and back with Ctrl+Down, so nothing has to be heard in one burst or caught the
+first time. Every buffer reads the same way up: review starts on its main line — the control's
+own readout, the unit's name and hp, the log's latest event — and Ctrl+Up goes on from there,
+to the tooltips, the die sides, the earlier events.
 Ctrl+Left/Right switch buffers, speaking the buffer's name and its current line; buffers
 with nothing to say are skipped. Moving to another control returns review to its own buffer.
 

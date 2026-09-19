@@ -78,7 +78,7 @@ public final class BufferManager {
     private void land(int index) {
         position = index;
         if (buffers.get(index).followLatest) {
-            buffers.get(index).moveToEnd();
+            buffers.get(index).moveHome(); // the latest line, not where review was left
         }
     }
 }

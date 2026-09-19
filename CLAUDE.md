@@ -210,8 +210,11 @@ Permanent/reloadable split (verified end-to-end):
   own `keyPress` checks and labelled with the game's words (`GameKeys`).
 - **Review buffers** (`snd.core.buffers`, roster in `module/Buffers`; ported from guildrun): what a
   control carries beyond its focus line is stepped line by line, not heard in one burst.
-  Ctrl+Left/Right switch buffers (speaking "name: current line"), Ctrl+Up/Down step lines (an edge
-  re-reads). In cycling order: **control** (the focused node's head line — never the role word or
+  Ctrl+Left/Right switch buffers (speaking "name: current line"), Ctrl+Up steps THROUGH a buffer and
+  Ctrl+Down back (an edge re-reads): review lands on the buffer's home line — a source's first
+  line, or the last for a `followLatest` log — and "next" is away from it. That orientation is
+  `Buffer`'s business alone; a source lists its lines in natural order, head first or oldest
+  first, and never reverses them. In cycling order: **control** (the focused node's head line — never the role word or
   the position — then its `TOOLTIP` parts and `NodeVtable.details`, repeats of the head folded),
   **hero** / **monster** (the whole unit the control concerns: `UnitLines`), **items** (that hero's,
   or the focused bag item), **party** and **enemies** (one hp line per unit), **log** (what

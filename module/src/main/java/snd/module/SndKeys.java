@@ -81,7 +81,8 @@ final class SndKeys {
                         speech.speak(CombatScreen.vitalsLine(CombatScreen.focusedUnit(nav)), true);
                     }
                 }));
-        // Review: Ctrl+Left/Right switch buffers, Ctrl+Up/Down step lines.
+        // Review: Ctrl+Left/Right switch buffers; Ctrl+Up steps through a
+        // buffer, away from the line review lands on, Ctrl+Down back to it.
         // They only read, so they answer over the help overlay too.
         keys.register(InputAction.of("buffer.next", "help.buffer.next")
                 .bind(KeyChord.of(22, "key.right").ctrl())
@@ -102,7 +103,7 @@ final class SndKeys {
                     }
                 }));
         keys.register(InputAction.of("buffer.line.next", "help.buffer.line.next")
-                .bind(KeyChord.of(20, "key.down").ctrl())
+                .bind(KeyChord.of(19, "key.up").ctrl())
                 .overOverlay()
                 .handle(new IntConsumer() {
                     @Override
@@ -111,7 +112,7 @@ final class SndKeys {
                     }
                 }));
         keys.register(InputAction.of("buffer.line.prev", "help.buffer.line.prev")
-                .bind(KeyChord.of(19, "key.up").ctrl())
+                .bind(KeyChord.of(20, "key.down").ctrl())
                 .overOverlay()
                 .handle(new IntConsumer() {
                     @Override

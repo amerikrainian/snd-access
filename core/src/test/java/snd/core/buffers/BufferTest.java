@@ -81,6 +81,49 @@ class BufferTest {
     }
 
     @Test
+    void nextIsAwayFromTheHomeLineWhicheverWayTheSourceListsItsLines() {
+        // A control lists its head first: home is the head, next goes on to the tooltips.
+        Buffer control = over("control", list("Start Heaven, locked", "Start with a bunch of blessings"));
+        assertEquals("Start Heaven, locked", control.currentLine());
+        assertFalse(control.movePrevious()); // already home
+        assertTrue(control.moveNext());
+        assertEquals("Start with a bunch of blessings", control.currentLine());
+        assertFalse(control.moveNext()); // the far end
+        assertTrue(control.movePrevious());
+        assertEquals("Start Heaven, locked", control.currentLine());
+
+        // A log lists its oldest first: home is the latest, next goes back through the older ones.
+        List<String> events = list("Your roll", "2 damage, on Bandit 1", "Undo");
+        Buffer log = over("log", events);
+        log.followLatest = true;
+        log.moveHome();
+        assertEquals("Undo", log.currentLine());
+        assertFalse(log.movePrevious()); // already home
+        assertTrue(log.moveNext());
+        assertEquals("2 damage, on Bandit 1", log.currentLine());
+        assertTrue(log.moveNext());
+        assertFalse(log.moveNext()); // the oldest: the far end
+        assertEquals("Your roll", log.currentLine());
+
+        // An event lands while reviewing: the cursor keeps its line, and
+        // previous walks forward to the new one.
+        events.add("Enemy attacks");
+        assertEquals("Your roll", log.currentLine());
+        assertTrue(log.movePrevious());
+        assertTrue(log.movePrevious());
+        assertTrue(log.movePrevious());
+        assertEquals("Enemy attacks", log.currentLine());
+        assertFalse(log.movePrevious());
+
+        // Emptied under the cursor (a new run), then filled again: back home.
+        events.clear();
+        assertNull(log.currentLine());
+        events.addAll(Arrays.asList("Fight 1", "Your roll"));
+        log.reset();
+        assertEquals("Your roll", log.currentLine());
+    }
+
+    @Test
     void aSourceThatThrowsReadsAsEmpty() {
         Buffer b = new Buffer("b", name("b")).source(new Supplier<List<String>>() {
             @Override
