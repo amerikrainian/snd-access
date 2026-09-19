@@ -36,11 +36,6 @@ public abstract class AccessScreen {
         return true;
     }
 
-    /** Tab wraps last→first stop. */
-    public boolean wrap() {
-        return false;
-    }
-
     /** The stop initial focus should land in, or null for the start node. */
     public Object initialFocusStop() {
         return null;

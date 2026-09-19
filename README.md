@@ -13,7 +13,7 @@ The mod adds a virtual cursor over the game's own UI. The game's native hotkeys
 | Key                                  | Action                                                                               |
 | ------------------------------------ | ------------------------------------------------------------------------------------ |
 | Arrow keys                           | Move between controls (rows/columns, table cells)                                    |
-| Tab / Shift+Tab                      | Next / previous group (heroes, enemies, buttons, content…)                           |
+| Tab / Shift+Tab                      | Next / previous group (heroes, enemies, buttons, content…); goes round at either end |
 | Alt+Up / Alt+Down                    | Previous / next section within a group                                               |
 | Home / End                           | First / last control                                                                 |
 | Enter                                | Activate (left-click equivalent)                                                     |

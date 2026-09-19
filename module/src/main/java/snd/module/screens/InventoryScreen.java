@@ -65,11 +65,6 @@ public class InventoryScreen extends AccessScreen {
         return GameText.t("Inventory");
     }
 
-    @Override
-    public boolean wrap() {
-        return true;
-    }
-
     // PartyManagementPanel.keyPress: R randomises, I and Escape are Done.
     // Enter (Done too) is the navigator's here.
     @Override

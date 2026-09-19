@@ -342,9 +342,9 @@ public final class GraphNavigator {
     /**
      * The same decisions as {@link #onAction}, made without acting: an arrow
      * where the focused node has a way that way (an edge, a value to adjust,
-     * a group to open or leave), Tab where there is another stop, Home/End
-     * where the node has siblings, Enter and Backspace where the node has
-     * the behavior. The key help lists exactly these.
+     * a group to open or leave), Tab where there is another stop to go round
+     * to, Home/End where the node has siblings, Enter and Backspace where the
+     * node has the behavior. The key help lists exactly these.
      */
     public boolean wouldHandle(NavAction action) {
         GraphNode node = graph != null && graph.rerender() ? graph.currentNode() : null;
@@ -362,9 +362,8 @@ public final class GraphNavigator {
             case RIGHT:
                 return node.vtable.onAdjust != null || hasWay(node, GraphDir.RIGHT) || node.expandable;
             case NEXT_STOP:
-                return hasStop(node, 1);
             case PREV_STOP:
-                return hasStop(node, -1);
+                return hasOtherStop(node);
             case HOME:
                 return KeyGraph.inTree(node) ? siblingEdge(node, true) != node : hasWay(node, GraphDir.UP);
             case END:
@@ -398,21 +397,22 @@ public final class GraphNavigator {
         return false;
     }
 
-    // Tab's own test: another stop that way, or a wrapping screen with more
-    // than one; from outside every stop, any stop at all.
-    private boolean hasStop(GraphNode node, int step) {
+    // Tab's own test: it goes round, so another stop to land on is all it
+    // needs; from outside every stop, any stop at all.
+    private boolean hasOtherStop(GraphNode node) {
+        List<Object> stops = stops();
+        return stops.contains(node.stopKey) ? stops.size() > 1 : !stops.isEmpty();
+    }
+
+    // The render's Tab-stops, in first-appearance order.
+    private List<Object> stops() {
         List<Object> stops = new ArrayList<Object>();
         for (GraphNode n : graph.current().order) {
             if (n.stopKey != null && !stops.contains(n.stopKey)) {
                 stops.add(n.stopKey);
             }
         }
-        int idx = stops.indexOf(node.stopKey);
-        if (idx < 0) {
-            return !stops.isEmpty();
-        }
-        int ni = idx + step;
-        return (ni >= 0 && ni < stops.size()) || (screen.wrap() && stops.size() > 1);
+        return stops;
     }
 
     // Where Home/End land inside a tree: the first/last node sharing the
@@ -573,12 +573,7 @@ public final class GraphNavigator {
             return false;
         }
 
-        List<Object> stops = new ArrayList<Object>();
-        for (GraphNode n : graph.current().order) {
-            if (n.stopKey != null && !stops.contains(n.stopKey)) {
-                stops.add(n.stopKey);
-            }
-        }
+        List<Object> stops = stops();
         if (stops.isEmpty()) {
             return false;
         }
@@ -589,15 +584,11 @@ public final class GraphNavigator {
         if (idx < 0) {
             return landOnStop(stops.get(step >= 0 ? 0 : stops.size() - 1));
         }
-
-        int ni = idx + step;
-        if (ni < 0 || ni >= stops.size()) {
-            if (screen != null && screen.wrap()) {
-                ni = ((ni % stops.size()) + stops.size()) % stops.size();
-            } else {
-                return true; // at the end; consume, no wrap
-            }
+        if (stops.size() == 1) {
+            return true; // the only stop: nowhere to go; consume without re-reading the focus
         }
+        // Tab goes round: past the last stop is the first, before the first the last.
+        int ni = (((idx + step) % stops.size()) + stops.size()) % stops.size();
         return landOnStop(stops.get(ni));
     }
 

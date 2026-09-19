@@ -252,11 +252,9 @@ class KeyHelpTest {
         assertEquals(ControlId.structural("b"), nav.focusedId());
     }
 
-    @Test
-    void tabIsListedOnlyTowardAnotherStop() {
-        GraphNavigator nav = new GraphNavigator(new SpeechPipeline());
-        final boolean[] wraps = { false };
-        nav.attach(new AccessScreen() {
+    // Screens with the given Tab-stops, one node each.
+    private static AccessScreen stopsScreen(final String... stops) {
+        return new AccessScreen() {
             @Override
             public String key() {
                 return "test.stops";
@@ -268,31 +266,57 @@ class KeyHelpTest {
             }
 
             @Override
-            public boolean wrap() {
-                return wraps[0];
-            }
-
-            @Override
             public void build(GraphBuilder b) {
-                for (String stop : new String[] { "first", "second" }) {
+                for (String stop : stops) {
                     b.beginStop(stop);
                     NodeVtable vt = new NodeVtable();
                     vt.announcements = Arrays.asList(NodeAnnouncement.of(stop));
                     b.addItem(ControlId.structural(stop), vt);
                 }
             }
-        });
+        };
+    }
+
+    @Test
+    void tabGoesRoundTheStopsBothWays() {
+        SpeechPipeline pipeline = new SpeechPipeline();
+        List<String> spoken = capture(pipeline);
+        GraphNavigator nav = new GraphNavigator(pipeline);
+        nav.attach(stopsScreen("first", "second", "third"));
         nav.ensureFocus();
 
-        // On the first of two stops: Tab has somewhere to go, Shift+Tab none.
+        // Wherever the focus is, both ways lead somewhere: the help lists both.
         assertTrue(nav.wouldHandle(NavAction.NEXT_STOP));
-        assertFalse(nav.wouldHandle(NavAction.PREV_STOP));
-        nav.onAction(NavAction.NEXT_STOP);
-        assertFalse(nav.wouldHandle(NavAction.NEXT_STOP));
         assertTrue(nav.wouldHandle(NavAction.PREV_STOP));
-        // A wrapping screen goes round either way.
-        wraps[0] = true;
+
+        // Shift+Tab from the first stop is the last; Tab from the last the first.
+        assertTrue(nav.onAction(NavAction.PREV_STOP));
+        assertEquals(ControlId.structural("third"), nav.focusedId());
         assertTrue(nav.wouldHandle(NavAction.NEXT_STOP));
+        assertTrue(nav.onAction(NavAction.NEXT_STOP));
+        assertEquals(ControlId.structural("first"), nav.focusedId());
+        assertTrue(nav.onAction(NavAction.NEXT_STOP));
+        assertEquals(ControlId.structural("second"), nav.focusedId());
+        assertEquals(Arrays.asList("first", "!third", "!first", "!second"), spoken);
+    }
+
+    @Test
+    void tabOnTheOnlyStopIsConsumedInSilence() {
+        SpeechPipeline pipeline = new SpeechPipeline();
+        List<String> spoken = capture(pipeline);
+        GraphNavigator nav = new GraphNavigator(pipeline);
+        nav.attach(stopsScreen("only"));
+        nav.ensureFocus();
+        spoken.clear();
+
+        // Nowhere to go round to: not listed, and pressing it neither falls
+        // through to the game nor re-reads the control the player is on.
+        assertFalse(nav.wouldHandle(NavAction.NEXT_STOP));
+        assertFalse(nav.wouldHandle(NavAction.PREV_STOP));
+        assertTrue(nav.onAction(NavAction.NEXT_STOP));
+        assertTrue(nav.onAction(NavAction.PREV_STOP));
+        assertTrue(spoken.isEmpty());
+        assertEquals(ControlId.structural("only"), nav.focusedId());
     }
 
     @Test
