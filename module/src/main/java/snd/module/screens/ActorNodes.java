@@ -248,6 +248,14 @@ final class ActorNodes {
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }
                 }, AnnouncementKinds.LABEL),
+                // A row of the game's buttons that works as a radio group:
+                // the chosen one is drawn with a light border.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return chosenAmongButtons(actor) ? Loc.get("ui", "state.selected") : null;
+                    }
+                }, AnnouncementKinds.SELECTED),
                 // Checkbox rows (options, jukebox songs): the box's state.
                 // Ledger tiles: the dark veil over one not met yet.
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -415,6 +423,77 @@ final class ActorNodes {
             snd.contracts.SndLog.error("ledger tile name failed", t);
             return null;
         }
+    }
+
+    private static java.lang.reflect.Field buttonColField;
+
+    private static com.badlogic.gdx.graphics.Color buttonCol(Actor button) throws Exception {
+        if (buttonColField == null) {
+            buttonColField = StandardButton.class.getDeclaredField("col");
+            buttonColField.setAccessible(true);
+        }
+        return (com.badlogic.gdx.graphics.Color) buttonColField.get(button);
+    }
+
+    // The game builds a choose-one row out of plain StandardButtons and marks
+    // the chosen one by colour alone, in one of two ways.
+    //
+    // A light BORDER where the others keep their own colour: the almanac's
+    // modifier filters (Curses / Blessings / Both), the leaderboard picker.
+    //
+    // A light CAPTION where every other one is greyed: the TextMod page's
+    // info / api / api-2 sections, its type row and its letter row
+    // ("[notranslate][light]api" among "[notranslate][grey]info"). The greyed
+    // siblings are what tells this from a list that merely has light entries
+    // in it — the keyword index captions "cleave" in its keyword colour,
+    // light, among others in theirs.
+    private static boolean chosenAmongButtons(Actor actor) {
+        if (!(actor instanceof StandardButton) || actor.getParent() == null) {
+            return false;
+        }
+        try {
+            StandardButton button = (StandardButton) actor;
+            boolean border = buttonCol(button) == com.tann.dice.util.Colours.light;
+            boolean caption = openingTags(button).endsWith("[light]");
+            if (border == caption) {
+                return false;
+            }
+            boolean unlitSibling = false;
+            for (Actor sibling : actor.getParent().getChildren()) {
+                if (sibling == actor || !(sibling instanceof StandardButton)) {
+                    continue;
+                }
+                if (border) {
+                    // Two filter rows share a parent, each with its own chosen one.
+                    unlitSibling |= buttonCol(sibling) != com.tann.dice.util.Colours.light;
+                    continue;
+                }
+                String tags = openingTags((StandardButton) sibling);
+                if (!tags.contains("[grey]") || tags.endsWith("[light]")) {
+                    return false;
+                }
+                unlitSibling = true;
+            }
+            return unlitSibling;
+        } catch (Throwable t) {
+            snd.contracts.SndLog.error("button colour read failed", t);
+            return false;
+        }
+    }
+
+    private static final java.util.regex.Pattern OPENING_TAGS =
+            java.util.regex.Pattern.compile("^(\\[[^\\]]*\\])+");
+
+    // The markup tags a button's caption opens with ("[notranslate][light]"
+    // of "[notranslate][light]api"); empty for an image button or a bare
+    // caption.
+    private static String openingTags(StandardButton button) {
+        String text = button.getText();
+        if (text == null) {
+            return "";
+        }
+        java.util.regex.Matcher tags = OPENING_TAGS.matcher(text);
+        return tags.find() ? tags.group() : "";
     }
 
     // The almanac dims a hero, monster or item the player has not met in a

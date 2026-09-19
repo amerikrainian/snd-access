@@ -257,6 +257,12 @@ Permanent/reloadable split (verified end-to-end):
   `NodeVtable.selected` instead, the silent form of a SELECTED part, which is what makes entering
   the group land on the open tab (`KeyGraph.isSelected`). Controls where selecting is a decision
   (the title's mode buttons) are buttons, not tabs, and keep Enter and their spoken "selected".
+- **A chosen button among plain buttons is told by colour.** The game builds choose-one rows out
+  of `StandardButton`s and marks the chosen one light: the border (the almanac's modifier
+  filters, the leaderboard picker) or the caption among `[grey]` ones (the TextMod page's
+  sections). `ActorNodes.chosenAmongButtons` reads both as "selected". The caption form needs
+  the greyed siblings — the keyword index captions entries in their keyword colour, light
+  included.
 - **Focus whose node vanished stays in its Tab-stop.** Generic actor nodes are keyed per actor
   instance, and the game answers many buttons by rebuilding the page they sit on (a filter, a
   section switch) — every id in the stop changes at once. `KeyGraph.reconcile` then lands on the
