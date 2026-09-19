@@ -72,7 +72,7 @@ class KeyHelpTest {
                     }
                 }));
         NavAction[] order = {
-            NavAction.ACTIVATE, NavAction.SECONDARY, NavAction.TOOLTIP, NavAction.UP, NavAction.DOWN,
+            NavAction.ACTIVATE, NavAction.SECONDARY, NavAction.UP, NavAction.DOWN,
             NavAction.LEFT, NavAction.RIGHT, NavAction.NEXT_STOP, NavAction.PREV_STOP, NavAction.HOME,
             NavAction.END, NavAction.REGION_PREV, NavAction.REGION_NEXT,
         };

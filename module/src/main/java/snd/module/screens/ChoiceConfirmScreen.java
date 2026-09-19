@@ -18,7 +18,6 @@ import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.util.lang.Words;
 import com.tann.dice.util.ui.choice.ChoiceDialog;
 
-import snd.contracts.HostServices;
 import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
@@ -39,19 +38,13 @@ import snd.module.GameUi;
  * The choice-confirmation dialog a ChoicePhase pushes before committing. For
  * a single level-up the game shows the current hero's sheet, an arrow, and
  * the upgraded hero's sheet; that reads here as two column-aligned rows —
- * header plus the six sides with keyword rules on the tooltip key — so
+ * header plus the six sides with their keyword rules as details — so
  * up/down compares the same side before and after. Other confirmations read
  * one node per chosen option. Yes and cancel drive the dialog's own key
  * route ({@code ChoiceDialog.keyPress}), the same path its physical Enter
  * and Backspace take.
  */
 public class ChoiceConfirmScreen extends AccessScreen {
-    private final HostServices host;
-
-    public ChoiceConfirmScreen(HostServices host) {
-        this.host = host;
-    }
-
     @Override
     public String key() {
         return "choice-confirm";
@@ -203,7 +196,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
                     return (side + 1) + ": " + GameText.t(currentSide(current, side).describe());
                 }
             }, AnnouncementKinds.LABEL));
-            vt.onTooltip = sideRules(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
+            vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
                 @Override
                 public com.tann.dice.gameplay.effect.eff.Eff get() {
                     return currentSide(current, side).getCalculatedEffect();
@@ -236,7 +229,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
                     return (side + 1) + ": " + GameText.t(blank.getSideState(side).describe());
                 }
             }, AnnouncementKinds.LABEL));
-            vt.onTooltip = sideRules(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
+            vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
                 @Override
                 public com.tann.dice.gameplay.effect.eff.Eff get() {
                     return blank.getSideState(side).getCalculatedEffect();
@@ -252,21 +245,6 @@ public class ChoiceConfirmScreen extends AccessScreen {
         return sides[side].findState(FightLog.Temporality.Present, ent);
     }
 
-    private Runnable sideRules(final Supplier<com.tann.dice.gameplay.effect.eff.Eff> eff) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                String rules;
-                try {
-                    rules = CombatScreen.keywordRules(eff.get());
-                } catch (Throwable t) {
-                    SndLog.error("confirm side keyword rules failed", t);
-                    rules = null;
-                }
-                host.speech().speak(rules, false);
-            }
-        };
-    }
 
     private static void addButton(GraphBuilder b, Object key, final String label,
             final ChoiceDialog cd, final int keycode) {

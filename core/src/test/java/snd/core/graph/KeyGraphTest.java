@@ -269,7 +269,6 @@ class KeyGraphTest {
         assertTrue(g.tryAdjust(+1, false));
         assertTrue(adjusted[0]);
         assertFalse(g.secondary());
-        assertFalse(g.tooltip());
     }
 
     private static NodeVtable radio(String label, final boolean selected) {

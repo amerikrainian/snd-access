@@ -325,18 +325,9 @@ public final class GraphNavigator {
                 if (node.vtable.onSecondary != null) {
                     graph.secondary();
                 }
-                return true;
-            }
-            case TOOLTIP: {
-                GraphNode node = graph != null ? graph.currentNode() : null;
-                if (node == null) {
-                    return false;
-                }
-                if (node.vtable.onTooltip != null) {
-                    graph.tooltip();
-                }
-                // Consumed like SECONDARY: the game reads this physical key as
-                // dialog decline/OK, which an info probe must never fire.
+                // Consumed even with nothing to do: the game reads this
+                // physical key as dialog decline/OK, which must never fire
+                // from a press meant for the navigator.
                 return true;
             }
             case CANCEL:
@@ -352,8 +343,8 @@ public final class GraphNavigator {
      * The same decisions as {@link #onAction}, made without acting: an arrow
      * where the focused node has a way that way (an edge, a value to adjust,
      * a group to open or leave), Tab where there is another stop, Home/End
-     * where the node has siblings, Enter and the Backspace tiers where the
-     * node has the behavior. The key help lists exactly these.
+     * where the node has siblings, Enter and Backspace where the node has
+     * the behavior. The key help lists exactly these.
      */
     public boolean wouldHandle(NavAction action) {
         GraphNode node = graph != null && graph.rerender() ? graph.currentNode() : null;
@@ -385,8 +376,6 @@ public final class GraphNavigator {
                 return node.vtable.onActivate != null;
             case SECONDARY:
                 return node.vtable.onSecondary != null;
-            case TOOLTIP:
-                return node.vtable.onTooltip != null;
             case CANCEL:
                 return search.isSearchActive();
             default:

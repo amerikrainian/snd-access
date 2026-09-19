@@ -50,12 +50,6 @@ public final class NodeVtable {
     /** Optional. Secondary activation — right-click equivalent (Backspace). */
     public Runnable onSecondary;
 
-    /**
-     * Optional. Read/open the control's tooltip. The action owns the whole
-     * behavior, so the core stays game-agnostic.
-     */
-    public Runnable onTooltip;
-
     /** Optional. Drag/drop participation; the action owns the state machine. */
     public Runnable onDrag;
 

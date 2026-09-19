@@ -186,6 +186,14 @@ public class InventoryScreen extends AccessScreen {
                         slotActivate(ds, panel, party, hero, slot);
                     }
                 };
+                slotNode.details = new Supplier<List<String>>() {
+                    @Override
+                    public List<String> get() {
+                        // The slot's own item; the items buffer has the hero's others.
+                        Item item = hero.getItems(slot);
+                        return item != null ? UnitLines.item(item) : null;
+                    }
+                };
                 slotNode.onSecondary = new Runnable() {
                     @Override
                     public void run() {

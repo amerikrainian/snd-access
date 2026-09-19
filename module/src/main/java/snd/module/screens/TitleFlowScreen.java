@@ -755,13 +755,13 @@ public class TitleFlowScreen extends AccessScreen {
             };
         }
         // The difficulty's rules (the game shows these only in the almanac
-        // glossary) on the tooltip key.
+        // glossary), as the button's details.
         if (cc instanceof DifficultyConfig) {
             final DifficultyConfig dc = (DifficultyConfig) cc;
-            vt.onTooltip = new Runnable() {
+            vt.details = new Supplier<List<String>>() {
                 @Override
-                public void run() {
-                    host.speech().speak(GameText.t(dc.getDifficulty().getRules()), false);
+                public List<String> get() {
+                    return java.util.Collections.singletonList(GameText.t(dc.getDifficulty().getRules()));
                 }
             };
         }

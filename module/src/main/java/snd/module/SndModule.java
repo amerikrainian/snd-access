@@ -68,9 +68,9 @@ public class SndModule implements ModModule {
         screens.register(new TitleFlowScreen(h));
         screens.register(new ChoiceScreen(h));
         screens.register(new GameModalScreen());
-        screens.register(new ChoiceConfirmScreen(h));
+        screens.register(new ChoiceConfirmScreen());
         screens.register(new CombatScreen(h));
-        screens.register(new SheetScreen(h));
+        screens.register(new SheetScreen());
         screens.register(new LevelEndScreen(h));
         screens.register(new DialogPhaseScreen());
         screens.register(new InventoryScreen(h));

@@ -14,7 +14,6 @@ public enum NavAction {
     REGION_NEXT,
     ACTIVATE,
     SECONDARY,
-    TOOLTIP,
     /** Escape: consumed only when it has something of ours to cancel (a live search). */
     CANCEL
 }

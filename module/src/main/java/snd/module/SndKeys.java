@@ -47,8 +47,6 @@ final class SndKeys {
                 .bind(KeyChord.of(66, "key.enter")).alias(KeyChord.of(160, "key.enter")));
         keys.register(InputAction.nav(NavAction.SECONDARY, "help.nav.SECONDARY")
                 .bind(KeyChord.of(67, "key.backspace")));
-        keys.register(InputAction.nav(NavAction.TOOLTIP, "help.nav.TOOLTIP")
-                .bind(KeyChord.of(67, "key.backspace").shift()));
         keys.register(InputAction.nav(NavAction.UP, "help.nav.UP").bind(KeyChord.of(19, "key.up")));
         keys.register(InputAction.nav(NavAction.DOWN, "help.nav.DOWN").bind(KeyChord.of(20, "key.down")));
         keys.register(InputAction.nav(NavAction.LEFT, "help.nav.LEFT").bind(KeyChord.of(21, "key.left")));

@@ -530,7 +530,7 @@ public class ChoiceScreen extends AccessScreen {
 
     // The offer's sheet as sibling nodes in the option's row — the same
     // per-side treatment as the combat sheet (SheetScreen): level and hp, the
-    // six sides with keyword rules on the tooltip key, items, passives.
+    // six sides with their keyword rules as details, items, passives.
     private void buildLevelupSheet(GraphBuilder b, final LevelupHeroChoosable option, final int index) {
         final Hero upgraded = upgradedHero(option, index);
         if (upgraded == null) {
@@ -562,19 +562,12 @@ public class ChoiceScreen extends AccessScreen {
                     return (side + 1) + ": " + GameText.t(blank.getSideState(side).describe());
                 }
             }, AnnouncementKinds.LABEL));
-            vt.onTooltip = new Runnable() {
+            vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
                 @Override
-                public void run() {
-                    String rules;
-                    try {
-                        rules = CombatScreen.keywordRules(blank.getSideState(side).getCalculatedEffect());
-                    } catch (Throwable t) {
-                        SndLog.error("levelup side keyword rules failed", t);
-                        rules = null;
-                    }
-                    host.speech().speak(rules, false);
+                public com.tann.dice.gameplay.effect.eff.Eff get() {
+                    return blank.getSideState(side).getCalculatedEffect();
                 }
-            };
+            });
             b.addItem(ControlId.structural(CompositeKey.of("choice", index, "side", side)), vt);
         }
 

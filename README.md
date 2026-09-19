@@ -14,17 +14,36 @@ The mod adds a virtual cursor over the game's own UI. The game's native hotkeys
 | ------------------------------------ | ------------------------------------------------------------------------------------ |
 | Arrow keys                           | Move between controls (rows/columns, table cells)                                    |
 | Tab / Shift+Tab                      | Next / previous group (heroes, enemies, buttons, content…)                           |
-| Ctrl+Up / Ctrl+Down                  | Previous / next region within a group                                                |
+| Alt+Up / Alt+Down                    | Previous / next section within a group                                               |
 | Home / End                           | First / last control                                                                 |
 | Enter                                | Activate (left-click equivalent)                                                     |
 | Backspace                            | Details (right-click equivalent: character sheets, item text, delete/detail actions) |
-| Shift+Backspace                      | Extra info (keyword rules in combat, difficulty rules)                               |
+| Ctrl+Up / Ctrl+Down                  | Review: previous / next line of the current buffer (see below)                       |
+| Ctrl+Left / Ctrl+Right               | Review: previous / next buffer                                                       |
+| Ctrl+1                               | On anything that concerns a hero or monster: its hp, shields and incoming damage     |
+| F1                                   | Keys here: every key that would do something right now; Enter on a row runs it      |
 | Left / Right on sliders and choosers | Adjust the value                                                                     |
 | Any letters                          | Type-ahead search within the current group                                           |
 | Escape                               | Game's own back/close (cancels type-ahead first if one is active)                    |
 
 In text inputs (rename, scenario names, modifier search) the keyboard goes to the field:
 typing echoes, Backspace deletes, Enter submits, Escape cancels.
+
+### Review buffers
+
+Moving onto a control speaks one line. Everything else it carries — keyword rules, status
+rules, item text, a difficulty's rules — waits in a buffer you step through a line at a time
+with Ctrl+Up/Down, so nothing has to be heard in one burst or caught the first time.
+Ctrl+Left/Right switch buffers, speaking the buffer's name and its current line; buffers
+with nothing to say are skipped. Moving to another control returns review to its own buffer.
+
+| Buffer         | Holds                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| control        | The focused control's line, then one line per tooltip: keyword rules, statuses in full         |
+| hero / monster | The whole unit the control concerns: hp, targets, all six sides, keyword rules, statuses       |
+| items          | What that hero carries, or the focused item: name and tier, then its description               |
+| party, enemies | Everyone on a side, one line each, with hp, shields and incoming damage                        |
+| log            | What happened — banners, rolls, outcomes, phases, notifications; opens on the latest line     |
 
 ## Installing (players)
 

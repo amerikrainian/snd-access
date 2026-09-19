@@ -142,8 +142,8 @@ game and read as unlabeled; naming them belongs with the achievements work (Phas
 
 Brutal/Hell also inject a "Beware!" message phase. Difficulty rules text (`getRules()`) is shown in the Book glossary, not on the buttons.
 
-> **Coverage:** each difficulty is a start button carrying its record, and the **rules text is on
-the tooltip key** — so "what does Unfair actually do" is answerable without leaving the card.
+> **Coverage:** each difficulty is a start button carrying its record, and the **rules text is a
+line of its control buffer** — so "what does Unfair actually do" is answerable without leaving the card.
 Locked difficulties are announced as locked rather than silently omitted.
 
 ## 2.2 Party Layout Chooser — PARTIAL
@@ -229,7 +229,7 @@ reflectively) + `DiceWatcher` (when the last tumbling die settles, each rolled d
 landed side followed by "Reroll n/max"; lock toggles speak "name locked/unlocked" from any input
 path). Activating a hero runs `targetingManager.clicked` — the game's digit route — and Backspace
 reads the full die net. The game's 1–9/R/Space keys fall through untouched (extra
-info rides Shift+Backspace, so the navigator claims no game key). Vetoed lock banners land
+info waits in the review buffers on Ctrl+arrows, so the navigator claims no game key). Vetoed lock banners land
 with 3.12's transient-text channel; the double-click tray line-up is visual-only.
 
 ## 3.3 Targeting Phase — DONE

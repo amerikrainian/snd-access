@@ -19,8 +19,6 @@ import com.tann.dice.screens.Screen;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory;
 
-import snd.contracts.HostServices;
-import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
@@ -47,12 +45,6 @@ import snd.module.GameUi;
  * the owning panel's node.
  */
 public class SheetScreen extends AccessScreen {
-    private final HostServices host;
-
-    public SheetScreen(HostServices host) {
-        this.host = host;
-    }
-
     @Override
     public String key() {
         return "sheet";
@@ -137,21 +129,12 @@ public class SheetScreen extends AccessScreen {
                             return isRolled(ent, index) ? Loc.get("ui", "sheet.rolled") : null;
                         }
                     }, AnnouncementKinds.SELECTED));
-            vt.onTooltip = new Runnable() {
+            vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
                 @Override
-                public void run() {
-                    String rules;
-                    try {
-                        rules = CombatScreen.keywordRules(sides[index]
-                                .findState(FightLog.Temporality.Present, ent)
-                                .getCalculatedEffect());
-                    } catch (Throwable t) {
-                        SndLog.error("sheet side keyword rules failed", t);
-                        rules = null;
-                    }
-                    host.speech().speak(rules, false);
+                public com.tann.dice.gameplay.effect.eff.Eff get() {
+                    return sides[index].findState(FightLog.Temporality.Present, ent).getCalculatedEffect();
                 }
-            };
+            });
             b.addItem(ControlId.structural(CompositeKey.of("sheet", "side", index)), vt);
         }
 

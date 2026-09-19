@@ -743,19 +743,6 @@ public final class KeyGraph {
         return true;
     }
 
-    /** Run the focused control's tooltip behavior. False = it has none. */
-    public boolean tooltip() {
-        if (!rerender()) {
-            return false;
-        }
-        GraphNode node = currentNode();
-        if (node == null || node.vtable.onTooltip == null) {
-            return false;
-        }
-        node.vtable.onTooltip.run();
-        return true;
-    }
-
     /** Run the focused control's drag behavior. False = it has none. */
     public boolean drag() {
         if (!rerender()) {

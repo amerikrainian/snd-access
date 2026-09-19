@@ -276,14 +276,10 @@ public class CombatScreen extends AccessScreen {
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
-                // What Backspace and Shift+Backspace speak, a line each.
+                // The card's effect, then a line per keyword it carries.
                 List<String> lines = new java.util.ArrayList<String>();
                 lines.add(GameText.t(a.getDerivedEffects().describe(false)));
-                try {
-                    lines.add(keywordRules(a.getDerivedEffects()));
-                } catch (Throwable t) {
-                    snd.contracts.SndLog.error("ability keyword rules failed", t);
-                }
+                lines.addAll(keywordRuleLines(a.getDerivedEffects()));
                 return lines;
             }
         };
@@ -299,19 +295,6 @@ public class CombatScreen extends AccessScreen {
             @Override
             public void run() {
                 host.speech().speak(GameText.t(a.getDerivedEffects().describe(false)), false);
-            }
-        };
-        vt.onTooltip = new Runnable() {
-            @Override
-            public void run() {
-                String rules;
-                try {
-                    rules = keywordRules(a.getDerivedEffects());
-                } catch (Throwable t) {
-                    snd.contracts.SndLog.error("ability keyword rules failed", t);
-                    rules = null;
-                }
-                host.speech().speak(rules, false);
             }
         };
         return vt;
@@ -366,6 +349,16 @@ public class CombatScreen extends AccessScreen {
                 return GameText.t("Reinforcements: " + waiting.size());
             }
         }, AnnouncementKinds.LABEL));
+        vt.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                List<String> names = new java.util.ArrayList<String>();
+                for (com.tann.dice.gameplay.content.ent.Monster m : waiting) {
+                    names.add(GameText.t(m.getName(true)));
+                }
+                return names;
+            }
+        };
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
@@ -531,37 +524,15 @@ public class CombatScreen extends AccessScreen {
                 ds.targetingManager.clicked(ent, false);
             }
         };
-        // The current side's keyword rules plus the statuses' full rules
-        // text — the row speaks only status names. The game shows both only
-        // in the almanac glossary or the right-click explanation panel.
-        vt.onTooltip = new Runnable() {
-            @Override
-            public void run() {
-                host.speech().speak(entTooltipText(ds, ent), false);
-            }
-        };
         return vt;
     }
 
-    private static String entTooltipText(DungeonScreen ds, Ent ent) {
-        StringBuilder sb = new StringBuilder();
-        for (String line : entTooltipLines(ds, ent)) {
-            if (sb.length() > 0) {
-                sb.append(". ");
-            }
-            sb.append(line);
-        }
-        return sb.length() > 0 ? sb.toString() : null;
-    }
-
-    // One line per tooltip: the current side's keyword rules, then each
-    // status the panel draws, in full.
+    // The row's details, one line per tooltip: a line per keyword of the
+    // current side, then each status the panel draws, in full — the row
+    // speaks only status names. The game shows both only in the almanac
+    // glossary or the right-click explanation panel.
     static List<String> entTooltipLines(DungeonScreen ds, Ent ent) {
-        List<String> lines = new java.util.ArrayList<String>();
-        String rules = sideKeywordRules(ent);
-        if (rules != null) {
-            lines.add(rules);
-        }
+        List<String> lines = new java.util.ArrayList<String>(sideKeywordRuleLines(ent));
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null) {
             for (Personal p : present.getActivePersonals()) {
@@ -575,34 +546,30 @@ public class CombatScreen extends AccessScreen {
     }
 
     // "bloodlust: +1 pip for each damaged enemy" for every keyword on the
-    // rolled side's calculated effect. Null when there is nothing to say —
-    // speak(null) is a no-op, so a keywordless side stays silent.
-    static String sideKeywordRules(Ent ent) {
+    // rolled side's calculated effect; nothing for a keywordless side.
+    static List<String> sideKeywordRuleLines(Ent ent) {
         try {
             EntSide side = ent.getDie().getCurrentSide();
-            if (side == null) {
-                return null;
+            if (side != null) {
+                return keywordRuleLines(side.findState(FightLog.Temporality.Present, ent).getCalculatedEffect());
             }
-            return keywordRules(side.findState(FightLog.Temporality.Present, ent)
-                    .getCalculatedEffect());
         } catch (Throwable t) {
             snd.contracts.SndLog.error("side keyword rules failed", t);
-            return null;
         }
+        return java.util.Collections.emptyList();
     }
 
     // The game's keyword box composition (KUtils.makeActor): the effect's
     // display-filtered keywords, each rules text parameterized by the source
     // effect — halved and treble rewrite their numbers from it.
-    static String keywordRules(com.tann.dice.gameplay.effect.eff.Eff e) {
-        StringBuilder sb = new StringBuilder();
-        for (String rule : keywordRuleLines(e)) {
-            if (sb.length() > 0) {
-                sb.append(". ");
+    /** A die side's row: its keyword rules as the control buffer's details, a line per keyword. */
+    static Supplier<List<String>> ruleDetails(final Supplier<com.tann.dice.gameplay.effect.eff.Eff> eff) {
+        return new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                return keywordRuleLines(eff.get());
             }
-            sb.append(rule);
-        }
-        return sb.length() > 0 ? sb.toString() : null;
+        };
     }
 
     // One line per keyword the effect displays: "ranged: can hit the back row".

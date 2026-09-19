@@ -217,8 +217,9 @@ Permanent/reloadable split (verified end-to-end):
   or the focused bag item), **party** and **enemies** (one hp line per unit), **log** (what
   happened; follows its latest line). Empty buffers are skipped; every source is re-read on every
   keypress (never cache lines); a focus change re-homes review to the control buffer. Conventions:
-  a tooltip is ONE line, never several joined — helpers return `List<String>`, and a burst spoken
-  on Backspace joins the same lines; a node says what it concerns with `NodeVtable.subject` (an
+  a tooltip is ONE line, never several joined — helpers return `List<String>`. There is no
+  read-the-tooltip key: whatever a control carries beyond its focus line goes in its `details`
+  (or the unit's `UnitLines`), never behind a key that speaks it as a burst; a node says what it concerns with `NodeVtable.subject` (an
   `Ent`, an `Item`) and the subject-fed buffers and the glances follow it from any screen.
 - **An event is spoken through the `EventLog`** (`events.say`), not the pipeline directly: a
   banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
