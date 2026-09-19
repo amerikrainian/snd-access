@@ -44,6 +44,15 @@ public final class NodeVtable {
      */
     public Supplier<List<String>> details;
 
+    /**
+     * Optional. Whether this is the selected member of its stop, for a control
+     * that does not SAY so: where entering the stop lands, exactly as a
+     * non-empty {@link AnnouncementKinds#SELECTED} part does for one that
+     * speaks it. A tab uses this: moving onto a tab selects it, so "selected"
+     * would be said of every tab the player ever hears.
+     */
+    public java.util.function.BooleanSupplier selected;
+
     /** Optional. Primary activation — the left-click equivalent (Enter). */
     public Runnable onActivate;
 

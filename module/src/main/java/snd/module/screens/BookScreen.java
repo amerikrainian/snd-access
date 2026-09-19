@@ -511,13 +511,16 @@ public class BookScreen extends AccessScreen {
                     public String get() {
                         return tab.getTabName();
                     }
-                }, AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return tabFocused(tab) ? Loc.get("ui", "state.selected") : null;
-                    }
-                }, AnnouncementKinds.SELECTED));
+                }, AnnouncementKinds.LABEL));
+        // Moving onto a tab opens it (the navigator's rule for tabs), so the
+        // open one is not announced as "selected" — it only says where
+        // entering the group lands.
+        vt.selected = new java.util.function.BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return tabFocused(tab);
+            }
+        };
         vt.onActivate = new Runnable() {
             @Override
             public void run() {

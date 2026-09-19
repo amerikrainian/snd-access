@@ -603,6 +603,7 @@ public final class GraphNavigator {
         speak(GraphAnnouncer.compose(lastSpokenNode, node), true);
         lastSpokenKey = node.id;
         lastSpokenNode = node;
+        followSelection();
         return true;
     }
 
@@ -645,6 +646,27 @@ public final class GraphNavigator {
         speak(GraphAnnouncer.compose(result.from, node, result.transitionLabel), true);
         lastSpokenKey = node.id;
         lastSpokenNode = node;
+        followSelection();
+    }
+
+    // Selection follows focus on a tab, as on tab controls everywhere: moving
+    // onto one opens it, no Enter needed, which is also why a tab never says
+    // "selected". Only a move the player made does this; focus that merely
+    // lands (a screen opening, Tab entering the stop) lands on the tab that
+    // is already open, by {@link KeyGraph#isSelected}.
+    private void followSelection() {
+        GraphNode node = graph.currentNode();
+        if (node == null || node.vtable.controlType != snd.core.graph.ControlTypes.TAB
+                || node.vtable.onActivate == null || KeyGraph.isSelected(node)) {
+            return;
+        }
+        graph.activate();
+        // Opening a tab rebuilds what is under it; the tab was just read.
+        node = graph.currentNode();
+        if (node != null) {
+            lastSpokenKey = node.id;
+            lastSpokenNode = node;
+        }
     }
 
     // Run the focused node's activation; speak its stateText as immediate
@@ -764,6 +786,7 @@ public final class GraphNavigator {
         speak(GraphAnnouncer.compose(lastSpokenNode, node), true);
         lastSpokenKey = node.id;
         lastSpokenNode = node;
+        followSelection();
         searchFocusId = node.id; // staleness check clears results if focus moves off
     }
 

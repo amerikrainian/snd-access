@@ -515,34 +515,44 @@ public final class KeyGraph {
         return null;
     }
 
-    /**
-     * The first node in a stop that reads as SELECTED — carries a non-empty
-     * selected-kind announcement part — or null.
-     */
+    /** The first node in a stop that {@link #isSelected is selected}, or null. */
     public static GraphNode selectedNodeInStop(GraphRender render, Object stopKey) {
         for (GraphNode n : render.order) {
-            if (!Objects.equals(n.stopKey, stopKey)) {
-                continue;
-            }
-            List<NodeAnnouncement> anns = n.vtable != null ? n.vtable.announcements : null;
-            if (anns == null) {
-                continue;
-            }
-            for (NodeAnnouncement a : anns) {
-                if (a != null && AnnouncementKinds.SELECTED.equals(a.kind)) {
-                    String t = null;
-                    try {
-                        t = a.text != null ? a.text.get() : null;
-                    } catch (Throwable ignored) {
-                        // a throwing part reads as unselected
-                    }
-                    if (t != null && !t.isEmpty()) {
-                        return n;
-                    }
-                }
+            if (Objects.equals(n.stopKey, stopKey) && isSelected(n)) {
+                return n;
             }
         }
         return null;
+    }
+
+    /**
+     * Whether a node is the selected member of its stop: it says so silently
+     * ({@link NodeVtable#selected}) or aloud (a non-empty selected-kind
+     * announcement part). A check that throws reads as unselected.
+     */
+    public static boolean isSelected(GraphNode n) {
+        if (n.vtable == null) {
+            return false;
+        }
+        try {
+            if (n.vtable.selected != null && n.vtable.selected.getAsBoolean()) {
+                return true;
+            }
+            List<NodeAnnouncement> anns = n.vtable.announcements;
+            if (anns != null) {
+                for (NodeAnnouncement a : anns) {
+                    if (a != null && AnnouncementKinds.SELECTED.equals(a.kind) && a.text != null) {
+                        String t = a.text.get();
+                        if (t != null && !t.isEmpty()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            // reads as unselected
+        }
+        return false;
     }
 
     // ---- tree operations (Right/Left semantics for expandable groups) ----

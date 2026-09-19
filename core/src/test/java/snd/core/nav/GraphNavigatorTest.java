@@ -115,6 +115,83 @@ class GraphNavigatorTest {
         assertEquals(ControlId.structural("about ranger"), nav.focusedNode().id);
     }
 
+    // Three tabs and a content line; opening a tab is remembered as the screen's own state.
+    static final class TabbedScreen extends ListScreen {
+        final List<String> opened = new ArrayList<String>();
+        String open = "Dice";
+
+        TabbedScreen() {
+            super("Basics", "Dice", "Rolling");
+        }
+
+        @Override
+        public void build(GraphBuilder b) {
+            b.beginStop("tabs");
+            for (final String tab : items) {
+                NodeVtable vt = new NodeVtable();
+                vt.controlType = snd.core.graph.ControlTypes.TAB;
+                vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return tab;
+                    }
+                }, AnnouncementKinds.LABEL));
+                vt.selected = new java.util.function.BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return tab.equals(open);
+                    }
+                };
+                vt.onActivate = new Runnable() {
+                    @Override
+                    public void run() {
+                        open = tab;
+                        opened.add(tab);
+                    }
+                };
+                b.addItem(ControlId.structural(tab), vt);
+            }
+            b.beginStop("content");
+            NodeVtable line = new NodeVtable();
+            line.announcements = Arrays.asList(NodeAnnouncement.of("about " + open));
+            b.addItem(ControlId.structural("content"), line);
+        }
+    }
+
+    @Test
+    void movingOntoATabOpensItAndNoTabSaysSelected() {
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        TabbedScreen screen = new TabbedScreen();
+        nav.attach(screen);
+        nav.ensureFocus();
+
+        // Focus lands on the tab that is open, silently selected; landing opens nothing.
+        assertEquals(ControlId.structural("Dice"), nav.focusedId());
+        assertTrue(screen.opened.isEmpty());
+
+        // Arrowing onto a tab opens it; it is read as a tab, never as "selected".
+        nav.onAction(NavAction.DOWN);
+        assertEquals(Arrays.asList("Rolling"), screen.opened);
+        nav.onAction(NavAction.HOME);
+        assertEquals(Arrays.asList("Rolling", "Basics"), screen.opened);
+        for (String line : cap.lines) {
+            assertTrue(!line.contains("selected"), line);
+        }
+
+        // The content under it follows, and the tab is not read a second time for the rebuild.
+        int said = cap.lines.size();
+        nav.ensureFocus();
+        assertEquals(said, cap.lines.size());
+        nav.onAction(NavAction.NEXT_STOP);
+        assertEquals("!about Basics", cap.lines.get(cap.lines.size() - 1));
+
+        // Tab back: lands on the open tab, and landing on it opens nothing again.
+        nav.onAction(NavAction.NEXT_STOP);
+        assertEquals(ControlId.structural("Basics"), nav.focusedId());
+        assertEquals(Arrays.asList("Rolling", "Basics"), screen.opened);
+    }
+
     @Test
     void moveAnnouncesInterrupting() {
         Capture cap = new Capture();

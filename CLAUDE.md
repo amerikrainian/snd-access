@@ -251,6 +251,12 @@ Permanent/reloadable split (verified end-to-end):
   banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
   and gone, and the log buffer is the only way back to them. Echoes of the player's own
   navigation (focus readouts, "selected", typed characters) are not events.
+- **Selection follows focus on tabs.** A `ControlTypes.TAB` node is opened (its `onActivate`) by the
+  navigator when a move the player made lands on it — arrows, Home/End, Tab, type-ahead — never
+  by focus merely landing (a screen opening). So a tab does not announce "selected": it declares
+  `NodeVtable.selected` instead, the silent form of a SELECTED part, which is what makes entering
+  the group land on the open tab (`KeyGraph.isSelected`). Controls where selecting is a decision
+  (the title's mode buttons) are buttons, not tabs, and keep Enter and their spoken "selected".
 - **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
   pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
   achievement's description). `GameUi.activate`/`info` notice a text-only panel arriving on the
