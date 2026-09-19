@@ -165,9 +165,13 @@ Permanent/reloadable split (verified end-to-end):
   an edge from a permanent class into the collectible loader and pins every old module in memory.
   Hooks are installed once by the host; a reload swaps one volatile reference.
 - Current hooks: `Main.render` → `Dispatcher.frame()` (the pump: drain jobs → poll frame-waits →
-  `module.tick()` → host frame hook); `AbilityHolder.showInfo` + `TargetingManager.showError` →
-  `Dispatcher.transientText()` (a bounded queue the module's BannerWatcher drains and speaks —
-  the game's half-second banners and red error flashes).
+  `module.tick()` → host frame hook); and the game's transient text, all into
+  `Dispatcher.transientText()` (a bounded queue the module's BannerWatcher drains and speaks):
+  `AbilityHolder.showInfo` + `TargetingManager.showError` (half-second banners, red error
+  flashes), `EntPanelCombat.addMessage` + `addSpeechBubble` (the floating words over a panel —
+  "dodged", "immune", "petrified" — and hero chatter, prefixed with the panel's entity), and
+  `AbilityHolder.addWisp` (mana gains, discards). Those are the game's own `TextEvent` /
+  `ChatStateEvent` / `SnapshotEvent` emit points, so modded text events come through too.
 - The UI model going forward (phases 3+) is the **wotr-access immediate-mode graph** — screens
   declare nodes fresh from live game state each render, focus survives by ControlId identity.
   Port its engine tests as the spec; do not invent a retained-tree/signature design, and do not
@@ -224,6 +228,25 @@ Permanent/reloadable split (verified end-to-end):
   read-the-tooltip key: whatever a control carries beyond its focus line goes in its `details`
   (or the unit's `UnitLines`), never behind a key that speaks it as a burst; a node says what it concerns with `NodeVtable.subject` (an
   `Ent`, an `Item`) and the subject-fed buffers and the glances follow it from any screen.
+- **What happened in a fight is read from the FightLog, never from an effect's name.**
+  `CommandWatcher` speaks every command the log resolves — the player's as applied, a monster's
+  as its animation lands (`Command.getImpacted`), the turn's Start/EndTurn ticks — and what one
+  did is `CombatChanges`: the diff of the log's own before/after snapshots across EVERY
+  combatant (hp, the blocked-damage and poison counters, shields, max hp, statuses by
+  `Personal.treatAsIncoming`, death/flight/return, who joined). Adding a case for a particular
+  effect or keyword there is the wrong fix: a mechanic that matters moves something in that
+  diff, and one that doesn't shows as one of the game's text events (the transient-text hooks).
+  The log archives a turn's commands (`pastCommands` → `commandHistory`) in the tick the last
+  one finishes — read the archive's tail or end-of-turn deaths are never seen. `PhaseWatcher`
+  opens the player's first phase of a turn with `CombatScreen.enemyIntents()`.
+- **Definitions are the game's or they are absent.** `Terms` gives a keyword's rules and its
+  almanac extra rules, for the keywords a side/ability DISPLAYS (`Eff.getKeywordsForDisplay`)
+  and the ones a status, trait or item REFERENCES (`getReferencedKeywords` — what the game's own
+  info panels draw keyword boxes from), plus the almanac glossary's entries where a line uses
+  the term. Never write a definition of our own: the game defines "overkill" nowhere, so
+  neither do we. Which statuses a unit lists is the game's sheet rule
+  (`UnitLines.sheetPersonals`: `showInDiePanel()`, a trait only while `visible`), not a test of
+  ours.
 - **An event is spoken through the `EventLog`** (`events.say`), not the pipeline directly: a
   banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
   and gone, and the log buffer is the only way back to them. Echoes of the player's own
