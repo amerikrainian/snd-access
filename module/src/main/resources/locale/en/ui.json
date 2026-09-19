@@ -63,6 +63,7 @@
   "key.digits": "1 to {n}",
   "key.shift": "Shift+{key}",
   "key.ctrl": "Ctrl+{key}",
+  "key.alt": "Alt+{key}",
 
   "screen.TitleScreen": "Title Screen",
   "screen.DungeonScreen": "Dungeon Screen",

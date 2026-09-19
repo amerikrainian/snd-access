@@ -55,29 +55,33 @@ final class DevDriver {
         if (proc == null) {
             return "no input processor yet";
         }
-        // "ctrl+", "shift+" prefixes (any order): the processor path reads
+        // "ctrl+", "shift+", "alt+" prefixes (any order): the processor path reads
         // live key state and can't fake held modifiers, so a modified verb
         // goes to the mod's own key path with the modifiers given. A chord
         // the mod leaves unconsumed stops there — the game reads its
         // modifiers from the live keyboard too.
         boolean shift = false;
         boolean ctrl = false;
+        boolean alt = false;
         String rest = verb.toLowerCase();
-        while (rest.startsWith("shift+") || rest.startsWith("ctrl+")) {
+        while (rest.startsWith("shift+") || rest.startsWith("ctrl+") || rest.startsWith("alt+")) {
             if (rest.startsWith("shift+")) {
                 shift = true;
                 rest = rest.substring(6);
-            } else {
+            } else if (rest.startsWith("ctrl+")) {
                 ctrl = true;
                 rest = rest.substring(5);
+            } else {
+                alt = true;
+                rest = rest.substring(4);
             }
         }
-        if (shift || ctrl) {
+        if (shift || ctrl || alt) {
             Integer chordCode = VERBS.get(rest);
             if (chordCode == null) {
                 return "unknown key '" + rest + "' in " + verb;
             }
-            return "ok: " + verb + " -> keycode " + chordCode + " consumed=" + input.key(chordCode, shift, ctrl)
+            return "ok: " + verb + " -> keycode " + chordCode + " consumed=" + input.key(chordCode, shift, ctrl, alt)
                     + " (mod key path only)";
         }
         // An action of the key table by its id ("glance.vitals", "nav.UP").

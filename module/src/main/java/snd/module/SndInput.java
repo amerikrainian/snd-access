@@ -50,16 +50,17 @@ final class SndInput implements InputProcessor {
     public boolean keyDown(int keycode) {
         boolean shift = Gdx.input.isKeyPressed(59) || Gdx.input.isKeyPressed(60);
         boolean ctrl = Gdx.input.isKeyPressed(129) || Gdx.input.isKeyPressed(130);
-        return key(keycode, shift, ctrl);
+        boolean alt = Gdx.input.isKeyPressed(57) || Gdx.input.isKeyPressed(58);
+        return key(keycode, shift, ctrl, alt);
     }
 
     /** A key press with its modifier state given (the dev driver fakes held modifiers here). */
-    boolean key(int keycode, boolean shift, boolean ctrl) {
+    boolean key(int keycode, boolean shift, boolean ctrl, boolean alt) {
         if (textEntryActive()) {
             return false;
         }
         int digit = digitOf(keycode);
-        return run(keys.match(keycode, digit, shift, ctrl), digit);
+        return run(keys.match(keycode, digit, shift, ctrl, alt), digit);
     }
 
     /**

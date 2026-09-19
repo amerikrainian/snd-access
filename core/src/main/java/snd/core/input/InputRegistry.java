@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * The mod's own keys, in registration order (which is the key help's order
  * within a group). A key press resolves to the action whose chord matches
- * with the most required modifiers: Ctrl+Up is the region jump, Up and
+ * with the most required modifiers: Alt+Up is the section jump, Up and
  * Shift+Up the plain move. No match = not ours; the press falls through to
  * the game.
  */
@@ -47,12 +47,12 @@ public final class InputRegistry {
     }
 
     /** digit: the pressed key's digit index (0 for "1"), or -1 for a non-digit key. */
-    public InputAction match(int keycode, int digit, boolean shift, boolean ctrl) {
+    public InputAction match(int keycode, int digit, boolean shift, boolean ctrl, boolean alt) {
         InputAction best = null;
         int bestScore = -1;
         for (InputAction action : actions) {
             for (KeyChord chord : action.allChords()) {
-                if (chord.matches(keycode, digit, shift, ctrl) && chord.specificity() > bestScore) {
+                if (chord.matches(keycode, digit, shift, ctrl, alt) && chord.specificity() > bestScore) {
                     best = action;
                     bestScore = chord.specificity();
                 }

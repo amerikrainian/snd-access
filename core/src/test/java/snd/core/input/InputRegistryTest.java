@@ -39,6 +39,7 @@ class InputRegistryTest {
         ui.put("key.digits", "1 to {n}");
         ui.put("key.shift", "Shift+{key}");
         ui.put("key.ctrl", "Ctrl+{key}");
+        ui.put("key.alt", "Alt+{key}");
         Map<String, Map<String, String>> tables = new HashMap<String, Map<String, String>>();
         tables.put("ui", ui);
         Loc.installFallback(tables);
@@ -47,6 +48,7 @@ class InputRegistryTest {
 
     private final InputAction up = InputAction.nav(NavAction.UP, "l").bind(KeyChord.of(UP, "key.up"));
     private final InputAction regionPrev = InputAction.nav(NavAction.REGION_PREV, "l").bind(KeyChord.of(UP, "key.up").ctrl());
+    private final InputAction altUp = InputAction.of("alt.up", "l").bind(KeyChord.of(UP, "key.up").alt());
     private final InputAction next = InputAction.nav(NavAction.NEXT_STOP, "l").bind(KeyChord.of(TAB, "key.tab"));
     private final InputAction prev = InputAction.nav(NavAction.PREV_STOP, "l").bind(KeyChord.of(TAB, "key.tab").shift());
     private final InputAction activate = InputAction.nav(NavAction.ACTIVATE, "l")
@@ -58,6 +60,7 @@ class InputRegistryTest {
         InputRegistry r = new InputRegistry();
         r.register(up);
         r.register(regionPrev);
+        r.register(altUp);
         r.register(next);
         r.register(prev);
         r.register(activate);
@@ -69,27 +72,30 @@ class InputRegistryTest {
     @Test
     void theMostSpecificChordWinsAndUnaskedModifiersAreIgnored() {
         InputRegistry r = registry();
-        assertSame(up, r.match(UP, -1, false, false));
-        assertSame(up, r.match(UP, -1, true, false)); // Shift+Up still moves up
-        assertSame(regionPrev, r.match(UP, -1, false, true));
-        assertSame(regionPrev, r.match(UP, -1, true, true));
-        assertSame(next, r.match(TAB, -1, false, false));
-        assertSame(next, r.match(TAB, -1, false, true)); // Ctrl+Tab is Tab
-        assertSame(prev, r.match(TAB, -1, true, false));
+        assertSame(up, r.match(UP, -1, false, false, false));
+        assertSame(up, r.match(UP, -1, true, false, false)); // Shift+Up still moves up
+        assertSame(regionPrev, r.match(UP, -1, false, true, false));
+        assertSame(regionPrev, r.match(UP, -1, true, true, false));
+        assertSame(next, r.match(TAB, -1, false, false, false));
+        assertSame(next, r.match(TAB, -1, false, true, false)); // Ctrl+Tab is Tab
+        assertSame(prev, r.match(TAB, -1, true, false, false));
+        // Alt is a tier of its own: Alt+Up is neither Ctrl+Up nor the plain move.
+        assertSame(altUp, r.match(UP, -1, false, false, true));
+        assertSame(next, r.match(TAB, -1, false, false, true));
     }
 
     @Test
     void whatNoChordMatchesIsNotOurs() {
         InputRegistry r = registry();
-        assertNull(r.match(BACKSPACE, -1, false, false));
+        assertNull(r.match(BACKSPACE, -1, false, false, false));
         // The plain digits and their Shift tier are the game's: only the
         // Ctrl tiers are bound.
-        assertNull(r.match(NUM_1, 0, false, false));
-        assertNull(r.match(NUM_1, 0, true, false));
-        assertSame(heroGlance, r.match(NUM_1, 0, false, true));
-        assertSame(enemyGlance, r.match(NUM_1, 0, true, true));
+        assertNull(r.match(NUM_1, 0, false, false, false));
+        assertNull(r.match(NUM_1, 0, true, false, false));
+        assertSame(heroGlance, r.match(NUM_1, 0, false, true, false));
+        assertSame(enemyGlance, r.match(NUM_1, 0, true, true, false));
         // A digits chord answers digit keys only.
-        assertNull(r.match(BACKSPACE, -1, false, true));
+        assertNull(r.match(BACKSPACE, -1, false, true, false));
     }
 
     @Test
@@ -99,11 +105,11 @@ class InputRegistryTest {
         InputAction reserved = r.register(InputAction.of("reserved", "l")
                 .bind(KeyChord.digits().ctrl()).bind(KeyChord.digits().ctrl().shift()));
         InputAction vitals = r.register(InputAction.of("glance.vitals", "l").bind(KeyChord.of(NUM_1, "key.1").ctrl()));
-        assertSame(vitals, r.match(NUM_1, 0, false, true));
-        assertSame(reserved, r.match(NUM_1 + 1, 1, false, true));
+        assertSame(vitals, r.match(NUM_1, 0, false, true, false));
+        assertSame(reserved, r.match(NUM_1 + 1, 1, false, true, false));
         // More modifiers still outrank the named key: Ctrl+Shift+1 is the family's.
-        assertSame(reserved, r.match(NUM_1, 0, true, true));
-        assertNull(r.match(NUM_1, 0, false, false));
+        assertSame(reserved, r.match(NUM_1, 0, true, true, false));
+        assertNull(r.match(NUM_1, 0, false, false, false));
     }
 
     @Test
@@ -111,7 +117,7 @@ class InputRegistryTest {
         InputRegistry r = registry();
         assertSame(activate, r.find("nav.ACTIVATE"));
         assertNull(r.find("nav.NOPE"));
-        assertSame(activate, r.match(NUMPAD_ENTER, -1, false, false));
+        assertSame(activate, r.match(NUMPAD_ENTER, -1, false, false, false));
         assertEquals("Enter", activate.keysDisplay());
     }
 
@@ -119,6 +125,7 @@ class InputRegistryTest {
     void chordsAreSpokenWithTheirModifiersAndDigitRange() {
         assertEquals("Shift+Tab", prev.keysDisplay());
         assertEquals("Ctrl+Up arrow", regionPrev.keysDisplay());
+        assertEquals("Alt+Up arrow", altUp.keysDisplay());
         enemyGlance.digitCount(new IntSupplier() {
             @Override
             public int getAsInt() {

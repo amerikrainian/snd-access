@@ -59,9 +59,9 @@ final class SndKeys {
         keys.register(InputAction.nav(NavAction.HOME, "help.nav.HOME").bind(KeyChord.of(3, "key.home")));
         keys.register(InputAction.nav(NavAction.END, "help.nav.END").bind(KeyChord.of(123, "key.end")));
         keys.register(InputAction.nav(NavAction.REGION_PREV, "help.nav.REGION_PREV")
-                .bind(KeyChord.of(19, "key.up").ctrl()));
+                .bind(KeyChord.of(19, "key.up").alt()));
         keys.register(InputAction.nav(NavAction.REGION_NEXT, "help.nav.REGION_NEXT")
-                .bind(KeyChord.of(20, "key.down").ctrl()));
+                .bind(KeyChord.of(20, "key.down").alt()));
         // Escape answers only a live search or a screen's onCancel, and
         // opening the help ends the search: never worth a row.
         keys.register(InputAction.nav(NavAction.CANCEL, "help.nav.CANCEL")
