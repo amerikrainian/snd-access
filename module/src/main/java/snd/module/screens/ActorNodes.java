@@ -62,7 +62,10 @@ final class ActorNodes {
         }
         if (actor instanceof TextWriter) {
             final TextWriter tw = (TextWriter) actor;
-            if (tw.text == null || tw.text.trim().isEmpty()) {
+            // Nothing to say once the markup is gone: a keyword's almanac
+            // page adds its "extra rules" line even when there are none, a
+            // bare colour tag, which read as an empty control ("", 3 of 10).
+            if (TextFilter.clean(tw.text).isEmpty()) {
                 return;
             }
             NodeVtable vt = new NodeVtable();
@@ -237,6 +240,9 @@ final class ActorNodes {
                         }
                         if (label == null) {
                             label = itemTileName(actor);
+                        }
+                        if (label == null) {
+                            label = abilityTileName(actor);
                         }
                         return label != null ? label
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
@@ -453,6 +459,29 @@ final class ActorNodes {
             }
         }, AnnouncementKinds.LABEL));
         return vt;
+    }
+
+    private static java.lang.reflect.Field abilityTileField;
+
+    // A spell or tactic drawn as its round icon alone (the keyword page's
+    // abilities that carry the keyword): its title.
+    private static String abilityTileName(Actor actor) {
+        if (!(actor instanceof com.tann.dice.screens.dungeon.panels.entPanel.AbilityPanel)) {
+            return null;
+        }
+        try {
+            if (abilityTileField == null) {
+                abilityTileField = com.tann.dice.screens.dungeon.panels.entPanel.AbilityPanel.class
+                        .getDeclaredField("ability");
+                abilityTileField.setAccessible(true);
+            }
+            com.tann.dice.gameplay.effect.targetable.ability.Ability ability =
+                    (com.tann.dice.gameplay.effect.targetable.ability.Ability) abilityTileField.get(actor);
+            return GameText.t(ability.getTitle());
+        } catch (Throwable t) {
+            snd.contracts.SndLog.error("ability tile read failed", t);
+            return null;
+        }
     }
 
     private static java.lang.reflect.Field itemTileField;

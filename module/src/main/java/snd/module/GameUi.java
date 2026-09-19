@@ -202,6 +202,21 @@ public final class GameUi {
     // game drew on it besides (the almanac's "chosen 1/1 (100%)").
     private static List<String> popupLines(Actor popup) {
         List<String> drawn = textsUnder(popup);
+        if (popup instanceof com.tann.dice.screens.dungeon.panels.Explanel.Explanel) {
+            // A panel opened with its keyword boxes on already draws the rules.
+            StringBuilder shown = new StringBuilder();
+            for (String line : drawn) {
+                shown.append(snd.contracts.speech.TextFilter.clean(line).toLowerCase()).append('\n');
+            }
+            for (String extra : explanelExtras((com.tann.dice.screens.dungeon.panels.Explanel.Explanel) popup)) {
+                String clean = snd.contracts.speech.TextFilter.clean(extra).toLowerCase();
+                String rules = clean.substring(clean.indexOf(": ") + 1).trim();
+                if (shown.indexOf(rules) < 0) {
+                    drawn.add(extra);
+                }
+            }
+            return drawn;
+        }
         if (!(popup instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel)) {
             return drawn;
         }
@@ -219,6 +234,39 @@ public final class GameUi {
             if (!clean.isEmpty() && said.indexOf(clean) < 0) {
                 lines.add(extra);
             }
+        }
+        return lines;
+    }
+
+    private static java.lang.reflect.Field explanelShowingField;
+
+    // What an ability's or a die side's explanation panel draws as pictures or
+    // leaves out: a spell's mana cost (pips), a tactic's (die faces), and the
+    // rules of the keywords it names — the almanac opens these panels with
+    // the keyword boxes off.
+    private static List<String> explanelExtras(com.tann.dice.screens.dungeon.panels.Explanel.Explanel panel) {
+        List<String> lines = new ArrayList<String>();
+        try {
+            if (explanelShowingField == null) {
+                explanelShowingField = com.tann.dice.screens.dungeon.panels.Explanel.Explanel.class
+                        .getDeclaredField("showing");
+                explanelShowingField.setAccessible(true);
+            }
+            Object showing = explanelShowingField.get(panel);
+            if (showing instanceof com.tann.dice.gameplay.effect.targetable.ability.Ability) {
+                com.tann.dice.gameplay.effect.targetable.ability.Ability ability =
+                        (com.tann.dice.gameplay.effect.targetable.ability.Ability) showing;
+                String cost = snd.module.screens.CombatScreen.baseCostText(ability);
+                if (cost != null) {
+                    lines.add(cost);
+                }
+                lines.addAll(snd.module.screens.Terms.forEff(ability.getDerivedEffects()));
+            } else if (showing instanceof com.tann.dice.gameplay.content.ent.die.side.EntSide) {
+                lines.addAll(snd.module.screens.Terms.forEff(
+                        ((com.tann.dice.gameplay.content.ent.die.side.EntSide) showing).getBaseEffect()));
+            }
+        } catch (Throwable t) {
+            SndLog.error("explanation panel read failed", t);
         }
         return lines;
     }

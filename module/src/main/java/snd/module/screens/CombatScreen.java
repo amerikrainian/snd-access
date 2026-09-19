@@ -356,6 +356,21 @@ public class CombatScreen extends AccessScreen {
         return null;
     }
 
+    /**
+     * An ability's cost where no fight prices it (the almanac): a spell's
+     * base mana, a tactic's die faces.
+     */
+    public static String baseCostText(com.tann.dice.gameplay.effect.targetable.ability.Ability a) {
+        if (a instanceof com.tann.dice.gameplay.effect.targetable.ability.tactic.Tactic) {
+            return GameText.t(((com.tann.dice.gameplay.effect.targetable.ability.tactic.Tactic) a).describeCost());
+        }
+        if (a instanceof com.tann.dice.gameplay.effect.targetable.ability.spell.Spell) {
+            return ((com.tann.dice.gameplay.effect.targetable.ability.spell.Spell) a).getBaseCost()
+                    + " " + GameText.t(com.tann.dice.util.lang.Words.manaString());
+        }
+        return null;
+    }
+
     // ---- the two combatant columns: one node per hero/monster ----
 
     private void buildEntityStop(GraphBuilder b, final DungeonScreen ds, boolean heroes) {
