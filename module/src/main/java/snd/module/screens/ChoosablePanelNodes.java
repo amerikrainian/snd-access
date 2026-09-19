@@ -31,7 +31,7 @@ import snd.module.GameText;
  * effect, so parameterized wordings match the visual boxes). The accessors
  * are protected, reached reflectively once.
  */
-final class ChoosablePanelNodes {
+public final class ChoosablePanelNodes {
     private ChoosablePanelNodes() {
     }
 
@@ -39,6 +39,38 @@ final class ChoosablePanelNodes {
     private static Method fullDescription;
     private static Method referencedKeywords;
     private static Method singleEffOrNull;
+
+    /**
+     * The same panel as lines — name with its tier, the description, a line
+     * per referenced keyword — for reading it where the player stands when it
+     * comes up as an info popup. Null when the panel's choosable can't be
+     * read; the caller falls back to the panel's drawn text.
+     */
+    public static List<String> lines(ConcisePanel panel) {
+        Choosable choosable = choosable(panel);
+        if (choosable == null) {
+            return null;
+        }
+        List<String> lines = new java.util.ArrayList<String>();
+        String name = ChoiceScreen.nameOf(choosable);
+        try {
+            name += ", " + Loc.get("ui", "choice.tier", "tier", GameText.t(choosable.getTierString()));
+        } catch (Throwable t) {
+            // no tier to say
+        }
+        lines.add(name);
+        String desc = fullDescription(panel);
+        if (desc != null && !desc.trim().isEmpty()) {
+            lines.add(GameText.t(desc));
+        }
+        List<Keyword> keywords = referencedKeywords(panel);
+        if (keywords != null) {
+            for (Keyword k : keywords) {
+                lines.add(GameText.t(k.getColourTaggedString()) + ": " + GameText.t(k.getRules(singleEffOrNull(panel, k))));
+            }
+        }
+        return lines;
+    }
 
     static void emit(GraphBuilder b, final ConcisePanel panel) {
         final Choosable choosable = choosable(panel);

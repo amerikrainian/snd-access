@@ -163,7 +163,7 @@ final class ActorNodes {
         if (actor instanceof StandardButton) {
             return true;
         }
-        return GameUi.hasTannListener(actor) && !hasInteractiveDescendant(actor);
+        return GameUi.isClickable(actor) && !hasInteractiveDescendant(actor);
     }
 
     private static boolean hasInteractiveDescendant(Actor actor) {
@@ -171,7 +171,7 @@ final class ActorNodes {
             return false;
         }
         for (Actor child : ((Group) actor).getChildren()) {
-            if (child instanceof StandardButton || GameUi.hasTannListener(child)
+            if (child instanceof StandardButton || GameUi.isClickable(child)
                     || hasInteractiveDescendant(child)) {
                 return true;
             }
@@ -235,10 +235,12 @@ final class ActorNodes {
                     }
                 }, AnnouncementKinds.LABEL),
                 // Checkbox rows (options, jukebox songs): the box's state.
+                // Ledger tiles: the dark veil over one not met yet.
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return checkboxState(actor);
+                        String state = checkboxState(actor);
+                        return state != null ? state : unencounteredState(actor);
                     }
                 }, AnnouncementKinds.VALUE),
                 // Item/modifier cards (ConcisePanel) draw their effect text as
@@ -399,6 +401,29 @@ final class ActorNodes {
             snd.contracts.SndLog.error("ledger tile name failed", t);
             return null;
         }
+    }
+
+    // The almanac dims a hero, monster or item the player has not met in a
+    // run with a translucent dark rectangle over its art
+    // (HeroLedgerView.addUnencountered) and says so only once the tile is
+    // opened. Said on the tile, in the game's own words for it.
+    private static String unencounteredState(Actor actor) {
+        boolean tile = actor instanceof com.tann.dice.screens.dungeon.panels.book.views.EntityLedgerView
+                || actor instanceof com.tann.dice.screens.dungeon.panels.book.views.ItemLedgerView;
+        return tile && veiled((Group) actor) ? GameText.t("Not encountered yet...") : null;
+    }
+
+    private static boolean veiled(Group group) {
+        for (Actor child : group.getChildren()) {
+            if (child instanceof com.tann.dice.util.Rectactor
+                    && child.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled) {
+                return true;
+            }
+            if (child instanceof Group && veiled((Group) child)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static java.lang.reflect.Field itemTileField;

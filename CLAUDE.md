@@ -290,6 +290,12 @@ Permanent/reloadable split (verified end-to-end):
   input multiplexer + stage in `Main.setupScale` (window resize), the top button row every turn.
   Never key anything on actor identity; key on domain objects (that's what the graph's ControlId
   is for).
+- **"Can this be clicked" is `GameUi.isClickable`, not `hasTannListener`.** Nearly everything
+  clickable carries the game's `TannListener` — except the almanac's monster and item tiles that
+  are NOT locked, which get a plain libGDX `ClickListener` (`LedgerUtils`, the only two in the
+  game). Tested by `TannListener` alone, the generic reader showed the locked tiles and silently
+  skipped every monster and item the player had found: a portrait with no text and, to that test,
+  nothing to press. `GameUi.activate` reaches a `ClickListener` with its synthesized click.
 - The in-game combat hotkeys (1–9, QWERTY, R, Z, Space/Enter, Tab-hold) are real and must keep
   working when our navigator arrives — see the audit §Phase 12 for the complete existing map.
 - `xsrvc.dll` in the game dir is the save file, not a library. Don't delete it; remember dev runs

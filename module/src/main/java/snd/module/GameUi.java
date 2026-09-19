@@ -174,7 +174,7 @@ public final class GameUi {
         if (top == null || top == topBefore || !isTextOnly(top)) {
             return; // nothing new came up, or something to operate: a real modal, read as one
         }
-        List<String> lines = textsUnder(top);
+        List<String> lines = popupLines(top);
         if (lines.isEmpty()) {
             return;
         }
@@ -193,13 +193,40 @@ public final class GameUi {
     /** The lines of the info popup this control last answered with, for its control buffer. */
     public static List<String> infoLines(Actor source) {
         Actor popup = INFO_POPUPS.get(source);
-        return popup != null ? textsUnder(popup) : new ArrayList<String>();
+        return popup != null ? popupLines(popup) : new ArrayList<String>();
+    }
+
+    // A popup's lines: its drawn text — except an item's or modifier's big
+    // panel, which reads from the model like everywhere else (name with its
+    // tier, not a bare "1"; the description whole), followed by whatever the
+    // game drew on it besides (the almanac's "chosen 1/1 (100%)").
+    private static List<String> popupLines(Actor popup) {
+        List<String> drawn = textsUnder(popup);
+        if (!(popup instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel)) {
+            return drawn;
+        }
+        List<String> lines = snd.module.screens.ChoosablePanelNodes.lines(
+                (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) popup);
+        if (lines == null) {
+            return drawn;
+        }
+        StringBuilder said = new StringBuilder();
+        for (String line : lines) {
+            said.append(snd.contracts.speech.TextFilter.clean(line).toLowerCase()).append('\n');
+        }
+        for (String extra : drawn) {
+            String clean = snd.contracts.speech.TextFilter.clean(extra).toLowerCase();
+            if (!clean.isEmpty() && said.indexOf(clean) < 0) {
+                lines.add(extra);
+            }
+        }
+        return lines;
     }
 
     // Nothing to click, drag or type into anywhere in it.
     private static boolean isTextOnly(Actor actor) {
         if (actor instanceof StandardButton || actor instanceof com.tann.dice.util.Slider
-                || actor instanceof com.tann.dice.util.ui.TextInput || hasTannListener(actor)) {
+                || actor instanceof com.tann.dice.util.ui.TextInput || isClickable(actor)) {
             return false;
         }
         if (actor instanceof Group) {
@@ -268,6 +295,25 @@ public final class GameUi {
     public static boolean hasTannListener(Actor actor) {
         for (ActorGestureListener l : gestureListeners(actor)) {
             if (l instanceof TannListener) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the actor answers a click at all: the game's own listener type,
+     * or libGDX's plain ClickListener — which the almanac hangs on exactly
+     * the monster and item tiles that are NOT locked (LedgerUtils), the ones
+     * worth opening. {@link #activate} reaches a ClickListener with its
+     * synthesized click.
+     */
+    public static boolean isClickable(Actor actor) {
+        if (hasTannListener(actor)) {
+            return true;
+        }
+        for (com.badlogic.gdx.scenes.scene2d.EventListener l : actor.getListeners()) {
+            if (l instanceof com.badlogic.gdx.scenes.scene2d.utils.ClickListener) {
                 return true;
             }
         }
