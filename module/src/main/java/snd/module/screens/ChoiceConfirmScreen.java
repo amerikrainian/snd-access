@@ -186,7 +186,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
             }
         }, AnnouncementKinds.LABEL));
         b.addItem(ControlId.structural(CompositeKey.of("confirm", "before")), before);
-        for (int s = 0; s < 6; s++) {
+        for (int s = 0; s < current.getSides().length; s++) {
             final int side = s;
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
@@ -219,7 +219,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
             }
         }, AnnouncementKinds.LABEL));
         b.addItem(ControlId.structural(CompositeKey.of("confirm", "after")), after);
-        for (int s = 0; s < 6; s++) {
+        for (int s = 0; s < upgraded.getSides().length; s++) {
             final int side = s;
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;

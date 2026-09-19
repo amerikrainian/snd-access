@@ -209,7 +209,7 @@ public class CombatScreen extends AccessScreen {
                         Loc.get("ui", "help.target_other_side"));
             }
             List<Integer> slots = new java.util.ArrayList<Integer>();
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < GameKeys.ABILITY_SLOTS; i++) {
                 if (ds.abilityHolder.getByIndex(i) != null) {
                     slots.add(i);
                 }
@@ -244,11 +244,9 @@ public class CombatScreen extends AccessScreen {
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
         java.util.List<com.tann.dice.gameplay.effect.targetable.ability.Ability> abilities =
                 new java.util.ArrayList<com.tann.dice.gameplay.effect.targetable.ability.Ability>();
-        for (int i = 0; i < 8; i++) {
-            com.tann.dice.gameplay.effect.targetable.ability.Ability a = ds.abilityHolder.getByIndex(i);
-            if (a != null) {
-                abilities.add(a);
-            }
+        // Every ability on the bar, keyed or not: getByIndex is null past the last one.
+        for (int i = 0; ds.abilityHolder.getByIndex(i) != null; i++) {
+            abilities.add(ds.abilityHolder.getByIndex(i));
         }
         boolean hasMana = present.getMaxMana() > 0 || present.getTotalMana() > 0;
         if (abilities.isEmpty() && !hasMana) {

@@ -31,6 +31,9 @@ public final class GameKeys {
     // TargetingPhase.spellInts: the ability bar's slot keys, in slot order.
     private static final String[] ABILITY_KEYS = {"Q", "W", "E", "R", "T", "Y", "U", "I"};
 
+    /** The ability bar holds as many as the game has keys for (TargetingPhase.spellInts). */
+    public static final int ABILITY_SLOTS = ABILITY_KEYS.length;
+
     public static void press(int keycode) {
         com.tann.dice.Main.getCurrentScreen().mainKeyPress(keycode);
     }

@@ -552,7 +552,7 @@ public class ChoiceScreen extends AccessScreen {
         // reconciliation to an arbitrary sibling on every rebuild.
         b.addItem(ControlId.structural(CompositeKey.of("choice", index, "lvl")), header);
 
-        for (int s = 0; s < 6; s++) {
+        for (int s = 0; s < upgraded.getSides().length; s++) {
             final int side = s;
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
