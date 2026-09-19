@@ -109,6 +109,8 @@ class InputRegistryTest {
     @Test
     void anAliasMatchesButIsNotSpoken() {
         InputRegistry r = registry();
+        assertSame(activate, r.find("nav.ACTIVATE"));
+        assertNull(r.find("nav.NOPE"));
         assertSame(activate, r.match(NUMPAD_ENTER, -1, false, false));
         assertEquals("Enter", activate.keysDisplay());
     }

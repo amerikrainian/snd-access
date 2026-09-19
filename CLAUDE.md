@@ -103,8 +103,10 @@ Everything game-touching marshals onto the render thread via `Dispatcher.post`; 
   speech muted (`SND_NO_SPEECH=1` for headless runs — backend skipped, tap still fires).
 - `GET /log?since=N[&grep=S]` — the mod's log in-band (same cursor protocol).
 - `POST /input` — body is a verb (`up down left right enter escape space tab backspace z r i f1
-  1-9` or `key:<code>`; a `ctrl+`/`shift+` prefix drives the mod's key table with those modifiers
-  held — the mod's path only, since the game reads its modifiers from the live keyboard), driven through the game's own key path (`Screen.mainKeyPress`) — the same
+  1-9` or `key:<code>`; an action id of the key table — `glance.vitals`, `nav.UP` — presses
+  whichever chord is bound to it, the way to drive a modified key; a `ctrl+`/`shift+` prefix
+  instead resolves the chord with those modifiers held, to test the binding itself — the mod's
+  path only, since the game reads its modifiers from the live keyboard), driven through the game's own key path (`Screen.mainKeyPress`) — the same
   route the stage listener uses.
 - `POST /wait?timeout=MS` — body is a boolean Java expression, compiled once in the eval session
   and evaluated **every frame** on the render thread; returns `true` or `timeout`. Use instead of

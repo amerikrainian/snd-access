@@ -32,6 +32,16 @@ public final class InputRegistry {
         return action;
     }
 
+    /** The action with this id, or null. */
+    public InputAction find(String id) {
+        for (InputAction action : actions) {
+            if (action.id.equals(id)) {
+                return action;
+            }
+        }
+        return null;
+    }
+
     public List<InputAction> actions() {
         return Collections.unmodifiableList(actions);
     }

@@ -80,6 +80,11 @@ final class DevDriver {
             return "ok: " + verb + " -> keycode " + chordCode + " consumed=" + input.key(chordCode, shift, ctrl)
                     + " (mod key path only)";
         }
+        // An action of the key table by its id ("glance.vitals", "nav.UP").
+        Boolean acted = input.act(verb);
+        if (acted != null) {
+            return "ok: action " + verb + " consumed=" + acted;
+        }
         if (verb.startsWith("type:")) {
             String text = verb.substring(5);
             for (int i = 0; i < text.length(); i++) {

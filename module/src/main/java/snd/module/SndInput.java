@@ -58,9 +58,25 @@ final class SndInput implements InputProcessor {
         if (textEntryActive()) {
             return false;
         }
-        help.keyPressed();
         int digit = digitOf(keycode);
-        InputAction action = keys.match(keycode, digit, shift, ctrl);
+        return run(keys.match(keycode, digit, shift, ctrl), digit);
+    }
+
+    /**
+     * The press of whichever chord is bound to this action, by the action's
+     * id (the dev driver: no modifiers to fake). Null = no such action.
+     */
+    Boolean act(String id) {
+        InputAction action = keys.find(id);
+        if (action == null) {
+            return null;
+        }
+        return !textEntryActive() && run(action, -1);
+    }
+
+    // One resolved press; action is null when no chord of ours matched.
+    private boolean run(InputAction action, int digit) {
+        help.keyPressed();
         boolean owns = screens.ownsKeyboard();
         // An overlay of the mod's own keeps every key from the game beneath.
         boolean exclusive = owns && screens.current().exclusive();
