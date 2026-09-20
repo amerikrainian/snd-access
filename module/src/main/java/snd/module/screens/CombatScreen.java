@@ -65,6 +65,13 @@ public class CombatScreen extends AccessScreen {
         return inFight();
     }
 
+    // Letters are the game's in a fight (Z undo, R reroll, QWERTY abilities):
+    // a search they started would hold the arrows and Escape after them.
+    @Override
+    public boolean allowsTypeahead() {
+        return false;
+    }
+
     /** A fight is on screen: the combat phases of the dungeon screen. */
     public static boolean inFight() {
         if (!(com.tann.dice.Main.getCurrentScreen() instanceof DungeonScreen)) {
