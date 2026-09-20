@@ -54,8 +54,12 @@ public final class UnitLines {
             // The sheet's skull-tag rule, the game's own sentence.
             lines.add(GameText.t("Heroes defeated last fight return with half hp"));
         }
-        if (!ent.isPlayer()) {
-            lines.add(CombatScreen.targetsText(ds, ent));
+        // Who aims at whom: a monster's targets, and whoever targets this unit.
+        for (String aim : new String[] {ent.isPlayer() ? null : CombatScreen.targetsText(ds, ent),
+                CombatScreen.targetedByText(ds, ent)}) {
+            if (aim != null) {
+                lines.add(aim);
+            }
         }
 
         // A rule is given once, however many sides carry the keyword.

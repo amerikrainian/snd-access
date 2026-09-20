@@ -111,7 +111,7 @@ public class CombatScreen extends AccessScreen {
                 continue; // stunned or just summoned: its die is no threat this turn
             }
             String side = currentSideText(monster);
-            String targets = targetsText(ds, monster);
+            String targets = aimText(ds, monster);
             sentence(sb, Loc.get("combat", "intent", "name", GameUi.entName(monster),
                     "side", targets != null ? side + ", " + targets : side));
         }
@@ -137,7 +137,7 @@ public class CombatScreen extends AccessScreen {
         sb.append(sentence);
     }
 
-    /** "Ranger, 9 hp, shielded 2, incoming 6 damage from Bandit 2"; "Ranger, defeated" for a corpse. */
+    /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse. */
     public static String vitalsLine(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
         StringBuilder sb = new StringBuilder(GameUi.entName(ent));
@@ -253,8 +253,7 @@ public class CombatScreen extends AccessScreen {
             return;
         }
 
-        b.beginStop("abilities").pushContext(
-                GameText.t("Abilities"), Loc.get("ui", "role.list"));
+        b.beginStop("abilities").pushContext(GameText.t("Abilities"));
         for (com.tann.dice.gameplay.effect.targetable.ability.Ability a : abilities) {
             b.addItem(ControlId.referenced(a, CompositeKey.of("ability", a.getTitle())),
                     abilityNode(ds, a));
@@ -373,7 +372,7 @@ public class CombatScreen extends AccessScreen {
 
     private void buildEntityStop(GraphBuilder b, final DungeonScreen ds, boolean heroes) {
         String key = heroes ? "heroes" : "enemies";
-        b.beginStop(key).pushContext(Loc.get("combat", key), Loc.get("ui", "role.list"));
+        b.beginStop(key).pushContext(Loc.get("combat", key));
         // Dead heroes keep their place (the greyed skull panel); dead
         // monsters vanish, matching the visual column.
         List<Ent> ents = ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
@@ -484,7 +483,7 @@ public class CombatScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return ent.isPlayer() ? null : targetsText(ds, ent);
+                        return ent.isPlayer() ? null : aimText(ds, ent);
                     }
                 }, AnnouncementKinds.VALUE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -754,9 +753,7 @@ public class CombatScreen extends AccessScreen {
     // counters miss (unblockable triggers, incoming heals, modded
     // mechanics): a mechanic must move future hp to matter, so nothing
     // incoming can stay silent. All parts enumerate under one "incoming"
-    // prefix: "incoming 6 damage from Bandit 2, 2 poison". The from-clause
-    // stays on the damage part — poison ticks from the buff, not from a
-    // current attacker.
+    // prefix, the blockable damage a bare number: "incoming 6, 2 poison".
     static String previewText(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
@@ -771,9 +768,7 @@ public class CombatScreen extends AccessScreen {
         StringBuilder parts = new StringBuilder();
         int damage = future.getBlockableDamageTaken() - present.getBlockableDamageTaken();
         if (damage > 0) {
-            String from = attackerNames(ds, ent);
-            parts.append(from == null ? Loc.get("combat", "incoming_damage", "n", damage)
-                    : Loc.get("combat", "incoming_damage_from", "n", damage, "names", from));
+            parts.append(damage);
         }
         int poison = future.getPoisonDamageTaken(true) - present.getPoisonDamageTaken(true);
         if (poison > 0) {
@@ -846,9 +841,20 @@ public class CombatScreen extends AccessScreen {
         return sb.length() > 0 ? Loc.get("combat", "targets", "names", sb.toString()) : null;
     }
 
-    // The enemies whose commands aim at this hero — the hover arrows' other
-    // direction.
-    private static String attackerNames(DungeonScreen ds, Ent ent) {
+    // The focus line's targets: nothing when they are every living hero —
+    // the side already says whom it hits ("to all enemies") and the names
+    // add five words to it. The monster buffer lists them regardless.
+    static String aimText(DungeonScreen ds, Ent ent) {
+        com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+        java.util.Set<Ent> targets = new java.util.HashSet<Ent>(present.getAllTargeters(ent, false));
+        targets.remove(ent);
+        return targets.equals(new java.util.HashSet<Ent>(present.getEntities(true, false))) ? null
+                : targetsText(ds, ent);
+    }
+
+    // "targeted by Ogre, Slimer" — the enemies whose commands aim at this
+    // unit, the hover arrows' other direction; null when none does.
+    static String targetedByText(DungeonScreen ds, Ent ent) {
         List<Ent> attackers = new java.util.ArrayList<Ent>(
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getAllTargeters(ent, true));
         StringBuilder sb = new StringBuilder();
@@ -858,7 +864,7 @@ public class CombatScreen extends AccessScreen {
             }
             sb.append(GameUi.entName(attacker));
         }
-        return sb.length() > 0 ? sb.toString() : null;
+        return sb.length() > 0 ? Loc.get("combat", "targeted_by", "names", sb.toString()) : null;
     }
 
     // The attack explanel's payload: the calculated rolled side, the arrow's

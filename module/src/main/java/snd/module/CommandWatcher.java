@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.tann.dice.gameplay.content.ent.Ent;
-import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.FightLog;
 import com.tann.dice.gameplay.fightLog.Snapshot;
 import com.tann.dice.gameplay.fightLog.command.Command;
@@ -103,64 +102,28 @@ final class CommandWatcher {
         Snapshot before = log.getSnapshotBefore(command);
         Snapshot after = log.getSnapshotAfter(command);
         Ent target = command instanceof TargetableCommand ? ((TargetableCommand) command).target : null;
-        EntState pre = target != null && before != null ? before.getState(target) : null;
-        EntState post = target != null && after != null ? after.getState(target) : null;
-        if (pre == null || post == null) {
-            target = null; // not held by both snapshots (summoned by this very step): an "other"
-        }
-        // Everyone else the step touched: a cleave's other victims, the
-        // attacker's own pain or shield, a kill's on-death fallout.
-        List<String> sentences = CombatChanges.clauses(before, after, target);
+        // Everyone the step touched, the one aimed at first: a cleave's other
+        // victims, the attacker's own pain or shield, a kill's on-death fallout.
+        String changes = CombatChanges.line(before, after, target);
 
         if (players && command instanceof TargetableCommand) {
-            sentences.add(0, playersHead((TargetableCommand) command, target, pre, post));
-            return join(sentences);
-        }
-        String source = command.getSource() != null ? GameUi.entName(command.getSource()) : null;
-        // Where a hit leaves its target is what it means to the player.
-        String hit = target != null ? CombatChanges.describe(pre, post, true) : null;
-        if (hit != null) {
-            sentences.add(0, source == null
-                    ? Loc.get("combat", "change.clause", "name", GameUi.entName(target), "parts", hit)
-                    : Loc.get("combat", "change.by", "source", source, "target", GameUi.entName(target), "parts", hit));
-        } else if (source != null && !sentences.isEmpty()) {
-            return Loc.get("combat", "change.source", "source", source, "changes", join(sentences));
-        }
-        return join(sentences); // null for a skipped or wasted step: nothing a panel shows moved
-    }
-
-    // "2 damage, on Bandit 1, defeated" — the player knows who acted and what
-    // with, so the outcome leads. Target-conditional keywords (engage, cruel,
-    // wham...) multiply damage at resolution, so the side's description
-    // understates exactly when it matters; the diff is the truth. With
-    // nothing measurable moved (a buff with no icon, a group effect) the
-    // side's own description stands in.
-    private static String playersHead(TargetableCommand command, Ent target, EntState pre, EntState post) {
-        String eff = target != null ? CombatChanges.parts(pre, post) : null;
-        if (eff == null) {
-            eff = GameText.t(command.targetable.getDerivedEffects().describe(false));
-        }
-        if (target == null) {
-            return eff;
-        }
-        String text = Loc.get("combat", "applied", "eff", eff, "target", GameUi.entName(target));
-        // A kill vanishes from the enemy column with only a death animation.
-        String ending = CombatChanges.ending(pre, post, false);
-        return ending != null ? text + ", " + ending : text;
-    }
-
-    private static String join(List<String> sentences) {
-        if (sentences.isEmpty()) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String sentence : sentences) {
-            if (sb.length() > 0) {
-                sb.append(". ");
+            // "Bandit 1 2, defeated" — the player knows who acted and what
+            // with, so the outcome is the whole line. Target-conditional
+            // keywords (engage, cruel, wham...) multiply damage at
+            // resolution, so the side's description understates exactly when
+            // it matters; the diff is the truth. With nothing spoken moved (a
+            // buff with no icon, a hit a shield took) the side's own
+            // description answers the press.
+            if (changes != null) {
+                return changes;
             }
-            sb.append(sentence);
+            String eff = GameText.t(((TargetableCommand) command).targetable.getDerivedEffects().describe(false));
+            return target == null ? eff : Loc.get("combat", "applied", "eff", eff, "target", GameUi.entName(target));
         }
-        return sb.toString();
+        // Null for a skipped, wasted or wholly blocked step: nothing spoken moved.
+        return changes != null && command.getSource() != null
+                ? Loc.get("combat", "change.source", "source", GameUi.entName(command.getSource()), "changes", changes)
+                : changes;
     }
 
     // FightLog keeps its command lists private; reading them beats

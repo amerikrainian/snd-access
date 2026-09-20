@@ -16,40 +16,89 @@ import snd.module.GameUi;
  * What a step of the fight did, read as the difference between the FightLog's
  * own snapshots before and after it — for every combatant, not just the one
  * that was aimed at. Nothing here knows which effect caused a change: it
- * reads what every mechanic must move to matter (hp, the blocked-damage and
- * poison counters, death and flight, who is on the field, the statuses a
- * panel draws), so a cleave's second victim, a pain side's self-damage, a
- * thorns reflect, a summon, or a modded effect nobody has met all speak.
+ * reads what every mechanic must move to matter (hp, the poison counter,
+ * death and flight, who is on the field, the statuses a panel draws), so a
+ * cleave's second victim, a pain side's self-damage, a thorns reflect, a
+ * summon, or a modded effect nobody has met all speak. Tersely: the hp a
+ * unit lost is a bare number after its name, damage a shield took is not an
+ * event, and where a hit leaves its target is the hp glance's to say.
  */
 public final class CombatChanges {
     private CombatChanges() {
     }
 
-    /** One clause per combatant that changed, "name: parts"; {@code skip} is left out (its change is said elsewhere). */
-    public static List<String> clauses(Snapshot before, Snapshot after, Ent skip) {
-        List<String> clauses = new ArrayList<String>();
+    /**
+     * The step as one line, a clause per combatant that changed — "Brute 1,
+     * Lazy 2" — with {@code first} (whoever was aimed at) leading; null when
+     * nothing spoken moved. A side whose every living member changed alike is
+     * said once: "all heroes 1".
+     */
+    public static String line(Snapshot before, Snapshot after, Ent first) {
         if (before == null || after == null || before == after) {
-            return clauses; // a skipped command shares its predecessor's snapshot
+            return null; // a skipped command shares its predecessor's snapshot
         }
+        List<Ent> ents = new ArrayList<Ent>();
+        List<String> changes = new ArrayList<String>();
         for (EntState post : after.getStates(null, null)) {
             Ent ent = post.getEnt();
-            if (ent == skip) {
-                continue;
-            }
-            String parts = describe(before.getState(ent), post, true);
-            if (parts != null) {
-                clauses.add(Loc.get("combat", "change.clause", "name", GameUi.entName(ent), "parts", parts));
+            String change = describe(before.getState(ent), post);
+            if (change != null) {
+                int at = ent == first ? 0 : ents.size();
+                ents.add(at, ent);
+                changes.add(at, change);
             }
         }
-        return clauses;
+        List<String> names = new ArrayList<String>();
+        for (Ent ent : ents) {
+            names.add(GameUi.entName(ent));
+        }
+        collapse(before, true, ents, names, changes);
+        collapse(before, false, ents, names, changes);
+
+        // A clause with parts of its own takes the comma; clauses then part by sentence.
+        boolean simple = true;
+        List<String> clauses = new ArrayList<String>();
+        for (int i = 0; i < names.size(); i++) {
+            simple &= changes.get(i).indexOf(',') < 0;
+            clauses.add(Loc.get("combat", "change.clause", "name", names.get(i), "parts", changes.get(i)));
+        }
+        return join(clauses, simple ? ", " : ". ");
+    }
+
+    // One clause for a side when all of its living changed, and all alike.
+    private static void collapse(Snapshot before, boolean heroes, List<Ent> ents, List<String> names,
+            List<String> changes) {
+        List<Ent> living = before.getEntities(heroes, false);
+        List<Integer> members = new ArrayList<Integer>();
+        for (int i = 0; i < ents.size(); i++) {
+            if (ents.get(i).isPlayer() != heroes) {
+                continue;
+            }
+            String shared = changes.get(members.isEmpty() ? i : members.get(0));
+            if (!living.contains(ents.get(i)) || !changes.get(i).equals(shared)) {
+                return;
+            }
+            members.add(i);
+        }
+        if (members.size() < 2 || members.size() != living.size()) {
+            return;
+        }
+        names.set(members.get(0), Loc.get("combat", heroes ? "change.all_heroes" : "change.all_enemies"));
+        for (int m = members.size() - 1; m > 0; m--) {
+            int i = members.get(m);
+            ents.remove(i);
+            names.remove(i);
+            changes.remove(i);
+        }
     }
 
     /**
-     * What changed for one combatant and how that leaves them, or null when
-     * nothing a panel shows did. {@code pre} is null for someone the earlier
-     * snapshot did not hold (a summon, a reinforcement).
+     * What changed for one combatant, or null when nothing spoken did: what
+     * the step did to them, then "defeated", "flees" or "returns". {@code pre}
+     * is null for someone the earlier snapshot did not hold (a summon, a
+     * reinforcement).
      */
-    public static String describe(EntState pre, EntState post, boolean standing) {
+    public static String describe(EntState pre, EntState post) {
         if (pre == null) {
             return Loc.get("combat", "change.joins");
         }
@@ -58,30 +107,15 @@ public final class CombatChanges {
         if (parts != null) {
             all.add(parts);
         }
-        String ending = ending(pre, post, standing);
-        if (ending != null) {
-            all.add(ending);
-        }
-        return join(all);
-    }
-
-    /**
-     * How the change leaves them: "defeated", "flees", back from the dead, or
-     * — with {@code standing} — the hp they are left on ("3 of 9 hp"), since
-     * what a hit means is what is left. Null when none applies.
-     */
-    public static String ending(EntState pre, EntState post, boolean standing) {
         if (!pre.isDead() && post.isDead()) {
-            return post.isFled() ? Loc.get("combat", "change.flees") : Loc.get("combat", "defeated");
+            all.add(post.isFled() ? Loc.get("combat", "change.flees") : Loc.get("combat", "defeated"));
+        } else if (pre.isDead() && !post.isDead()) {
+            all.add(Loc.get("combat", "change.returns"));
         }
-        if (pre.isDead() && !post.isDead()) {
-            return Loc.get("combat", "change.returns", "hp", hpText(post));
-        }
-        boolean moved = pre.getHp() != post.getHp() || pre.getMaxHp() != post.getMaxHp();
-        return standing && moved && !post.isDead() ? hpText(post) : null;
+        return join(all, ", ");
     }
 
-    /** What the step did to one combatant (damage, blocking, poison, healing, shields, statuses), or null. */
+    /** What the step did to one combatant (hp lost, poison, healing, shields, statuses), or null. */
     public static String parts(EntState pre, EntState post) {
         List<String> parts = new ArrayList<String>();
         boolean returned = pre.isDead() && !post.isDead();
@@ -90,22 +124,15 @@ public final class CombatChanges {
         // they have reset (a negative delta) and only the hp delta is left.
         int hpLost = pre.getHp() - post.getHp();
         int blocked = Math.max(0, post.getDamageBlocked() - pre.getDamageBlocked());
-        int poison = Math.max(0, post.getPoisonDamageTaken(true) - pre.getPoisonDamageTaken(true));
-        if (hpLost > 0 || blocked > 0) {
-            int lost = Math.max(0, hpLost);
-            int struck = Math.max(0, lost - poison) + blocked;
-            if (struck > 0) {
-                String damage = GameText.t(struck + " damage");
-                if (blocked > 0) {
-                    damage += ", " + (lost - poison > 0 ? Loc.get("combat", "blocked_n", "n", blocked)
-                            : Loc.get("combat", "blocked_all"));
-                }
-                parts.add(damage);
-            }
-            if (Math.min(poison, lost) > 0) {
-                parts.add(Loc.get("combat", "change.poison", "n", Math.min(poison, lost)));
-            }
-        } else if (hpLost < 0 && !returned) {
+        int poison = Math.min(Math.max(0, hpLost),
+                Math.max(0, post.getPoisonDamageTaken(true) - pre.getPoisonDamageTaken(true)));
+        if (hpLost - poison > 0) {
+            parts.add(String.valueOf(hpLost - poison));
+        }
+        if (poison > 0) {
+            parts.add(Loc.get("combat", "change.poison", "n", poison));
+        }
+        if (hpLost < 0 && !returned) {
             parts.add(GameText.t("Heal " + -hpLost));
         }
         // Shields spent on a block are the hit's, not a change of their own,
@@ -134,7 +161,7 @@ public final class CombatChanges {
             }
         }
 
-        return join(parts);
+        return join(parts, ", ");
     }
 
     private static boolean isNew(Personal p, List<Personal> others) {
@@ -142,19 +169,14 @@ public final class CombatChanges {
         return incoming == null || incoming;
     }
 
-    private static String hpText(EntState state) {
-        return state.getHp() >= state.getMaxHp() ? Loc.get("combat", "hp_full", "hp", state.getHp())
-                : Loc.get("combat", "hp", "hp", state.getHp(), "max", state.getMaxHp());
-    }
-
-    private static String join(List<String> parts) {
+    private static String join(List<String> parts, String separator) {
         if (parts.isEmpty()) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
         for (String part : parts) {
             if (sb.length() > 0) {
-                sb.append(", ");
+                sb.append(separator);
             }
             sb.append(part);
         }
