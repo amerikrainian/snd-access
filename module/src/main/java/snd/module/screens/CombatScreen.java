@@ -600,7 +600,7 @@ public class CombatScreen extends AccessScreen {
                 if (!p.showInEntPanel() || p.skipNetAndIcon()) {
                     continue;
                 }
-                lines.add(GameText.t(p.describeForTriggerPanel()));
+                lines.add(SpecialPips.describe(p));
                 lines.addAll(Terms.forPersonal(p));
             }
         }
@@ -676,6 +676,11 @@ public class CombatScreen extends AccessScreen {
             // "shielded 3", not "Shield 3" — a rolled Shield side in the same
             // row would read as the same words twice.
             text += ", " + Loc.get("combat", "shielded", "n", present.getShields());
+        }
+        // The hp bar draws its marked pips; the next one down is where it is.
+        int pip = SpecialPips.next(present);
+        if (pip >= 0) {
+            text += ", " + Loc.get("combat", "pip_at", "hp", pip);
         }
         return text;
     }
@@ -871,7 +876,7 @@ public class CombatScreen extends AccessScreen {
                 if (!p.showInDiePanel()) {
                     continue;
                 }
-                sb.append(". ").append(GameText.t(p.describeForTriggerPanel()));
+                sb.append(". ").append(SpecialPips.describe(p));
             }
         }
         return sb.toString();

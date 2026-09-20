@@ -183,7 +183,7 @@ public class SheetScreen extends AccessScreen {
                 vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return GameText.t(personal.describeForTriggerPanel());
+                        return SpecialPips.describe(personal);
                     }
                 }, AnnouncementKinds.LABEL));
                 b.addItem(ControlId.structural(CompositeKey.of("sheet", "status", i)), vt);
@@ -227,7 +227,7 @@ public class SheetScreen extends AccessScreen {
         }
         if (present != null) {
             for (Personal p : UnitLines.sheetPersonals(present)) {
-                sb.append(". ").append(GameText.t(p.describeForTriggerPanel()));
+                sb.append(". ").append(SpecialPips.describe(p));
             }
         }
         return sb.toString();

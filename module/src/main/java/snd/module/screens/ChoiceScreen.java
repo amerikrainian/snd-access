@@ -633,7 +633,7 @@ public class ChoiceScreen extends AccessScreen {
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return GameText.t(personal.describeForTriggerPanel());
+                    return SpecialPips.describe(personal);
                 }
             }, AnnouncementKinds.LABEL));
             b.addItem(ControlId.structural(CompositeKey.of("choice", index, "passive", n)), vt);
@@ -683,7 +683,7 @@ public class ChoiceScreen extends AccessScreen {
             if (!personal.hasImage()) {
                 continue;
             }
-            sb.append(". ").append(GameText.t(personal.describeForTriggerPanel()));
+            sb.append(". ").append(SpecialPips.describe(personal));
         }
         return sb.toString();
     }

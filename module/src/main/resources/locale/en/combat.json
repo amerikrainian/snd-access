@@ -24,6 +24,8 @@
   "flees": "flees this turn",
   "overkill": "overkill {n}",
   "shielded": "shielded {n}",
+  "pip": "Marked hp: {rule}",
+  "pip_at": "mark at {hp}",
   "defeated": "defeated",
   "level": "level {n}",
   "caster_defeated": "caster defeated",

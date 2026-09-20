@@ -76,7 +76,7 @@ public final class UnitLines {
         // Statuses and traits, each in full, then the keywords they reference.
         Set<String> referenced = new LinkedHashSet<String>();
         for (Personal p : sheetPersonals(present)) {
-            lines.add(GameText.t(p.describeForTriggerPanel()));
+            lines.add(SpecialPips.describe(p));
             referenced.addAll(Terms.forPersonal(p));
         }
         referenced.removeAll(rules);
