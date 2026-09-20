@@ -153,11 +153,11 @@ public class ChoiceConfirmScreen extends AccessScreen {
             }
         }
 
-        b.startRow("confirm-buttons");
-        // The dialog's own key route: index 0 = decline, 1 = accept.
+        // Below the choice, one under the other: Down from what is being
+        // confirmed reaches cancel, then yes. The dialog's own key route:
+        // index 0 = decline, 1 = accept.
         addButton(b, "cancel", GameText.t("cancel"), cd, 67);
         addButton(b, "yes", GameText.t("yes"), cd, 66);
-        b.endRow();
     }
 
     // The before and after sheets as two rows sharing a key, so vertical
@@ -256,6 +256,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
                 return label;
             }
         }, AnnouncementKinds.LABEL));
+        vt.speaksOwnPosition = true; // two answers under a sheet are not a list to count
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
