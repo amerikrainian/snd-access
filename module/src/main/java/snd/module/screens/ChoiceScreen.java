@@ -593,7 +593,7 @@ public class ChoiceScreen extends AccessScreen {
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + GameText.t(blank.getSideState(side).describe());
+                    return (side + 1) + ": " + SideText.of(blank.getSideState(side));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
@@ -685,7 +685,7 @@ public class ChoiceScreen extends AccessScreen {
         sb.append(", ").append(blank.getMaxHp()).append(" ").append(GameText.t("hp"));
         for (int i = 0; i < 6; i++) {
             sb.append(", ").append(i + 1).append(": ")
-                    .append(GameText.t(blank.getSideState(i).describe()));
+                    .append(SideText.of(blank.getSideState(i)));
         }
         for (com.tann.dice.gameplay.trigger.personal.Personal personal : blank.getActivePersonals()) {
             if (!personal.hasImage()) {

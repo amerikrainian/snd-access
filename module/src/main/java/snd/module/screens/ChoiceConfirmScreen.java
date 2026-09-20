@@ -193,7 +193,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + GameText.t(currentSide(current, side).describe());
+                    return (side + 1) + ": " + SideText.of(currentSide(current, side));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
@@ -226,7 +226,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + GameText.t(blank.getSideState(side).describe());
+                    return (side + 1) + ": " + SideText.of(blank.getSideState(side));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {

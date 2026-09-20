@@ -264,8 +264,8 @@ final class ActorNodes {
                         }
                         if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.DieSidePanel) {
                             // Die-net previews in dialogs (level-ups, sheets).
-                            label = GameText.t(((com.tann.dice.screens.dungeon.panels.DieSidePanel) actor)
-                                    .side.getBaseEffect().describe());
+                            label = SideText.of(((com.tann.dice.screens.dungeon.panels.DieSidePanel) actor)
+                                    .side.getBaseEffect());
                         }
                         if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel) {
                             // A sheet's item slot: the item's name, or an empty slot.
@@ -660,7 +660,7 @@ final class ActorNodes {
 
     private static String sideIconName(Actor actor) {
         com.tann.dice.gameplay.content.ent.die.side.EntSide side = sideOf(actor);
-        return side != null ? GameText.t(side.getBaseEffect().describe()) : null;
+        return side != null ? SideText.of(side.getBaseEffect()) : null;
     }
 
     /** The die side an ImageActor displays, or null. */

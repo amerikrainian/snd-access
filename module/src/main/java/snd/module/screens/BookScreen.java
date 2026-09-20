@@ -198,7 +198,7 @@ public class BookScreen extends AccessScreen {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return snd.module.GameText.t(side.getBaseEffect().describe());
+                            return SideText.of(side.getBaseEffect());
                         }
                     }, AnnouncementKinds.LABEL),
                     NodeAnnouncement.kinded(new Supplier<String>() {

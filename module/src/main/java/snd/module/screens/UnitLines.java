@@ -67,7 +67,7 @@ public final class UnitLines {
         EntSide[] sides = ent.getSides();
         for (int i = 0; i < sides.length; i++) {
             EntSideState side = sides[i].findState(FightLog.Temporality.Present, ent);
-            String line = (i + 1) + ": " + GameText.t(side.describe());
+            String line = (i + 1) + ": " + SideText.of(side);
             lines.add(SheetScreen.isRolled(ent, i) ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
             try {
                 rules.addAll(CombatScreen.keywordRuleLines(side.getCalculatedEffect()));

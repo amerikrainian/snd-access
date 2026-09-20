@@ -919,7 +919,7 @@ public class CombatScreen extends AccessScreen {
         if (side == null || die.getState() == Die.DieState.Rolling) {
             return Loc.get("combat", "die_rolling");
         }
-        return GameText.t(side.findState(FightLog.Temporality.Present, ent).describe());
+        return SideText.of(side.findState(FightLog.Temporality.Present, ent));
     }
 
     // ---- the phase's buttons: Reroll (n/max, rolling only) and the

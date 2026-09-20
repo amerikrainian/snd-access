@@ -119,8 +119,8 @@ public class SheetScreen extends AccessScreen {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return (index + 1) + ": " + GameText.t(sides[index]
-                                    .findState(FightLog.Temporality.Present, ent).describe());
+                            return (index + 1) + ": " + SideText.of(sides[index]
+                                    .findState(FightLog.Temporality.Present, ent));
                         }
                     }, AnnouncementKinds.LABEL),
                     NodeAnnouncement.kinded(new Supplier<String>() {
@@ -209,7 +209,7 @@ public class SheetScreen extends AccessScreen {
         EntSide[] sides = ent.getSides();
         for (int i = 0; i < sides.length; i++) {
             sb.append(i == 0 ? ". " : ", ").append(i + 1).append(": ")
-                    .append(GameText.t(sides[i].findState(FightLog.Temporality.Present, ent).describe()));
+                    .append(SideText.of(sides[i].findState(FightLog.Temporality.Present, ent)));
         }
         List<Item> items = ent.getItems();
         if (items != null && !items.isEmpty()) {
