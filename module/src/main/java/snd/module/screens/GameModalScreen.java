@@ -89,7 +89,8 @@ public class GameModalScreen extends AccessScreen {
 
     private static ActorNodes.Place place(Actor modal) {
         if (isCogMenu(modal)) {
-            return ActorNodes.Place.glyphs(COG_GLYPHS);
+            // Screen mode, display, sound and the menu's buttons: Tab moves between them.
+            return ActorNodes.Place.glyphs(COG_GLYPHS).withSectionStops();
         }
         // The almanac's leaderboard picker, under the name the game pops it by
         // (StuffPage.makeLeaderboard): the board on show has a light border.

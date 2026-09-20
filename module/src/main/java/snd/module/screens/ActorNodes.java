@@ -11,6 +11,7 @@ import com.tann.dice.util.ui.standardButton.StandardButton;
 
 import snd.core.loc.Loc;
 import snd.core.graph.AnnouncementKinds;
+import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
 import snd.core.graph.ControlTypes;
 import snd.core.graph.GraphBuilder;
@@ -68,10 +69,21 @@ final class ActorNodes {
         /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
         final java.util.Map<String, String> glyphs;
         final ChosenMark chosen;
+        /** Each titled section is a Tab-stop of its own, and so is what lies between two of them. */
+        final boolean sectionStops;
 
         Place(java.util.Map<String, String> glyphs, ChosenMark chosen) {
+            this(glyphs, chosen, false);
+        }
+
+        private Place(java.util.Map<String, String> glyphs, ChosenMark chosen, boolean sectionStops) {
             this.glyphs = glyphs;
             this.chosen = chosen;
+            this.sectionStops = sectionStops;
+        }
+
+        Place withSectionStops() {
+            return new Place(glyphs, chosen, true);
         }
 
         static Place glyphs(java.util.Map<String, String> glyphs) {
@@ -123,9 +135,15 @@ final class ActorNodes {
             Group group = (Group) actor;
             String section = sectionTitle(group);
             if (section != null) {
+                if (place.sectionStops) {
+                    b.beginStop(CompositeKey.of("section", section));
+                }
                 b.pushContext(section, Loc.get("ui", "role.group"));
                 emit(b, group.getChild(0), place);
                 b.popContext();
+                if (place.sectionStops) {
+                    b.beginStop(CompositeKey.of("after-section", section));
+                }
                 return;
             }
             boolean dieNet = isDieNetDiagram(group);
