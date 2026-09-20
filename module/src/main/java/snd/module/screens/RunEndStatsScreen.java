@@ -1,5 +1,6 @@
 package snd.module.screens;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -96,7 +97,7 @@ public class RunEndStatsScreen extends AccessScreen {
         // The header's second line; the title itself is the screen name.
         final String progress = dc.getLevelProgressString(true);
         if (progress != null) {
-            b.addLabel(ControlId.structural(CompositeKey.of("stats", "progress")),
+            addLine(b, ControlId.structural(CompositeKey.of("stats", "progress")),
                     new Supplier<String>() {
                         @Override
                         public String get() {
@@ -137,6 +138,7 @@ public class RunEndStatsScreen extends AccessScreen {
                             return GameText.t(modifier.getFullDescription());
                         }
                     }, AnnouncementKinds.TOOLTIP));
+            vt.speaksOwnPosition = true;
             b.addItem(ControlId.referenced(modifier, CompositeKey.of("stats-mod", index)), vt);
             index++;
         }
@@ -170,6 +172,7 @@ public class RunEndStatsScreen extends AccessScreen {
                             return sb.toString();
                         }
                     }, AnnouncementKinds.VALUE));
+            vt.speaksOwnPosition = true;
             b.addItem(ControlId.referenced(hero, CompositeKey.of("stats-hero", i)), vt);
         }
     }
@@ -199,8 +202,17 @@ public class RunEndStatsScreen extends AccessScreen {
         return String.valueOf(stat.getValue());
     }
 
+    // A read-only line. The summary is a sheet to read down, not a list to
+    // count: no line says its position.
+    private static void addLine(GraphBuilder b, ControlId id, Supplier<String> text) {
+        NodeVtable vt = new NodeVtable();
+        vt.announcements = Arrays.asList(new NodeAnnouncement(text));
+        vt.speaksOwnPosition = true;
+        b.addItem(id, vt);
+    }
+
     private void addStatLine(GraphBuilder b, Object key, final String label, final String value) {
-        b.addLabel(ControlId.structural(CompositeKey.of("stats-line", key)),
+        addLine(b, ControlId.structural(CompositeKey.of("stats-line", key)),
                 new Supplier<String>() {
                     @Override
                     public String get() {
@@ -215,7 +227,7 @@ public class RunEndStatsScreen extends AccessScreen {
         if (plt == null) {
             return;
         }
-        b.addLabel(ControlId.structural(CompositeKey.of("stats", "layout")),
+        addLine(b, ControlId.structural(CompositeKey.of("stats", "layout")),
                 new Supplier<String>() {
                     @Override
                     public String get() {
