@@ -188,7 +188,8 @@ public class DialogPhaseScreen extends AccessScreen {
         if (dialog == null) {
             return;
         }
-        b.pushContext(Loc.get("ui", "modal.dialog"));
+        // A dialog is a few lines and its answers, not a list to count.
+        b.pushContext(Loc.get("ui", "modal.dialog"), null, false);
         ActorNodes.emit(b, dialog);
         b.popContext();
     }
