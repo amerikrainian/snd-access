@@ -192,6 +192,7 @@ public class LevelEndScreen extends AccessScreen {
                     panel.inventoryClick();
                 }
             };
+            inv.speaksOwnPosition = true;
             b.addItem(ControlId.structural(CompositeKey.of("levelend", "inventory")), inv);
         }
 
@@ -216,6 +217,7 @@ public class LevelEndScreen extends AccessScreen {
                 panel.continueClick();
             }
         };
+        cont.speaksOwnPosition = true;
         b.addItem(ControlId.structural(CompositeKey.of("levelend", "continue")), cont);
 
         // Refusal / "items unequipped" reminder lines under the panel.
@@ -230,71 +232,76 @@ public class LevelEndScreen extends AccessScreen {
                     return tw.text;
                 }
             }, AnnouncementKinds.LABEL));
+            vt.speaksOwnPosition = true;
             b.addItem(ControlId.referenced(tw, CompositeKey.of("levelend", "under", i)), vt);
         }
 
-        // The minimap, as words: fight progress, zone, next boss.
         if (dc.getContextConfig().mode.showMinimap()) {
-            NodeVtable map = new NodeVtable();
-            map.controlType = ControlTypes.TEXT;
-            map.announcements = Arrays.asList(
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return Loc.get("ui", "levelend.map");
-                        }
-                    }, AnnouncementKinds.LABEL),
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return mapText(dc);
-                        }
-                    }, AnnouncementKinds.VALUE));
-            b.addItem(ControlId.structural(CompositeKey.of("levelend", "map")), map);
+            ControlId above = under.isEmpty() ? ControlId.structural(CompositeKey.of("levelend", "continue"))
+                    : ControlId.referenced(under.get(under.size() - 1),
+                            CompositeKey.of("levelend", "under", under.size() - 1));
+            buildMap(b, dc, above);
         }
 
         TutorialNodes.build(b, ds);
     }
 
-    // "Fight 5/20, zone Dungeon, next boss at fight 8" — what the minimap's
-    // node icons and zone backgrounds paint.
-    private static String mapText(DungeonContext dc) {
-        StringBuilder sb = new StringBuilder();
-        String progress = GameText.t(dc.getLevelProgressString(false));
-        if (progress != null) {
-            sb.append(progress);
-        }
-        int levelNumber = dc.getCurrentMod20LevelNumber();
-        try {
-            int cumulative = 0;
-            for (com.tann.dice.util.tp.TP<com.tann.dice.gameplay.battleTest.Zone, Integer> zone
-                    : dc.getLevelTypes()) {
-                cumulative += zone.b;
-                if (levelNumber <= cumulative) {
-                    if (sb.length() > 0) {
-                        sb.append(", ");
-                    }
-                    sb.append(Loc.get("ui", "levelend.map_zone", "zone", zone.a.name()));
-                    break;
+    // The minimap (MiniMap) as the strip it is: a row of the fights its
+    // window shows, left to right, each by what its icon paints — boss or not,
+    // done or current — under the zone whose background it stands on. Down
+    // from the panel lands on the current fight.
+    private static void buildMap(GraphBuilder b, DungeonContext dc, ControlId above) {
+        int current = dc.getCurrentMod20LevelNumber();
+        // MiniMap's own scroll: at most 8 fights, the current one fifth.
+        int first = Math.min(Math.max(0, current - 4), 12) + 1;
+        int last = first + Math.min(8, dc.getTotalLength()) - 1;
+
+        b.pushContext(Loc.get("ui", "levelend.map"), null, false);
+        b.startRow("levelend-map");
+        int level = 0;
+        for (com.tann.dice.util.tp.TP<com.tann.dice.gameplay.battleTest.Zone, Integer> zone : dc.getLevelTypes()) {
+            b.pushContext(GameText.t(zone.a.name()), null, false);
+            for (int i = 0; i < zone.b; i++) {
+                level++;
+                if (level < first || level > last) {
+                    continue;
+                }
+                final int fight = dc.getCurrentLevelNumber() + (level - current);
+                final boolean boss = dc.getContextConfig().isBoss(level);
+                final String state = level < current ? Loc.get("ui", "levelend.map_done")
+                        : level == current ? Loc.get("ui", "levelend.map_current") : null;
+                NodeVtable vt = new NodeVtable();
+                vt.controlType = ControlTypes.TEXT;
+                vt.speaksOwnPosition = true;
+                vt.announcements = Arrays.asList(
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return Loc.get("ui", "levelend.map_fight", "n", fight);
+                            }
+                        }, AnnouncementKinds.LABEL),
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return boss ? Loc.get("ui", "levelend.map_boss") : null;
+                            }
+                        }, AnnouncementKinds.VALUE),
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return state;
+                            }
+                        }, AnnouncementKinds.STATE));
+                ControlId id = ControlId.structural(CompositeKey.of("levelend", "map", level));
+                b.addItem(id, vt);
+                if (level == current) {
+                    b.connect(above, snd.core.graph.GraphDir.DOWN, id);
                 }
             }
-        } catch (Throwable t) {
-            SndLog.error("minimap zone read failed", t);
+            b.popContext();
         }
-        int total = dc.getContextConfig().getTotalDifferentLevels();
-        for (int level = levelNumber; level <= total; level++) {
-            if (dc.getContextConfig().isBoss(level)) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(level == levelNumber
-                        ? Loc.get("ui", "levelend.map_boss_now")
-                        : Loc.get("ui", "levelend.map_boss", "n",
-                                dc.getCurrentLevelNumber() + (level - levelNumber)));
-                break;
-            }
-        }
-        return sb.length() > 0 ? sb.toString() : null;
+        b.endRow();
+        b.popContext();
     }
 
     // A pending reward's spoken name. ChoicePhases carry the game's own offer

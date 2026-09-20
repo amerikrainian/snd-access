@@ -188,9 +188,10 @@
   "levelend.rewards": "Rewards",
   "levelend.new_items": "new items",
   "levelend.map": "Map",
-  "levelend.map_zone": "zone {zone}",
-  "levelend.map_boss": "next boss at fight {n}",
-  "levelend.map_boss_now": "boss fight",
+  "levelend.map_fight": "Fight {n}",
+  "levelend.map_boss": "boss",
+  "levelend.map_done": "done",
+  "levelend.map_current": "current",
 
   "reward.challenge": "Challenge",
   "reward.cursed_chest": "Cursed chest",
