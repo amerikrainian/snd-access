@@ -34,7 +34,7 @@
   "change.joins": "joins the fight",
   "change.poison": "{n} poison",
   "change.max_hp": "max hp {n}",
-  "change.ends": "{status} ends",
+  "change.lost": "lost {status}",
   "change.flees": "flees",
   "change.returns": "returns",
   "intent": "{name}: {side}",

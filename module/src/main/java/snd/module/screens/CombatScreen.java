@@ -729,6 +729,11 @@ public class CombatScreen extends AccessScreen {
      * reads the full description.
      */
     public static String statusName(Personal p) {
+        return statusName(p, true);
+    }
+
+    /** {@link #statusName(Personal)}, with or without the buff's turns rider ("this turn", "for 2 turns"). */
+    public static String statusName(Personal p, boolean turns) {
         String desc;
         try {
             desc = p.describeForSelfBuff();
@@ -744,7 +749,7 @@ public class CombatScreen extends AccessScreen {
             desc = desc.substring(0, cut);
         }
         // Markup can hide a trailing space from the reader ("Poisoned 1 ,").
-        return (p.buff != null ? desc + p.buff.getTurnsString() : desc).trim();
+        return (turns && p.buff != null ? desc + p.buff.getTurnsString() : desc).trim();
     }
 
     // The damage preview, computed the way the game's own hp grid computes

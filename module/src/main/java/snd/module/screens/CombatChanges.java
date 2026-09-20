@@ -28,14 +28,14 @@ public final class CombatChanges {
     }
 
     /**
-     * The step as one line, a clause per combatant that changed — "Brute 1,
-     * Lazy 2" — with {@code first} (whoever was aimed at) leading; null when
-     * nothing spoken moved. A side whose every living member changed alike is
-     * said once: "all heroes 1".
+     * The step as a line per combatant that changed — "Brute 1", "Lazy 2" —
+     * with {@code first} (whoever was aimed at) leading; empty when nothing
+     * spoken moved. Each is an event of its own. A side whose every living
+     * member changed alike is said once: "all heroes 1".
      */
-    public static String line(Snapshot before, Snapshot after, Ent first) {
+    public static List<String> lines(Snapshot before, Snapshot after, Ent first) {
         if (before == null || after == null || before == after) {
-            return null; // a skipped command shares its predecessor's snapshot
+            return new ArrayList<String>(); // a skipped command shares its predecessor's snapshot
         }
         List<Ent> ents = new ArrayList<Ent>();
         List<String> changes = new ArrayList<String>();
@@ -55,14 +55,11 @@ public final class CombatChanges {
         collapse(before, true, ents, names, changes);
         collapse(before, false, ents, names, changes);
 
-        // A clause with parts of its own takes the comma; clauses then part by sentence.
-        boolean simple = true;
         List<String> clauses = new ArrayList<String>();
         for (int i = 0; i < names.size(); i++) {
-            simple &= changes.get(i).indexOf(',') < 0;
             clauses.add(Loc.get("combat", "change.clause", "name", names.get(i), "parts", changes.get(i)));
         }
-        return join(clauses, simple ? ", " : ". ");
+        return clauses;
     }
 
     // One clause for a side when all of its living changed, and all alike.
@@ -153,10 +150,12 @@ public final class CombatChanges {
                 }
             }
             // Gone means no status of its kind is left: "Poison 2" growing to
-            // "Poison 3" is the new one arriving, not the old one ending.
+            // "Poison 3" is the new one arriving, not the old one ending. What
+            // was lost is named without the turns it had left.
             for (Personal p : pre.getActivePersonals()) {
                 if (p.hasImage() && Boolean.TRUE.equals(Personal.treatAsIncoming(p, post.getActivePersonals()))) {
-                    parts.add(Loc.get("combat", "change.ends", "status", GameText.t(CombatScreen.statusName(p)).trim()));
+                    parts.add(Loc.get("combat", "change.lost", "status",
+                            GameText.t(CombatScreen.statusName(p, false)).trim()));
                 }
             }
         }

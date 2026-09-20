@@ -87,8 +87,7 @@ final class CommandWatcher {
         if (!spoken.add(command)) {
             return;
         }
-        String line = lineFor(log, command, players(command));
-        if (line != null) {
+        for (String line : linesFor(log, command, players(command))) {
             events.say(line, false);
         }
     }
@@ -98,13 +97,13 @@ final class CommandWatcher {
         return command.getSource() == null ? command instanceof TargetableCommand : command.getSource().isPlayer();
     }
 
-    private static String lineFor(FightLog log, Command command, boolean players) {
+    private static List<String> linesFor(FightLog log, Command command, boolean players) {
         Snapshot before = log.getSnapshotBefore(command);
         Snapshot after = log.getSnapshotAfter(command);
         Ent target = command instanceof TargetableCommand ? ((TargetableCommand) command).target : null;
         // Everyone the step touched, the one aimed at first: a cleave's other
         // victims, the attacker's own pain or shield, a kill's on-death fallout.
-        String changes = CombatChanges.line(before, after, target);
+        List<String> changes = CombatChanges.lines(before, after, target);
 
         if (players && command instanceof TargetableCommand) {
             // "Bandit 1 2, defeated" — the player knows who acted and what
@@ -114,16 +113,20 @@ final class CommandWatcher {
             // it matters; the diff is the truth. With nothing spoken moved (a
             // buff with no icon, a hit a shield took) the side's own
             // description answers the press.
-            if (changes != null) {
-                return changes;
+            if (changes.isEmpty()) {
+                String eff = GameText.t(((TargetableCommand) command).targetable.getDerivedEffects().describe(false));
+                changes.add(target == null ? eff
+                        : Loc.get("combat", "applied", "eff", eff, "target", GameUi.entName(target)));
             }
-            String eff = GameText.t(((TargetableCommand) command).targetable.getDerivedEffects().describe(false));
-            return target == null ? eff : Loc.get("combat", "applied", "eff", eff, "target", GameUi.entName(target));
+            return changes;
         }
-        // Null for a skipped, wasted or wholly blocked step: nothing spoken moved.
-        return changes != null && command.getSource() != null
-                ? Loc.get("combat", "change.source", "source", GameUi.entName(command.getSource()), "changes", changes)
-                : changes;
+        // Empty for a skipped, wasted or wholly blocked step: nothing spoken
+        // moved. Who did it opens the first line; the rest follow it.
+        if (!changes.isEmpty() && command.getSource() != null) {
+            changes.set(0, Loc.get("combat", "change.source", "source", GameUi.entName(command.getSource()),
+                    "changes", changes.get(0)));
+        }
+        return changes;
     }
 
     // FightLog keeps its command lists private; reading them beats
