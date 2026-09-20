@@ -62,9 +62,8 @@ final class PhaseWatcher {
             if (turn != intentsTurn || (fight != null && !fight.equals(intentsFight))) {
                 intentsTurn = turn;
                 intentsFight = fight;
-                String intents = CombatScreen.enemyIntents();
-                if (intents != null) {
-                    events.say(intents, false);
+                for (String intent : CombatScreen.enemyIntents()) {
+                    events.say(intent, false);
                 }
             }
         }

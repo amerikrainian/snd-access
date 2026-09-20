@@ -96,15 +96,16 @@ public class CombatScreen extends AccessScreen {
     }
 
     /**
-     * What the monsters are about to do, a sentence each ("Bandit 1: 5 damage,
+     * What the monsters are about to do, a line each ("Bandit 1: 5 damage,
      * targets Defender 1"), then every hero that leaves dead ("Defender 1:
      * overkill 2") — what the targeting arrows and the flashing hp bars tell
-     * the eye the moment the enemy dice land. Null with no monster standing.
+     * the eye the moment the enemy dice land. Each line is an event of its
+     * own. Empty with no monster acting.
      */
-    public static String enemyIntents() {
+    public static List<String> enemyIntents() {
         DungeonScreen ds = DungeonScreen.get();
         com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
-        StringBuilder sb = new StringBuilder();
+        List<String> lines = new java.util.ArrayList<String>();
         for (Ent monster : present.getEntities(false, false)) {
             EntState state = present.getState(monster);
             if (state.skipTurn() || state.isSummonedSoNotAttacking()) {
@@ -112,11 +113,11 @@ public class CombatScreen extends AccessScreen {
             }
             String side = currentSideText(monster);
             String targets = aimText(ds, monster);
-            sentence(sb, Loc.get("combat", "intent", "name", GameUi.entName(monster),
+            lines.add(Loc.get("combat", "intent", "name", GameUi.entName(monster),
                     "side", targets != null ? side + ", " + targets : side));
         }
-        if (sb.length() == 0) {
-            return null;
+        if (lines.isEmpty()) {
+            return lines;
         }
         for (Ent hero : present.getEntities(true, false)) {
             EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, hero);
@@ -124,17 +125,10 @@ public class CombatScreen extends AccessScreen {
                 String fate = future.isFled() ? Loc.get("combat", "flees")
                         : future.getHp() < 0 ? Loc.get("combat", "overkill", "n", -future.getHp())
                         : Loc.get("combat", "dies");
-                sentence(sb, Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", fate));
+                lines.add(Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", fate));
             }
         }
-        return sb.toString();
-    }
-
-    private static void sentence(StringBuilder sb, String sentence) {
-        if (sb.length() > 0) {
-            sb.append(". ");
-        }
-        sb.append(sentence);
+        return lines;
     }
 
     /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse. */

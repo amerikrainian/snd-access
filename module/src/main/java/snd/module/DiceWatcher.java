@@ -55,7 +55,9 @@ final class DiceWatcher {
             }
         }
         if (wasRolling && !rolling) {
-            events.say(rollResults(ds, heroes), false);
+            for (String result : rollResults(ds, heroes)) {
+                events.say(result, false);
+            }
         }
         wasRolling = rolling;
 
@@ -70,22 +72,16 @@ final class DiceWatcher {
         }
     }
 
-    private static String rollResults(DungeonScreen ds, List<Ent> heroes) {
-        StringBuilder sb = new StringBuilder();
+    // A line per die that rolled, then the rerolls left — each an event of its own.
+    private static List<String> rollResults(DungeonScreen ds, List<Ent> heroes) {
+        List<String> lines = new java.util.ArrayList<String>();
         for (Ent h : heroes) {
             if (h.getDie().getState().isLockedOrLocking()) {
                 continue; // sat out the roll
             }
-            if (sb.length() > 0) {
-                sb.append(". ");
-            }
-            sb.append(GameUi.entName(h)).append(": ")
-                    .append(CombatScreen.currentSideText(h));
+            lines.add(GameUi.entName(h) + ": " + CombatScreen.currentSideText(h));
         }
-        if (sb.length() > 0) {
-            sb.append(". ");
-        }
-        sb.append(GameText.t("Reroll")).append(' ').append(CombatScreen.rollCounter(ds));
-        return sb.toString();
+        lines.add(GameText.t("Reroll") + ' ' + CombatScreen.rollCounter(ds));
+        return lines;
     }
 }
