@@ -130,6 +130,10 @@ public class ChoiceScreen extends AccessScreen {
         final boolean optional = "Optional".equals(style);
         final boolean pointBuy = "PointBuy".equals(style);
         List<Choosable> options = ChoicePhases.options(p);
+        boolean sheets = false;
+        for (Choosable option : options) {
+            sheets |= option instanceof LevelupHeroChoosable;
+        }
 
         for (int i = 0; i < options.size(); i++) {
             final Choosable option = options.get(i);
@@ -207,6 +211,10 @@ public class ChoiceScreen extends AccessScreen {
                     }
                 };
             }
+            // Beside level-up sheets, each a row counting its own nodes, the
+            // plain options ("a random tier 2 levelup", "skip") would count
+            // only each other.
+            vt.speaksOwnPosition = sheets && !levelup;
             b.addItem(ControlId.referenced(option, CompositeKey.of("choice", i, option.getSaveString())), vt);
             if (levelup) {
                 buildLevelupSheet(b, (LevelupHeroChoosable) option, index);
