@@ -51,6 +51,8 @@ public class SndModule implements ModModule {
     private snd.module.screens.TutorialWatcher tutorial;
     private Object lastScreen;
     private boolean greeted;
+    private UpdateChecker updates;
+    private boolean updateAnnounced;
 
     @Override
     public void load(HostServices h) {
@@ -94,8 +96,12 @@ public class SndModule implements ModModule {
         banners = new BannerWatcher(events);
         textEntry = new TextEntryWatcher(h.speech());
         tutorial = new snd.module.screens.TutorialWatcher(events);
-        SndLog.info("module generation " + h.generation() + " loaded");
-        if (h.generation() > 1) {
+        SndLog.info("module generation " + h.generation() + " loaded, version " + ModVersion.current());
+        if (h.generation() == 1) {
+            // The launch update check: one background request per game launch.
+            updates = new UpdateChecker();
+            updates.start(ModVersion.current());
+        } else {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
         }
     }
@@ -122,7 +128,7 @@ public class SndModule implements ModModule {
         Locales.tick(); // follow the game's live language option
         if (!greeted) {
             greeted = true;
-            host.speech().speak(Loc.get("ui", "greeting"), false);
+            host.speech().speak(Loc.get("ui", "greeting", "version", ModVersion.current()), false);
         }
         if (screen != lastScreen) {
             boolean first = lastScreen == null;
@@ -145,6 +151,12 @@ public class SndModule implements ModModule {
         banners.tick();
         textEntry.tick();
         tutorial.tick();
+        // Last: after the screen change (entering the title clears the log) and
+        // the focus readout, so the notice queues behind what the player is on.
+        if (!updateAnnounced && updates != null && updates.newerVersion() != null) {
+            updateAnnounced = true;
+            events.say(Loc.get("ui", "update_available", "version", updates.newerVersion()), false);
+        }
     }
 
     // The game rebuilds its InputMultiplexer in Main.setupScale (resize,

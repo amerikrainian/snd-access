@@ -17,5 +17,8 @@ compileJava.options.compilerArgs << '-Xlint:-options'
 
 jar {
     archiveBaseName = 'snd-module'
+    // The running mod reads its version from here (ModVersion): the greeting
+    // says it and the launch update check compares against it.
+    manifest { attributes('Implementation-Title': 'SnDAccess', 'Implementation-Version': modVersion) }
     from project(':core').sourceSets.main.output
 }

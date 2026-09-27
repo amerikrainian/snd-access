@@ -70,6 +70,11 @@ Five Gradle modules; artifact names are fixed (no version suffixes):
   **its own classloader**, not the system loader — so the host never links against game classes
   (game-typed code lives in the module, whose loader bridges through `Dispatcher.gameLoader()`),
   and `/eval` (JShell) cannot see game classes in a deployed dev launch.
+- **Version:** `modVersion` in `gradle.properties` names the release zip and is stamped into the
+  module jar's manifest (`Implementation-Version`, read by `ModVersion`). The greeting speaks it,
+  and the launch update check (`UpdateChecker`, generation 1 only) compares it against GitHub's
+  latest release. `SND_UPDATE_URL` overrides that feed — a `file:` URL to a
+  `{"tag_name":"v9.9.9"}` payload exercises the announcement without publishing anything.
 - From the Bash tool, launch java with `MSYS2_ARG_CONV_EXCL="*"` or the `-javaagent:`/`-cp` args
   get path-mangled. Kill the game with PowerShell `Get-Process java | Stop-Process -Force`
   (note: this also kills the Gradle daemon — it restarts itself).

@@ -15,7 +15,8 @@
   "state.locked": "locked",
 
   "position": "{index} of {count}",
-  "greeting": "Slice and Dice access loaded",
+  "greeting": "Slice and Dice access {version} loaded",
+  "update_available": "Slice and Dice access update {version} available",
   "module_reloaded": "Module reloaded, generation {generation}",
   "notification": "Notification: {text}",
 
