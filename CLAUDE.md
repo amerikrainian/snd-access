@@ -60,10 +60,10 @@ Five Gradle modules; artifact names are fixed (no version suffixes):
 | `module`  | `snd-module.jar`   | Java 8  | module classes + core's — feature code, reloadable; NEVER contracts classes                     |
 | `devrepl` | `snd-devrepl.jar`  | Java 21 | JShell evaluator; dev classpath only, never shipped                                              |
 
-- **Dev launch:** `scripts/run-dev.ps1` (builds, then runs the game under the system JDK with
+- **Dev launch:** `run-dev.ps1` (builds, then runs the game under the system JDK with
   `-javaagent:snd-host-all.jar -Dsnd.dev=1 -Dsnd.module=<module jar> -Djna.library.path=<prism>`
   and `-cp "dice.jar;snd-devrepl.jar"`, cwd = game dir). Never modifies the game install.
-- **Player deploy:** `scripts/deploy.ps1` stages jars + prism.dll into `<game>\mods\snd-access\`
+- **Player deploy:** `deploy.ps1` stages jars + prism.dll into `<game>\mods\snd-access\`
   and patches `SliceAndDice.json` vmArgs (backup kept; restore = copy the .bak back). Verified on
   the bundled OpenJ9 8 JRE. Two shim facts learned the hard way: the shim's JSON parser rejects a
   UTF-8 BOM and **exits silently** (the script writes BOM-free), and the shim loads dice.jar in
@@ -126,7 +126,7 @@ Iteration loop for feature code, no game restart: edit `module/` or `core/`, `gr
 same boundary and same reason as the reference mods: those load permanently in the app
 classloader.
 
-Bring-up: `scripts/run-dev.ps1`, then poll
+Bring-up: `run-dev.ps1`, then poll
 `curl -s --retry 60 --retry-connrefused --retry-delay 1 http://127.0.0.1:8771/health`.
 
 **If `/log` shows "dev server failed to bind"**, a previous game instance still owns the port —

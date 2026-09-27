@@ -1,13 +1,13 @@
 # Build the distributable mod zip: the mod jars, prism.dll and its licenses
 # under mods\snd-access. The zip root IS the game folder, so the installer (and
 # a manual user) extracts it straight into the game dir. The installer then
-# patches SliceAndDice.json; a manual user runs scripts\deploy.ps1 instead,
+# patches SliceAndDice.json; a manual user runs deploy.ps1 instead,
 # which does both steps from a local build.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = $PSScriptRoot
 $releaseDir = Join-Path $root "releases"
 $stageDir = Join-Path $root "build\release-stage"
 

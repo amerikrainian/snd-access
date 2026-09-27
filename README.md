@@ -59,7 +59,7 @@ with nothing to say are skipped. Moving to another control returns review to its
    handles updates, repair, and uninstall; run it with `--cli` for a console interface.
 3. Launch the game normally.
 
-Installing from source instead: run `scripts/deploy.ps1`. It builds, stages the mod
+Installing from source instead: run `deploy.ps1`. It builds, stages the mod
 (including the vendored [Prism](https://github.com/ethindp/prism) speech library), and
 patches `SliceAndDice.json` (original kept as `SliceAndDice.json.bak`; copy it back to
 uninstall). If the game is not in the default Steam location, pass `-GameDir <path>`.
@@ -71,7 +71,7 @@ no reflection layer). Prism is vendored in `third_party/prism/` (MPL-2.0; licens
 
 ```
 gradle build            # all modules + core unit tests
-scripts/run-dev.ps1     # build, then launch the game with the mod + dev server attached
+run-dev.ps1             # build, then launch the game with the mod + dev server attached
 ```
 
 Iteration loop (no game restart):
@@ -98,10 +98,10 @@ adapted from Rashad Naqeeb's Non-Visual Calculus installer — see
 
 1. Bump `modVersion` in `gradle.properties` and add the matching `## VX.Y.Z` section
    to `CHANGELOG.md` (it becomes the release notes the installer shows players).
-2. `scripts/build-release.ps1` — builds and stages `releases/SnDAccess-vX.Y.Z.zip`.
-3. `scripts/build-installer.ps1` — builds `releases/SnDAccessInstaller.exe`
-   (`scripts/test-installer.ps1` runs its unit tests).
-4. Commit, tag `vX.Y.Z`, push the tag, then `scripts/create-release.ps1 vX.Y.Z` to
+2. `build-release.ps1` — builds and stages `releases/SnDAccess-vX.Y.Z.zip`.
+3. `build-installer.ps1` — builds `releases/SnDAccessInstaller.exe`
+   (`test-installer.ps1` runs its unit tests).
+4. Commit, tag `vX.Y.Z`, push the tag, then `create-release.ps1 vX.Y.Z` to
    publish the GitHub release with both assets.
 
 ## Notes

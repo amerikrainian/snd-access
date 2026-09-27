@@ -6,7 +6,7 @@ param(
     [int]$Port = 8771
 )
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $PSScriptRoot
+$root = $PSScriptRoot
 $gameDir = 'C:\Program Files (x86)\Steam\steamapps\common\Slice_n_Dice'
 
 if (-not $NoBuild) {

@@ -4,7 +4,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = $PSScriptRoot
 $installerDir = Join-Path $root "installer"
 $releaseDir = Join-Path $root "releases"
 $targetExe = Join-Path $installerDir "target\release\snd-access-installer.exe"

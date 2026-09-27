@@ -7,7 +7,7 @@ param(
     [string]$GameDir = 'C:\Program Files (x86)\Steam\steamapps\common\Slice_n_Dice'
 )
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $PSScriptRoot
+$root = $PSScriptRoot
 
 & gradle -p $root build
 if ($LASTEXITCODE -ne 0) { throw "gradle build failed" }

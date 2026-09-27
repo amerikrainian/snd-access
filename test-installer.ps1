@@ -3,7 +3,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = $PSScriptRoot
 $installerDir = Join-Path $root "installer"
 
 if (-not (Test-Path (Join-Path $installerDir "Cargo.toml"))) {
