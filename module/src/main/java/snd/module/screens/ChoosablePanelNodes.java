@@ -59,6 +59,7 @@ public final class ChoosablePanelNodes {
         if (desc != null && !desc.trim().isEmpty()) {
             lines.add(GameText.t(desc));
         }
+        lines.addAll(taught(choosable));
         List<Keyword> keywords = referencedKeywords(panel);
         if (keywords != null) {
             for (Keyword k : keywords) {
@@ -139,6 +140,20 @@ public final class ChoosablePanelNodes {
             b.addItem(ControlId.structural(CompositeKey.of("choosable-panel", "desc")), vt);
         }
 
+        List<String> taught = taught(choosable);
+        for (int i = 0; i < taught.size(); i++) {
+            final String line = taught.get(i);
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.TEXT;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return line;
+                }
+            }, AnnouncementKinds.LABEL));
+            b.addItem(ControlId.structural(CompositeKey.of("choosable-panel", "taught", i)), vt);
+        }
+
         List<Keyword> keywords = referencedKeywords(panel);
         if (keywords != null) {
             for (int i = 0; i < keywords.size(); i++) {
@@ -157,6 +172,18 @@ public final class ChoosablePanelNodes {
                 b.addItem(ControlId.structural(CompositeKey.of("choosable-panel", "kw", i)), vt);
             }
         }
+    }
+
+    // The card of each spell the panel's item or modifier teaches, which the
+    // panel draws beside its description (LearnAbility, GlobalLearnSpell).
+    private static List<String> taught(Choosable choosable) {
+        if (choosable instanceof com.tann.dice.gameplay.content.item.Item) {
+            return UnitLines.taughtAbilities((com.tann.dice.gameplay.content.item.Item) choosable);
+        }
+        if (choosable instanceof com.tann.dice.gameplay.modifier.Modifier) {
+            return UnitLines.taughtAbilities((com.tann.dice.gameplay.modifier.Modifier) choosable);
+        }
+        return new java.util.ArrayList<String>();
     }
 
     private static Choosable choosable(ConcisePanel panel) {

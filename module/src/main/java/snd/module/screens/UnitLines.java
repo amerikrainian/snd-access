@@ -8,11 +8,16 @@ import java.util.Set;
 import com.tann.dice.gameplay.content.ent.Ent;
 import com.tann.dice.gameplay.content.ent.die.side.EntSide;
 import com.tann.dice.gameplay.content.item.Item;
+import com.tann.dice.gameplay.effect.Trait;
+import com.tann.dice.gameplay.effect.targetable.ability.Ability;
 import com.tann.dice.gameplay.fightLog.EntSideState;
 import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.FightLog;
+import com.tann.dice.gameplay.modifier.Modifier;
+import com.tann.dice.gameplay.trigger.global.Global;
 import com.tann.dice.gameplay.trigger.personal.Personal;
 import com.tann.dice.screens.dungeon.DungeonScreen;
+import com.tann.dice.screens.dungeon.panels.Explanel.NetPanel;
 
 import snd.contracts.SndLog;
 import snd.core.loc.Loc;
@@ -33,7 +38,8 @@ public final class UnitLines {
     /**
      * The unit: its name, level and hp display; a monster's targets; its six
      * sides, the rolled one marked; the sides' keyword rules; every status the
-     * sheet draws, in full. Items are their own buffer.
+     * sheet draws, in full; the traits beside the net, a spell as its card.
+     * Items are their own buffer.
      */
     public static List<String> of(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
@@ -83,6 +89,11 @@ public final class UnitLines {
             lines.add(SpecialPips.describe(p));
             referenced.addAll(Terms.forPersonal(p));
         }
+        // The traits drawn beside the net, a caster's spell among them.
+        for (Trait t : netTraits(ent, present)) {
+            lines.add(netTraitLine(t));
+            referenced.addAll(netTraitRules(t));
+        }
         referenced.removeAll(rules);
         lines.addAll(referenced);
         lines.addAll(Terms.glossary(lines));
@@ -108,6 +119,63 @@ public final class UnitLines {
         return shown;
     }
 
+    /**
+     * The traits the game draws beside the die net and again under the sheet
+     * (NetPanel.showTraitInNet, EntPanelInventory's extras): among them a
+     * caster's spell, which the die-panel list never shows (LearnAbility).
+     * One that list already shows (a stone hp trait is on both) is left out.
+     */
+    static List<Trait> netTraits(Ent ent, EntState present) {
+        List<Personal> listed = sheetPersonals(present);
+        List<Trait> shown = new ArrayList<Trait>();
+        for (Trait t : ent.traits) {
+            if (NetPanel.showTraitInNet(t) && !listed.contains(t.personal)) {
+                shown.add(t);
+            }
+        }
+        return shown;
+    }
+
+    /** A net trait as the sheet draws it: a taught ability as its card, any other trait in full. */
+    static String netTraitLine(Trait t) {
+        Ability a = t.personal.getAbility();
+        return a != null ? CombatScreen.abilityLine(a) : SpecialPips.describe(t.personal);
+    }
+
+    /** The keyword rules a net trait's line uses. */
+    static List<String> netTraitRules(Trait t) {
+        Ability a = t.personal.getAbility();
+        return a != null ? Terms.forEff(a.getDerivedEffects()) : Terms.forPersonal(t.personal);
+    }
+
+    /**
+     * The abilities an item teaches, each as its card reads — the item's own
+     * description only names them ("Learn the spell: Poultice").
+     */
+    static List<String> taughtAbilities(Item item) {
+        List<String> lines = new ArrayList<String>();
+        for (Personal p : item.getPersonals()) {
+            if (p.getAbility() != null) {
+                lines.add(CombatScreen.abilityLine(p.getAbility()));
+            }
+        }
+        return lines;
+    }
+
+    /**
+     * The spells a modifier teaches, each as its card reads — a spell
+     * blessing's description does not even name it ("Learn a new spell").
+     */
+    static List<String> taughtAbilities(Modifier modifier) {
+        List<String> lines = new ArrayList<String>();
+        for (Global g : modifier.getGlobals()) {
+            if (g.getGlobalSpell() != null) {
+                lines.add(CombatScreen.abilityLine(g.getGlobalSpell()));
+            }
+        }
+        return lines;
+    }
+
     /** What a unit carries: each item's name and tier, then its description. */
     public static List<String> items(Ent ent) {
         // A keyword two items share is defined once.
@@ -129,6 +197,7 @@ public final class UnitLines {
         if (desc != null && !desc.trim().isEmpty()) {
             lines.add(GameText.t(desc));
         }
+        lines.addAll(taughtAbilities(item));
         lines.addAll(Terms.forItem(item));
         return lines;
     }

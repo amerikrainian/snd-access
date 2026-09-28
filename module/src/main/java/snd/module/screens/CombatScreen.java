@@ -375,6 +375,20 @@ public class CombatScreen extends AccessScreen {
         return null;
     }
 
+    /**
+     * An ability as its card reads where something teaches it (an item, a
+     * hero's trait, a blessing — Explanel(Ability)): title, the card's cost,
+     * and the effect with its keywords' names, as the ability bar words it.
+     */
+    public static String abilityLine(com.tann.dice.gameplay.effect.targetable.ability.Ability a) {
+        StringBuilder sb = new StringBuilder(GameText.t(a.getTitle()));
+        String cost = baseCostText(a);
+        if (cost != null) {
+            sb.append(", ").append(cost);
+        }
+        return sb.append(", ").append(SideText.of(a.getDerivedEffects())).toString();
+    }
+
     // ---- the two combatant columns: one node per hero/monster ----
 
     private void buildEntityStop(GraphBuilder b, final DungeonScreen ds, boolean heroes) {

@@ -12,6 +12,7 @@ import com.tann.dice.gameplay.content.ent.die.Die;
 import com.tann.dice.gameplay.content.ent.die.EntDie;
 import com.tann.dice.gameplay.content.ent.die.side.EntSide;
 import com.tann.dice.gameplay.content.item.Item;
+import com.tann.dice.gameplay.effect.Trait;
 import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.FightLog;
 import com.tann.dice.gameplay.trigger.personal.Personal;
@@ -145,7 +146,9 @@ public class SheetScreen extends AccessScreen {
                 vt.details = new Supplier<List<String>>() {
                     @Override
                     public List<String> get() {
-                        return Terms.forItem(item);
+                        List<String> lines = UnitLines.taughtAbilities(item);
+                        lines.addAll(Terms.forItem(item));
+                        return lines;
                     }
                 };
                 vt.announcements = Arrays.asList(
@@ -189,6 +192,27 @@ public class SheetScreen extends AccessScreen {
                 i++;
             }
         }
+
+        // The traits drawn beside the net, a caster's spell among them.
+        int n = 0;
+        for (Trait t : UnitLines.netTraits(ent, present)) {
+            final Trait trait = t;
+            NodeVtable vt = textVtable(ent);
+            vt.details = new Supplier<List<String>>() {
+                @Override
+                public List<String> get() {
+                    return UnitLines.netTraitRules(trait);
+                }
+            };
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return UnitLines.netTraitLine(trait);
+                }
+            }, AnnouncementKinds.LABEL));
+            b.addItem(ControlId.structural(CompositeKey.of("sheet", "trait", n)), vt);
+            n++;
+        }
     }
 
     /**
@@ -224,12 +248,18 @@ public class SheetScreen extends AccessScreen {
                 if (desc != null && !desc.trim().isEmpty()) {
                     sb.append(", ").append(GameText.t(desc));
                 }
+                for (String taught : UnitLines.taughtAbilities(items.get(i))) {
+                    sb.append(", ").append(taught);
+                }
             }
         }
         if (present != null) {
             for (Personal p : UnitLines.sheetPersonals(present)) {
                 sb.append(". ").append(SpecialPips.describe(p));
             }
+        }
+        for (Trait t : UnitLines.netTraits(ent, present)) {
+            sb.append(". ").append(UnitLines.netTraitLine(t));
         }
         return sb.toString();
     }

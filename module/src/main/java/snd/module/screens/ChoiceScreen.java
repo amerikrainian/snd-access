@@ -179,8 +179,8 @@ public class ChoiceScreen extends AccessScreen {
             // blocker-backed modal, so the generic modal reader takes over
             // and Escape pops it. Level-ups keep their sheet rows instead.
             if (!levelup) {
-                // The panel's keyword boxes, a line each, and the glossary
-                // entries its description uses.
+                // The panel's spell card and keyword boxes, a line each, and
+                // the glossary entries its description uses.
                 vt.details = new Supplier<List<String>>() {
                     @Override
                     public List<String> get() {
@@ -555,14 +555,17 @@ public class ChoiceScreen extends AccessScreen {
         }
     }
 
-    // The keywords the option's panel draws a rules box for (ModifierPanel,
-    // ItemPanel), each once; a replacement's are those of what it gains, an
+    // What the option's panel draws beside its description (ModifierPanel,
+    // ItemPanel): the card of a spell it teaches, then a rules box per
+    // keyword, each once; a replacement's are those of what it gains, an
     // or-choice's those of every alternative.
     static java.util.Collection<String> termsOf(Choosable option) {
         java.util.Set<String> lines = new java.util.LinkedHashSet<String>();
         if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
+            lines.addAll(UnitLines.taughtAbilities((com.tann.dice.gameplay.modifier.Modifier) option));
             lines.addAll(Terms.forModifier((com.tann.dice.gameplay.modifier.Modifier) option));
         } else if (option instanceof com.tann.dice.gameplay.content.item.Item) {
+            lines.addAll(UnitLines.taughtAbilities((com.tann.dice.gameplay.content.item.Item) option));
             lines.addAll(Terms.forItem((com.tann.dice.gameplay.content.item.Item) option));
         } else if (option instanceof ReplaceChoosable) {
             lines.addAll(termsOf(((ReplaceChoosable) option).gain));
@@ -675,6 +678,29 @@ public class ChoiceScreen extends AccessScreen {
             b.addItem(ControlId.structural(CompositeKey.of("choice", index, "passive", n)), vt);
             n++;
         }
+        // The traits drawn beside the net, a caster's spell among them.
+        int t = 0;
+        for (final com.tann.dice.gameplay.effect.Trait trait : UnitLines.netTraits(upgraded, blank)) {
+            if (trait.personal.hasImage()) {
+                continue; // a passive row above already reads it
+            }
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.TEXT;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return UnitLines.netTraitLine(trait);
+                }
+            }, AnnouncementKinds.LABEL));
+            vt.details = new Supplier<List<String>>() {
+                @Override
+                public List<String> get() {
+                    return UnitLines.netTraitRules(trait);
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("choice", index, "trait", t)), vt);
+            t++;
+        }
     }
 
     // The hypothetical upgraded hero, built the way makeChoosableActor builds
@@ -719,6 +745,11 @@ public class ChoiceScreen extends AccessScreen {
                 continue;
             }
             sb.append(". ").append(SpecialPips.describe(personal));
+        }
+        for (com.tann.dice.gameplay.effect.Trait trait : UnitLines.netTraits(upgraded, blank)) {
+            if (!trait.personal.hasImage()) {
+                sb.append(". ").append(UnitLines.netTraitLine(trait));
+            }
         }
         return sb.toString();
     }
