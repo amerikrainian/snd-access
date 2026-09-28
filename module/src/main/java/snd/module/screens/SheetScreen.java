@@ -236,7 +236,11 @@ public class SheetScreen extends AccessScreen {
     static String headerText(DungeonScreen ds, Ent ent) {
         StringBuilder sb = new StringBuilder(GameUi.entName(ent));
         if (ent instanceof Hero) {
-            sb.append(", ").append(Loc.get("combat", "level", "n", ((Hero) ent).getLevel()));
+            Hero hero = (Hero) ent;
+            // The colour the panel is bordered in, which items restrict by
+            // ("grey heroes only"). The game defines no colour beyond its name.
+            sb.append(", ").append(GameText.t(hero.getHeroCol().colName));
+            sb.append(", ").append(Loc.get("combat", "level", "n", hero.getLevel()));
         }
         String health = CombatScreen.healthText(ds, ent);
         if (health != null) {
