@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.tann.dice.gameplay.content.ent.die.side.EntSide;
 import com.tann.dice.gameplay.content.item.Item;
 import com.tann.dice.gameplay.effect.eff.Eff;
 import com.tann.dice.gameplay.effect.eff.keyword.Keyword;
 import com.tann.dice.gameplay.modifier.Modifier;
 import com.tann.dice.gameplay.trigger.personal.Personal;
+import com.tann.dice.gameplay.trigger.personal.affectSideModular.AffectSides;
+import com.tann.dice.gameplay.trigger.personal.affectSideModular.effect.AffectSideEffect;
+import com.tann.dice.gameplay.trigger.personal.affectSideModular.effect.ReplaceWith;
+import com.tann.dice.gameplay.trigger.personal.linked.TriggerPersonalToGlobal;
 
 import snd.contracts.speech.TextFilter;
 import snd.module.GameText;
@@ -74,9 +79,48 @@ public final class Terms {
         return keywordLines(modifier.getReferencedKeywords(), modifier.getSingleEffOrNull());
     }
 
-    /** An item: the keywords its effects reference. */
+    /**
+     * An item: the keywords its effects reference, each specialised by the
+     * effect the item's panel specialises it by — a taught spell's "+2", not
+     * "+N".
+     */
     public static List<String> forItem(Item item) {
-        return keywordLines(item.getReferencedKeywords(), null);
+        List<String> lines = new ArrayList<String>();
+        for (Keyword keyword : item.getReferencedKeywords()) {
+            lines.addAll(keywordLines(java.util.Collections.singletonList(keyword), itemSource(item, keyword)));
+        }
+        return lines;
+    }
+
+    // ItemPanel.getSingleEffOrNull: the first trigger with a single effect of
+    // its own (a taught spell's), else a side it swaps in that carries the
+    // keyword, else a party-wide trigger's single effect; null for the
+    // general rule.
+    private static Eff itemSource(Item item, Keyword keyword) {
+        for (Personal p : item.getPersonals()) {
+            Eff e = p.getSingleEffOrNull();
+            if (e != null) {
+                return e;
+            }
+            if (p instanceof AffectSides) {
+                for (AffectSideEffect ase : ((AffectSides) p).getEffects()) {
+                    if (ase instanceof ReplaceWith) {
+                        for (EntSide side : ((ReplaceWith) ase).getReplaceSides()) {
+                            if (side.getBaseEffect().hasKeyword(keyword)) {
+                                return side.getBaseEffect();
+                            }
+                        }
+                    }
+                }
+            }
+            if (p instanceof TriggerPersonalToGlobal) {
+                e = p.getGlobalFromPersonalTrigger().getSingleEffOrNull();
+                if (e != null) {
+                    return e;
+                }
+            }
+        }
+        return null;
     }
 
     // The almanac glossary (HelpPage.populateList, case Glossary), the entries
