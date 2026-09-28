@@ -237,8 +237,8 @@ public class CombatScreen extends AccessScreen {
         return label != null ? label : Loc.get("combat", "confirm");
     }
 
-    // ---- the ability bar: one node per spell/tactic card, in the bar's own
-    // QWERTY slot order, plus the mana store ----
+    // ---- the ability bar: the mana store, then one node per spell/tactic
+    // card in the bar's own QWERTY slot order ----
 
     private void buildAbilitiesStop(GraphBuilder b, final DungeonScreen ds) {
         com.tann.dice.gameplay.fightLog.Snapshot present =
@@ -254,11 +254,8 @@ public class CombatScreen extends AccessScreen {
             return;
         }
 
-        b.beginStop("abilities").pushContext(GameText.t("Abilities"));
-        for (com.tann.dice.gameplay.effect.targetable.ability.Ability a : abilities) {
-            b.addItem(ControlId.referenced(a, CompositeKey.of("ability", a.getTitle())),
-                    abilityNode(ds, a));
-        }
+        // A bar of cards read by name and cost, not a list to count.
+        b.beginStop("abilities").pushContext(GameText.t("Abilities"), null, false);
         if (hasMana) {
             NodeVtable mana = new NodeVtable();
             mana.controlType = ControlTypes.TEXT;
@@ -272,6 +269,10 @@ public class CombatScreen extends AccessScreen {
                 }
             }, AnnouncementKinds.LABEL));
             b.addItem(ControlId.structural(CompositeKey.of("abilities", "mana")), mana);
+        }
+        for (com.tann.dice.gameplay.effect.targetable.ability.Ability a : abilities) {
+            b.addItem(ControlId.referenced(a, CompositeKey.of("ability", a.getTitle())),
+                    abilityNode(ds, a));
         }
         b.popContext();
     }
@@ -291,6 +292,14 @@ public class CombatScreen extends AccessScreen {
                     @Override
                     public String get() {
                         return costText(ds, a);
+                    }
+                }, AnnouncementKinds.VALUE),
+                // What the card draws: the effect with its keywords' names, as a
+                // die's face reads; their rules are the buffer's.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return SideText.of(a.getDerivedEffects());
                     }
                 }, AnnouncementKinds.VALUE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -316,11 +325,8 @@ public class CombatScreen extends AccessScreen {
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
-                // The card's effect, then a line per keyword it carries.
-                List<String> lines = new java.util.ArrayList<String>();
-                lines.add(GameText.t(a.getDerivedEffects().describe(false)));
-                lines.addAll(keywordRuleLines(a.getDerivedEffects()));
-                return lines;
+                // A line per keyword the card carries.
+                return keywordRuleLines(a.getDerivedEffects());
             }
         };
         vt.onActivate = new Runnable() {
@@ -334,7 +340,7 @@ public class CombatScreen extends AccessScreen {
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
-                host.speech().speak(GameText.t(a.getDerivedEffects().describe(false)), false);
+                host.speech().speak(SideText.of(a.getDerivedEffects()), false);
             }
         };
         return vt;
