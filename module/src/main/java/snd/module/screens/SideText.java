@@ -3,7 +3,9 @@ package snd.module.screens;
 import com.tann.dice.gameplay.effect.eff.Eff;
 import com.tann.dice.gameplay.effect.eff.keyword.Keyword;
 import com.tann.dice.gameplay.fightLog.EntSideState;
+import com.tann.dice.gameplay.trigger.personal.affectSideModular.condition.SpecificSidesType;
 
+import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.module.GameText;
 
@@ -61,5 +63,39 @@ final class SideText {
             }
         }
         return true;
+    }
+
+    /**
+     * The side indices in the order the almanac's die diagram lists them
+     * (HelpPage.makeDicePositionExplain, over SpecificSidesType.All): left,
+     * middle, top, bottom, right, rightmost.
+     */
+    static int[] readingOrder() {
+        return SpecificSidesType.All.sideIndices;
+    }
+
+    /** A side's line: "left: 2 damage". */
+    static String at(int index, String side) {
+        return Loc.get("ui", "side.at", "position", position(index), "side", side);
+    }
+
+    private static boolean positionMissReported;
+
+    /**
+     * Where a side sits on the die net, in the words item text uses for it
+     * ("the left side"): the single-side SpecificSidesType naming that index.
+     */
+    static String position(int index) {
+        for (SpecificSidesType type : SpecificSidesType.values()) {
+            if (!type.isWeird() && type.sideIndices.length == 1 && type.sideIndices[0] == index) {
+                return Loc.get("ui", "side.position." + type.name().toLowerCase(java.util.Locale.ROOT));
+            }
+        }
+        // Every index of a six-sided die has one; said once per miss.
+        if (!positionMissReported) {
+            positionMissReported = true;
+            SndLog.error("no SpecificSidesType names side index " + index, null);
+        }
+        return String.valueOf(index + 1);
     }
 }

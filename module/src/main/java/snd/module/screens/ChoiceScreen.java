@@ -615,14 +615,13 @@ public class ChoiceScreen extends AccessScreen {
         // reconciliation to an arbitrary sibling on every rebuild.
         b.addItem(ControlId.structural(CompositeKey.of("choice", index, "lvl")), header);
 
-        for (int s = 0; s < upgraded.getSides().length; s++) {
-            final int side = s;
+        for (final int side : SideText.readingOrder()) {
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + SideText.of(blank.getSideState(side));
+                    return SideText.at(side, SideText.of(blank.getSideState(side)));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
@@ -712,9 +711,8 @@ public class ChoiceScreen extends AccessScreen {
         StringBuilder sb = new StringBuilder();
         sb.append(Loc.get("combat", "level", "n", upgraded.getLevel()));
         sb.append(", ").append(blank.getMaxHp()).append(" ").append(GameText.t("hp"));
-        for (int i = 0; i < 6; i++) {
-            sb.append(", ").append(i + 1).append(": ")
-                    .append(SideText.of(blank.getSideState(i)));
+        for (int i : SideText.readingOrder()) {
+            sb.append(", ").append(SideText.at(i, SideText.of(blank.getSideState(i))));
         }
         for (com.tann.dice.gameplay.trigger.personal.Personal personal : blank.getActivePersonals()) {
             if (!personal.hasImage()) {

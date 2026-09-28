@@ -8,6 +8,13 @@
   "role.chooser": "chooser",
   "role.list": "list",
   "side.keyword_pips": "{keywords} {n}, {side}",
+  "side.at": "{position}: {side}",
+  "side.position.left": "left",
+  "side.position.middle": "middle",
+  "side.position.top": "top",
+  "side.position.bot": "bottom",
+  "side.position.right": "right",
+  "side.position.rightmost": "rightmost",
 
   "state.expanded": "expanded",
   "state.collapsed": "collapsed",

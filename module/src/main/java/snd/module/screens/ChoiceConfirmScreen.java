@@ -186,14 +186,13 @@ public class ChoiceConfirmScreen extends AccessScreen {
             }
         }, AnnouncementKinds.LABEL));
         b.addItem(ControlId.structural(CompositeKey.of("confirm", "before")), before);
-        for (int s = 0; s < current.getSides().length; s++) {
-            final int side = s;
+        for (final int side : SideText.readingOrder()) {
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + SideText.of(currentSide(current, side));
+                    return SideText.at(side, SideText.of(currentSide(current, side)));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {
@@ -219,14 +218,13 @@ public class ChoiceConfirmScreen extends AccessScreen {
             }
         }, AnnouncementKinds.LABEL));
         b.addItem(ControlId.structural(CompositeKey.of("confirm", "after")), after);
-        for (int s = 0; s < upgraded.getSides().length; s++) {
-            final int side = s;
+        for (final int side : SideText.readingOrder()) {
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.TEXT;
             vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return (side + 1) + ": " + SideText.of(blank.getSideState(side));
+                    return SideText.at(side, SideText.of(blank.getSideState(side)));
                 }
             }, AnnouncementKinds.LABEL));
             vt.details = CombatScreen.ruleDetails(new Supplier<com.tann.dice.gameplay.effect.eff.Eff>() {

@@ -112,15 +112,14 @@ public class SheetScreen extends AccessScreen {
         b.addItem(ControlId.structural(CompositeKey.of("sheet", "header")), header);
 
         final EntSide[] sides = ent.getSides();
-        for (int i = 0; i < sides.length; i++) {
-            final int index = i;
+        for (final int index : SideText.readingOrder()) {
             NodeVtable vt = textVtable(ent);
             vt.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return (index + 1) + ": " + SideText.of(sides[index]
-                                    .findState(FightLog.Temporality.Present, ent));
+                            return SideText.at(index, SideText.of(sides[index]
+                                    .findState(FightLog.Temporality.Present, ent)));
                         }
                     }, AnnouncementKinds.LABEL),
                     NodeAnnouncement.kinded(new Supplier<String>() {
@@ -207,9 +206,11 @@ public class SheetScreen extends AccessScreen {
             }
         }
         EntSide[] sides = ent.getSides();
-        for (int i = 0; i < sides.length; i++) {
-            sb.append(i == 0 ? ". " : ", ").append(i + 1).append(": ")
-                    .append(SideText.of(sides[i].findState(FightLog.Temporality.Present, ent)));
+        String separator = ". ";
+        for (int i : SideText.readingOrder()) {
+            sb.append(separator).append(SideText.at(i,
+                    SideText.of(sides[i].findState(FightLog.Temporality.Present, ent))));
+            separator = ", ";
         }
         List<Item> items = ent.getItems();
         if (items != null && !items.isEmpty()) {

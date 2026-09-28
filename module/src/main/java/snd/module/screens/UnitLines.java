@@ -65,9 +65,9 @@ public final class UnitLines {
         // A rule is given once, however many sides carry the keyword.
         Set<String> rules = new LinkedHashSet<String>();
         EntSide[] sides = ent.getSides();
-        for (int i = 0; i < sides.length; i++) {
+        for (int i : SideText.readingOrder()) {
             EntSideState side = sides[i].findState(FightLog.Temporality.Present, ent);
-            String line = (i + 1) + ": " + SideText.of(side);
+            String line = SideText.at(i, SideText.of(side));
             lines.add(SheetScreen.isRolled(ent, i) ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
             try {
                 rules.addAll(CombatScreen.keywordRuleLines(side.getCalculatedEffect()));
