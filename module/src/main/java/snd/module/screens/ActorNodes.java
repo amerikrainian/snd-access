@@ -249,12 +249,14 @@ final class ActorNodes {
         vt.controlType = ControlTypes.BUTTON;
         // What the game's info popup said when this control was last asked
         // (Enter on an info-only row, Backspace anywhere): read on the spot,
-        // kept here to step through.
+        // kept here to step through. A party-layout card adds the heroes
+        // each of its colours can start as.
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
                 List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
                 lines.addAll(GameUi.infoLines(infoTarget(actor)));
+                lines.addAll(PartyLayouts.pools(actor));
                 return lines;
             }
         };
@@ -266,7 +268,7 @@ final class ActorNodes {
                         // glyphs ("H5") that would win the text search.
                         String label = achievementTileName(actor);
                         if (label == null) {
-                            label = partyLayoutName(actor); // its "?" squares are text too
+                            label = PartyLayouts.name(actor); // its "?" squares are text too
                         }
                         if (label == null) {
                             label = nowPlayingLabel(actor);
@@ -338,7 +340,7 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return partyLayoutColours(actor);
+                        return PartyLayouts.colours(actor);
                     }
                 }, AnnouncementKinds.VALUE));
         vt.onActivate = new Runnable() {
@@ -363,73 +365,6 @@ final class ActorNodes {
     private static Actor infoTarget(Actor actor) {
         return findCheckbox(actor) instanceof com.tann.dice.util.ui.RadioCheckbox
                 && actor.getParent() != null ? actor.getParent() : actor;
-    }
-
-    // A party-layout option ("Choose party layout", GameStart) is an anonymous
-    // card: a name over five squares, coloured, or a "?" for a slot filled at
-    // random when the run starts. The layout it starts is the one its click
-    // listener holds.
-    private static String partyLayoutName(Actor actor) {
-        com.tann.dice.gameplay.content.ent.group.PartyLayoutType layout = partyLayoutOf(actor);
-        if (layout == null) {
-            return null;
-        }
-        String name = GameText.t(layout.name());
-        // PartyLayoutType.addRarityIfNecessary
-        if (com.tann.dice.gameplay.save.settings.option.OptionLib.SHOW_RARITY.c()
-                && layout.getChance() != com.tann.dice.gameplay.trigger.global.chance.RarityUtils.IGNORED_RARITY) {
-            name += ", r: " + layout.getChance();
-        }
-        return name;
-    }
-
-    private static java.lang.reflect.Field layoutColsField;
-
-    private static String partyLayoutColours(Actor actor) {
-        com.tann.dice.gameplay.content.ent.group.PartyLayoutType layout = partyLayoutOf(actor);
-        if (layout == null) {
-            return null;
-        }
-        try {
-            if (layoutColsField == null) {
-                layoutColsField = com.tann.dice.gameplay.content.ent.group.PartyLayoutType.class
-                        .getDeclaredField("cols");
-                layoutColsField.setAccessible(true);
-            }
-            StringBuilder sb = new StringBuilder();
-            for (com.tann.dice.gameplay.content.ent.type.HeroCol col
-                    : (com.tann.dice.gameplay.content.ent.type.HeroCol[]) layoutColsField.get(layout)) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(col == null ? Loc.get("ui", "value.random") : GameText.t(col.colName));
-            }
-            return sb.length() > 0 ? sb.toString() : null;
-        } catch (Throwable t) {
-            snd.contracts.SndLog.error("party layout colours read failed", t);
-            return null;
-        }
-    }
-
-    private static com.tann.dice.gameplay.content.ent.group.PartyLayoutType partyLayoutOf(Actor actor) {
-        for (com.badlogic.gdx.scenes.scene2d.EventListener listener : actor.getListeners()) {
-            if (!(listener instanceof com.tann.dice.util.listener.TannListener)) {
-                continue;
-            }
-            for (java.lang.reflect.Field field : listener.getClass().getDeclaredFields()) {
-                if (field.getType() != com.tann.dice.gameplay.content.ent.group.PartyLayoutType.class) {
-                    continue;
-                }
-                try {
-                    field.setAccessible(true);
-                    return (com.tann.dice.gameplay.content.ent.group.PartyLayoutType) field.get(listener);
-                } catch (Throwable t) {
-                    snd.contracts.SndLog.error("party layout read failed", t);
-                    return null;
-                }
-            }
-        }
-        return null;
     }
 
     // The jukebox's currently-playing row: a LiveText (the game's only one)

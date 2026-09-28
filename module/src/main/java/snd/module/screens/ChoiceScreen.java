@@ -179,6 +179,16 @@ public class ChoiceScreen extends AccessScreen {
             // blocker-backed modal, so the generic modal reader takes over
             // and Escape pops it. Level-ups keep their sheet rows instead.
             if (!levelup) {
+                // The panel's keyword boxes, a line each, and the glossary
+                // entries its description uses.
+                vt.details = new Supplier<List<String>>() {
+                    @Override
+                    public List<String> get() {
+                        List<String> lines = new java.util.ArrayList<String>(termsOf(option));
+                        lines.addAll(Terms.glossary(Arrays.asList(effectOf(option, index))));
+                        return lines;
+                    }
+                };
                 vt.onSecondary = new Runnable() {
                     @Override
                     public void run() {
@@ -543,6 +553,25 @@ public class ChoiceScreen extends AccessScreen {
             SndLog.error("failed to describe a choice option", t);
             return null;
         }
+    }
+
+    // The keywords the option's panel draws a rules box for (ModifierPanel,
+    // ItemPanel), each once; a replacement's are those of what it gains, an
+    // or-choice's those of every alternative.
+    static java.util.Collection<String> termsOf(Choosable option) {
+        java.util.Set<String> lines = new java.util.LinkedHashSet<String>();
+        if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
+            lines.addAll(Terms.forModifier((com.tann.dice.gameplay.modifier.Modifier) option));
+        } else if (option instanceof com.tann.dice.gameplay.content.item.Item) {
+            lines.addAll(Terms.forItem((com.tann.dice.gameplay.content.item.Item) option));
+        } else if (option instanceof ReplaceChoosable) {
+            lines.addAll(termsOf(((ReplaceChoosable) option).gain));
+        } else if (option instanceof OrChoosable) {
+            for (Choosable child : ((OrChoosable) option).getAll()) {
+                lines.addAll(termsOf(child));
+            }
+        }
+        return lines;
     }
 
     private static String safeDescribe(Choosable option) {

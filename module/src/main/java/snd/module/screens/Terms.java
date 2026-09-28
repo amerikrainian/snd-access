@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import com.tann.dice.gameplay.content.item.Item;
 import com.tann.dice.gameplay.effect.eff.Eff;
 import com.tann.dice.gameplay.effect.eff.keyword.Keyword;
+import com.tann.dice.gameplay.modifier.Modifier;
 import com.tann.dice.gameplay.trigger.personal.Personal;
 
 import snd.contracts.speech.TextFilter;
@@ -63,6 +64,14 @@ public final class Terms {
     /** A status or trait: the keywords it says it references. */
     public static List<String> forPersonal(Personal personal) {
         return keywordLines(personal.getReferencedKeywords(), null);
+    }
+
+    /**
+     * A modifier (a blessing, a curse): the keywords its globals reference,
+     * with the effect ModifierPanel specialises the rules by.
+     */
+    public static List<String> forModifier(Modifier modifier) {
+        return keywordLines(modifier.getReferencedKeywords(), modifier.getSingleEffOrNull());
     }
 
     /** An item: the keywords its effects reference. */
