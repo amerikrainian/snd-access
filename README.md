@@ -98,7 +98,7 @@ adapted from Rashad Naqeeb's Non-Visual Calculus installer — see
 
 1. Bump `modVersion` in `gradle.properties` and add the matching `## VX.Y.Z` section
    to `CHANGELOG.md` (it becomes the release notes the installer shows players).
-2. `build-release.ps1` — builds and stages `releases/SnDAccess-vX.Y.Z.zip`.
+2. `build_release.ps1` — builds and stages `releases/SnDAccess-vX.Y.Z.zip`.
 3. `build-installer.ps1` — builds `releases/SnDAccessInstaller.exe`
    (`test-installer.ps1` runs its unit tests).
 4. Commit, tag `vX.Y.Z`, push the tag, then `create-release.ps1 vX.Y.Z` to

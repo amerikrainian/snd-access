@@ -1,6 +1,6 @@
 # Publish a GitHub release for an existing, pushed tag: uploads the mod zip and
 # the installer exe from releases\ with notes taken from the tag's CHANGELOG.md
-# section. Run build-release.ps1 and build-installer.ps1 first.
+# section. Run build_release.ps1 and build-installer.ps1 first.
 
 param(
     [Parameter(Mandatory = $true, Position = 0)]
