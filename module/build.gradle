@@ -9,6 +9,9 @@ dependencies {
     implementation project(':contracts')
     implementation project(':core')
     compileOnly files(gameJar)
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 compileJava.options.release = 8
 // javac on the 21 toolchain calls release 8 obsolete; the game's bundled

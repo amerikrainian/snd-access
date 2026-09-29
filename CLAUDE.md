@@ -46,7 +46,7 @@ The game is a dice-battler roguelike: 2 real screens (title, dungeon) plus a dee
 ## Build & deploy
 
 ```
-gradle build          # all five modules + the contracts and core unit tests
+gradle build          # all five modules + the contracts, core and module unit tests
 gradle :module:build  # the reloadable unit: core + module (the hot-reload inner loop)
 ```
 
