@@ -39,6 +39,7 @@
   "change.returns": "volta",
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
+  "party_safe": "nada iminente",
 
   "phase.enemy_rolling": "Inimigos rolando",
   "phase.player_rolling": "Sua rolagem",

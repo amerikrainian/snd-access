@@ -39,6 +39,7 @@
   "change.returns": "vuelve",
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
+  "party_safe": "nada entrante",
 
   "phase.enemy_rolling": "Los enemigos tiran",
   "phase.player_rolling": "Tu tirada",

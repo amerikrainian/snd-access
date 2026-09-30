@@ -138,6 +138,26 @@ public class CombatScreen extends AccessScreen {
         return lines;
     }
 
+    /**
+     * What is coming at the party, a hero at a time in column order: each
+     * living hero the damage preview moves ("Defender 1: incoming 6, dies
+     * this turn"), joined; "nothing incoming" when it moves none.
+     */
+    public static String partyIncoming() {
+        DungeonScreen ds = DungeonScreen.get();
+        StringBuilder sb = new StringBuilder();
+        for (Ent hero : ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getEntities(true, false)) {
+            String preview = previewText(ds, hero);
+            if (preview != null) {
+                if (sb.length() > 0) {
+                    sb.append(". ");
+                }
+                sb.append(Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", preview));
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : Loc.get("combat", "party_safe");
+    }
+
     /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse. */
     public static String vitalsLine(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();

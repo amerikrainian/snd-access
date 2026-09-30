@@ -19,11 +19,11 @@ import snd.module.screens.HelpScreen;
  * the key help's order within a group: what the focused control answers,
  * then movement.
  *
- * <p>Picking a key: no letters (type-ahead owns them), nothing the game
+ * <p>Picking a key: no bare letters (type-ahead owns them), nothing the game
  * binds (a fall-through fires the game's action), so new keys take Ctrl or
  * Shift tiers of existing ones, or keys that type nothing. Shift+digit is the
- * game's (target the other side); the Ctrl tiers of the digits are the
- * glances'. Keycodes are the game's libGDX ({@code Input.Keys}).
+ * game's (target the other side); the Ctrl tiers of the digits, and Ctrl+I,
+ * are the glances'. Keycodes are the game's libGDX ({@code Input.Keys}).
  */
 final class SndKeys {
     private SndKeys() {
@@ -79,6 +79,20 @@ final class SndKeys {
                     public void accept(int digit) {
                         // In place, interrupting, like any answer to a key press.
                         speech.speak(CombatScreen.vitalsLine(CombatScreen.focusedUnit(nav)), true);
+                    }
+                }));
+        keys.register(InputAction.of("glance.incoming", "help.glance.incoming")
+                .bind(KeyChord.of(37, "key.i").ctrl())
+                .when(new BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return CombatScreen.inFight();
+                    }
+                })
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        speech.speak(CombatScreen.partyIncoming(), true);
                     }
                 }));
         // Review: Ctrl+Left/Right switch buffers; Ctrl+Up steps through a

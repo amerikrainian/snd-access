@@ -39,6 +39,7 @@
   "change.returns": "возвращается",
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
+  "party_safe": "ничего входящего",
 
   "phase.enemy_rolling": "Враги бросают",
   "phase.player_rolling": "Ваш бросок",

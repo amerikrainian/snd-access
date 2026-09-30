@@ -39,6 +39,7 @@
   "change.returns": "revient",
   "intent": "{name} : {side}",
   "intent.fate": "{name} : {fate}",
+  "party_safe": "rien à venir",
 
   "phase.enemy_rolling": "Les ennemis lancent",
   "phase.player_rolling": "Votre lancer",
