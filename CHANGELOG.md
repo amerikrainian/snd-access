@@ -1,5 +1,10 @@
 # Changelog
 
+## V0.1.2
+
+- More shortcut keys: ctrl+i in combat reads incoming damage, numbers outside combat read hero die faces.
+- Added machine-assisted translations.
+
 ## V0.1.1
 
 - Fixed not being able to see hero color.
