@@ -211,9 +211,13 @@ Permanent/reloadable split (verified end-to-end):
   it. Never add a keycode check anywhere else. A handler key states where it applies with
   `.when(...)` — that one predicate gates the press and the help row. A handler key that does not
   apply does nothing, silently, and is still consumed: fallen through, Ctrl+1 is the game's 1.
+  The exception is a key the game binds elsewhere, marked `.yieldsToGame()`: where it does not
+  apply the press is the game's (the plain digits read a die's sides on a control concerning a
+  unit outside a fight, and are the game's in a fight and on its choice and level-end options).
   The Ctrl tiers of the digits are the glances' (Ctrl+1 = the hp display of the unit the focused
   control concerns); the unassigned ones are bound to a silent placeholder for the same reason.
-  Ctrl+arrows review the buffers; the section jump is Alt+Up/Down.
+  Ctrl+I is the party's incoming damage in a fight. Ctrl+arrows review the buffers; the section
+  jump is Alt+Up/Down.
 - **The game's hotkeys are never in the table** — they are the game's, reached by fall-through. A
   screen offers the ones live in its state from `AccessScreen.keys()`, gated on what the game's
   own `keyPress` checks and labelled with the game's words (`GameKeys`).

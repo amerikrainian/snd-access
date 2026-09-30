@@ -55,6 +55,7 @@
   "help.nav.CANCEL": "Cancel search",
   "help.glance.vitals": "hp and shields",
   "help.glance.incoming": "what hits the party this turn",
+  "help.glance.side": "die side",
   "help.buffer.next": "Next buffer",
   "help.buffer.prev": "Previous buffer",
   "help.buffer.line.next": "Next buffer line",

@@ -92,8 +92,9 @@ final class SndInput implements InputProcessor {
         }
         if (!action.isAvailable()) {
             // Does nothing where it does not apply, and stays ours: fallen
-            // through, Ctrl+1 is the game's 1.
-            return true;
+            // through, Ctrl+1 is the game's 1. A key the game binds where
+            // ours does not apply is the game's there.
+            return !action.isYieldingToGame();
         }
         action.perform(digit);
         return true;

@@ -55,6 +55,7 @@
   "help.nav.CANCEL": "Cancelar búsqueda",
   "help.glance.vitals": "ps y escudos",
   "help.glance.incoming": "lo que recibe el grupo este turno",
+  "help.glance.side": "cara del dado",
   "help.buffer.next": "Búfer siguiente",
   "help.buffer.prev": "Búfer anterior",
   "help.buffer.line.next": "Línea siguiente del búfer",

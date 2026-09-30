@@ -2,6 +2,7 @@ package snd.module;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 import snd.contracts.speech.SpeechPipeline;
 import snd.core.input.InputAction;
@@ -11,6 +12,7 @@ import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.HelpScreen;
+import snd.module.screens.UnitLines;
 
 /**
  * The mod's key table: every key of our own, bound here and nowhere else.
@@ -21,7 +23,8 @@ import snd.module.screens.HelpScreen;
  *
  * <p>Picking a key: no bare letters (type-ahead owns them), nothing the game
  * binds (a fall-through fires the game's action), so new keys take Ctrl or
- * Shift tiers of existing ones, or keys that type nothing. Shift+digit is the
+ * Shift tiers of existing ones, or keys that type nothing — or a game key
+ * only where the game leaves it unused, yielding it everywhere else. Shift+digit is the
  * game's (target the other side); the Ctrl tiers of the digits, and Ctrl+I,
  * are the glances'. Keycodes are the game's libGDX ({@code Input.Keys}).
  */
@@ -95,6 +98,35 @@ final class SndKeys {
                         speech.speak(CombatScreen.partyIncoming(), true);
                     }
                 }));
+        // A die's sides one at a time, in the sheet's reading order, on a
+        // control that concerns a unit outside a fight: the inventory, a
+        // sheet, the almanac. In a fight, and on the choice and level-end
+        // options, the digits are the game's.
+        keys.register(InputAction.of("glance.side", "help.glance.side")
+                .bind(KeyChord.digits())
+                .yieldsToGame()
+                .when(new BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return sideOwner(nav) != null;
+                    }
+                })
+                .digitCount(new IntSupplier() {
+                    @Override
+                    public int getAsInt() {
+                        Object owner = sideOwner(nav);
+                        return owner != null ? UnitLines.sideCount(owner) : 6;
+                    }
+                })
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        String line = UnitLines.sideLine(sideOwner(nav), digit);
+                        if (line != null) {
+                            speech.speak(line, true);
+                        }
+                    }
+                }));
         // Review: Ctrl+Left/Right switch buffers; Ctrl+Up steps through a
         // buffer, away from the line review lands on, Ctrl+Down back to it.
         // They only read, so they answer over the help overlay too.
@@ -146,5 +178,14 @@ final class SndKeys {
                     }
                 }));
         return keys;
+    }
+
+    // The die the focused control concerns, while the digits are not the
+    // fight's: the almanac takes every key before the fight sees it.
+    private static Object sideOwner(GraphNavigator nav) {
+        if (CombatScreen.inFight() && !com.tann.dice.screens.dungeon.panels.book.Book.inBook()) {
+            return null;
+        }
+        return UnitLines.dieOwner(nav.focusedSubject());
     }
 }

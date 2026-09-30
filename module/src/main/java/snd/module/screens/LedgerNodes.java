@@ -144,11 +144,11 @@ final class LedgerNodes {
                         Loc.get("ui", "book.hero_group", "colour", GameText.t(hero.heroCol.colName),
                                 "tier", hero.level));
                 b.addItem(ControlId.referenced(hero, CompositeKey.of("ledger-hero", hero.getName(false))),
-                        tileNode(actor, hero, entName(hero), null));
+                        tileNode(actor, hero, entName(hero), hero));
             } else if (monster != null) {
                 group(CompositeKey.of("ledger-monsters", monster.size), sizeName(monster.size));
                 b.addItem(ControlId.referenced(monster, CompositeKey.of("ledger-monster", monster.getName(false))),
-                        tileNode(actor, monster, entName(monster), null));
+                        tileNode(actor, monster, entName(monster), monster));
             } else if (item != null) {
                 String tier = ChoosablePanelNodes.tierText(item);
                 group(CompositeKey.of("ledger-items", item.getTier()),

@@ -55,6 +55,7 @@
   "help.nav.CANCEL": "Отменить поиск",
   "help.glance.vitals": "здоровье и щиты",
   "help.glance.incoming": "что получит отряд в этот ход",
+  "help.glance.side": "грань кубика",
   "help.buffer.next": "Следующий буфер",
   "help.buffer.prev": "Предыдущий буфер",
   "help.buffer.line.next": "Следующая строка буфера",

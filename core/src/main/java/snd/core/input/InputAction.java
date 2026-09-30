@@ -33,6 +33,7 @@ public final class InputAction {
     private IntSupplier digitCount;
     private boolean overOverlay;
     private boolean unlisted;
+    private boolean yieldsToGame;
 
     private InputAction(String id, String labelKey, NavAction nav) {
         this.id = id;
@@ -73,6 +74,20 @@ public final class InputAction {
     public InputAction when(BooleanSupplier a) {
         available = a;
         return this;
+    }
+
+    /**
+     * Where the key does not apply, the press is the game's: for a key the
+     * game binds elsewhere (the plain digits), which a gated key would
+     * otherwise swallow.
+     */
+    public InputAction yieldsToGame() {
+        yieldsToGame = true;
+        return this;
+    }
+
+    public boolean isYieldingToGame() {
+        return yieldsToGame;
     }
 
     /** For a digits chord: how many digits answer right now ("1 to 5"). */

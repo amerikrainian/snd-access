@@ -55,6 +55,7 @@
   "help.nav.CANCEL": "Cancelar busca",
   "help.glance.vitals": "pv e escudos",
   "help.glance.incoming": "o que atinge o grupo neste turno",
+  "help.glance.side": "face do dado",
   "help.buffer.next": "Próximo buffer",
   "help.buffer.prev": "Buffer anterior",
   "help.buffer.line.next": "Próxima linha do buffer",

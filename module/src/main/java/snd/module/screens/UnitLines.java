@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.tann.dice.gameplay.content.ent.Ent;
 import com.tann.dice.gameplay.content.ent.die.side.EntSide;
+import com.tann.dice.gameplay.content.ent.type.EntType;
 import com.tann.dice.gameplay.content.item.Item;
 import com.tann.dice.gameplay.effect.Trait;
 import com.tann.dice.gameplay.effect.targetable.ability.Ability;
@@ -98,6 +99,38 @@ public final class UnitLines {
         lines.addAll(referenced);
         lines.addAll(Terms.glossary(lines));
         return lines;
+    }
+
+    /**
+     * The die a control's subject rolls, for the side glance: a unit, or a
+     * unit type where no unit exists (the almanac's tiles); null for
+     * anything else.
+     */
+    public static Object dieOwner(Object subject) {
+        return subject instanceof Ent || subject instanceof EntType ? subject : null;
+    }
+
+    /** How many sides the owner's die has. */
+    public static int sideCount(Object owner) {
+        return owner instanceof Ent ? ((Ent) owner).getSides().length : ((EntType) owner).sides.length;
+    }
+
+    /**
+     * The digit'th side in the sheet's reading order ("left: 2 damage"): a
+     * unit's as its state calculates it (items and all), a type's as its
+     * base effect. Null past the last side.
+     */
+    public static String sideLine(Object owner, int digit) {
+        int[] order = SideText.readingOrder();
+        if (digit < 0 || digit >= order.length || order[digit] >= sideCount(owner)) {
+            return null;
+        }
+        int i = order[digit];
+        if (owner instanceof Ent) {
+            Ent ent = (Ent) owner;
+            return SideText.at(i, SideText.of(ent.getSides()[i].findState(FightLog.Temporality.Present, ent)));
+        }
+        return SideText.at(i, SideText.of(((EntType) owner).sides[i].getBaseEffect()));
     }
 
     /**

@@ -55,6 +55,7 @@
   "help.nav.CANCEL": "Annuler la recherche",
   "help.glance.vitals": "PV et protection",
   "help.glance.incoming": "ce que subit le groupe ce tour-ci",
+  "help.glance.side": "face du dé",
   "help.buffer.next": "Tampon suivant",
   "help.buffer.prev": "Tampon précédent",
   "help.buffer.line.next": "Ligne suivante du tampon",
