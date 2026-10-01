@@ -10,12 +10,16 @@ import com.tann.dice.gameplay.phase.gameplay.PlayerRollingPhase;
 import com.tann.dice.gameplay.phase.gameplay.SurrenderPhase;
 import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.LevelEndPhase;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.ChoicePhase;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.LinkedPhase;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.TransformPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
 import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
 import snd.module.screens.CombatScreen;
+import snd.module.screens.DialogPhaseScreen;
 
 /**
  * Speaks the combat turn structure: the current phase of the
@@ -98,12 +102,12 @@ final class PhaseWatcher {
             resetStamps();
             return null;
         }
-        // Decision phases (the rewardPhase package) are announced by their
-        // own screens. Anything else is a phase this watcher has never met —
-        // a game update or mod could add one — and a phase change the player
-        // never hears is invisible, so leave a trace.
-        if (!p.getClass().getName().contains(".rewardPhase.")
-                && loggedUnknown.add(p.getClass().getName())) {
+        // A decision phase a screen reads announces itself there; a linked or
+        // transform phase hands over to another phase as it starts. Anything
+        // else is a phase nothing reads, and a phase change the player never
+        // hears is invisible, so leave a trace.
+        if (!(p instanceof ChoicePhase) && !DialogPhaseScreen.reads(p) && !(p instanceof LinkedPhase)
+                && !(p instanceof TransformPhase) && loggedUnknown.add(p.getClass().getName())) {
             SndLog.info("phase with no announcement: " + p.getClass().getName());
         }
         return null;

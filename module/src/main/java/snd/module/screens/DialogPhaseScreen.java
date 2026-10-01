@@ -2,9 +2,11 @@ package snd.module.screens;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.tann.dice.gameplay.phase.Phase;
@@ -13,15 +15,23 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.MessagePhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.challenge.ChallengePhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc.HeroChangePhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc.ItemCombinePhase;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.SeqPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc.PositionSwapPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.reveal.RandomRevealPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.trade.TradePhase;
 
 import snd.contracts.SndLog;
+import snd.core.graph.AnnouncementKinds;
+import snd.core.graph.CompositeKey;
+import snd.core.graph.ControlId;
+import snd.core.graph.ControlTypes;
 import snd.core.graph.GraphBuilder;
+import snd.core.graph.NodeAnnouncement;
+import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.KeyOffer;
+import snd.module.Captured;
 import snd.module.GameKeys;
 import snd.module.GameText;
 
@@ -53,6 +63,13 @@ public class DialogPhaseScreen extends AccessScreen {
         // The cursed-family loop boundary: purple text + a single "never" button.
         DIALOG_FIELDS.put(com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.resetPhase.ResetPhase.class,
                 "resetPanel");
+        // A choice of paths (custom and TextMod content): built from the phase.
+        DIALOG_FIELDS.put(SeqPhase.class, "a");
+    }
+
+    /** Whether this screen reads the phase's dialog. */
+    public static boolean reads(Phase p) {
+        return p != null && DIALOG_FIELDS.containsKey(p.getClass());
     }
 
     private final Map<Class<?>, Field> fieldCache = new HashMap<Class<?>, Field>();
@@ -145,6 +162,9 @@ public class DialogPhaseScreen extends AccessScreen {
         if (p instanceof com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.resetPhase.ResetPhase) {
             return Loc.get("ui", "reward.reset");
         }
+        if (p instanceof SeqPhase) {
+            return null; // its own message leads the dialog
+        }
         return Loc.get("ui", "reward.reveal");
     }
 
@@ -186,7 +206,65 @@ public class DialogPhaseScreen extends AccessScreen {
         }
         // A dialog is a few lines and its answers, not a list to count.
         b.pushContext(Loc.get("ui", "modal.dialog"), null, false);
-        ActorNodes.emit(b, dialog);
+        Phase p = currentDialogPhase();
+        if (p instanceof SeqPhase) {
+            seqNodes(b, (SeqPhase) p);
+        } else {
+            ActorNodes.emit(b, dialog);
+        }
         b.popContext();
+    }
+
+    private static java.lang.reflect.Method pickPhase;
+
+    // SeqPhase: its message, then a button per path, which picks it as the
+    // path's own button does (SeqPhase.pickPhase).
+    private static void seqNodes(GraphBuilder b, final SeqPhase phase) {
+        final String message = (String) Captured.field(phase, SeqPhase.class, "message");
+        List<?> paths = (List<?>) Captured.field(phase, SeqPhase.class, "spps");
+        if (message == null || paths == null) {
+            return; // logged by the field read
+        }
+        b.addItem(ControlId.structural(CompositeKey.of("seq", "message")),
+                textNode(GameText.t(message)));
+        for (int i = 0; i < paths.size(); i++) {
+            final Object path = paths.get(i);
+            final String title = (String) Captured.field(path, path.getClass(), "title");
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameText.t(title);
+                }
+            }, AnnouncementKinds.LABEL));
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (pickPhase == null) {
+                            pickPhase = SeqPhase.class.getDeclaredMethod("pickPhase", path.getClass());
+                            pickPhase.setAccessible(true);
+                        }
+                        pickPhase.invoke(phase, path);
+                    } catch (Exception e) {
+                        SndLog.error("SeqPhase.pickPhase failed", e);
+                    }
+                }
+            };
+            b.addItem(ControlId.structural(CompositeKey.of("seq", "path", i)), vt);
+        }
+    }
+
+    private static NodeVtable textNode(final String text) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.TEXT;
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return text;
+            }
+        }, AnnouncementKinds.LABEL));
+        return vt;
     }
 }
