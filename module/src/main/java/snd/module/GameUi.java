@@ -166,8 +166,11 @@ public final class GameUi {
 
     private static void readInfoPopup(Actor source, Actor topBefore) {
         Actor top = stackTop();
-        if (top == null || top == topBefore || !isTextOnly(top)) {
-            return; // nothing new came up, or something to operate: a real modal, read as one
+        // A panel the game closes with a click on it (Screen.push's SELF_POP)
+        // and holds nothing to operate. One it keeps up until dismissed (a
+        // leaderboard, still "Loading...") is a real modal, read as one.
+        if (top == null || top == topBefore || !selfPops(top) || !isTextOnly(top)) {
+            return;
         }
         List<String> lines = popupLines(top);
         if (lines.isEmpty()) {
@@ -183,6 +186,11 @@ public final class GameUi {
         }
         speech.speak(sb.toString(), false);
         com.tann.dice.Main.getCurrentScreen().pop(top);
+    }
+
+    private static boolean selfPops(Actor actor) {
+        Object selfPop = Captured.field(com.tann.dice.Main.getCurrentScreen(), Screen.class, "SELF_POP");
+        return selfPop != null && actor.getListeners().contains((com.badlogic.gdx.scenes.scene2d.EventListener) selfPop, true);
     }
 
     /** The lines of the info popup this control last answered with, for its control buffer. */
