@@ -76,6 +76,40 @@ public final class Captured {
         }
     }
 
+    /** The holder's captured primitive of this type (int.class, boolean.class), boxed, or null. */
+    public static Object primitive(Object holder, Class<?> type) {
+        if (holder == null || !type.isPrimitive()) {
+            return null;
+        }
+        Class<?> cls = holder.getClass();
+        Map<Class<?>, Field> fields = BY_TYPE.get(cls);
+        if (fields == null) {
+            fields = new HashMap<Class<?>, Field>();
+            BY_TYPE.put(cls, fields);
+        }
+        Field field = fields.get(type);
+        if (field == null) {
+            field = NO_FIELD;
+            for (Field f : cls.getDeclaredFields()) {
+                if (f.getType() == type) {
+                    f.setAccessible(true);
+                    field = f;
+                    break;
+                }
+            }
+            fields.put(type, field);
+        }
+        if (field == NO_FIELD) {
+            return null;
+        }
+        try {
+            return field.get(holder);
+        } catch (IllegalAccessException e) {
+            SndLog.error("captured " + type.getSimpleName() + " read failed on " + cls.getName(), e);
+            return null;
+        }
+    }
+
     /** Whether the holder's class was declared inside the game method owner.method. */
     public static boolean builtBy(Object holder, Class<?> owner, String method) {
         if (holder == null) {

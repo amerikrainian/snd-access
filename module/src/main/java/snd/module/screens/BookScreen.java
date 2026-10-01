@@ -167,58 +167,93 @@ public class BookScreen extends AccessScreen {
         return ActorNodes.Place.PLAIN;
     }
 
-    // The side-value curves, as numbers: the plot identifies series only by
-    // hash colours; this table gives each plotted side its calculated value
-    // per pip count (the same computation the curves draw for the strongest
-    // reference hero).
+    // The side-value curves, as numbers: the plot tells series apart by hash
+    // colour alone. Read from what the graph was built with (GraphUtils.make,
+    // held by its "+" button's runnable): the plotted sides, the pip range,
+    // and hero or monster mode. A row per side and reference unit, as the
+    // graph draws a curve for each (GraphUtils.addSideToGraph).
     private void buildGraphTable(GraphBuilder b, Actor content) {
-        List<com.tann.dice.gameplay.content.ent.die.side.EntSide> sides =
-                new java.util.ArrayList<com.tann.dice.gameplay.content.ent.die.side.EntSide>();
-        collectSides(content, sides);
-        if (sides.isEmpty()) {
+        Runnable graph = graphRunnable(content);
+        if (graph == null) {
+            if (!graphMissReported) {
+                graphMissReported = true;
+                SndLog.error("graph tab: the graph's \"+\" button was not found", null);
+            }
             return;
         }
-        final com.tann.dice.gameplay.content.ent.type.EntType reference;
-        try {
-            reference = com.tann.dice.gameplay.content.ent.type.lib.HeroTypeUtils.byName("veteran");
-        } catch (Throwable t) {
-            SndLog.error("graph reference hero missing", t);
+        graphMissReported = false;
+        List<?> plotted = snd.module.Captured.value(graph, List.class);
+        Object maxPipsBox = snd.module.Captured.primitive(graph, int.class);
+        Object heroBox = snd.module.Captured.primitive(graph, boolean.class);
+        if (plotted == null || plotted.isEmpty() || maxPipsBox == null || heroBox == null) {
             return;
         }
-        int maxPips = 6;
-        String[] headers = new String[maxPips - 1];
+        int maxPips = (Integer) maxPipsBox;
+        com.tann.dice.gameplay.content.ent.type.EntType[] references = (Boolean) heroBox
+                ? new com.tann.dice.gameplay.content.ent.type.EntType[] {
+                        com.tann.dice.gameplay.content.ent.type.lib.HeroTypeUtils.byName("thief"),
+                        com.tann.dice.gameplay.content.ent.type.lib.HeroTypeUtils.byName("guardian"),
+                        com.tann.dice.gameplay.content.ent.type.lib.HeroTypeUtils.byName("veteran")}
+                : new com.tann.dice.gameplay.content.ent.type.EntType[] {
+                        com.tann.dice.gameplay.content.ent.type.lib.MonsterTypeLib.byName("bones")};
+        String[] headers = new String[Math.max(0, maxPips - 1)];
         for (int pip = 2; pip <= maxPips; pip++) {
             headers[pip - 2] = Loc.get("ui", "book.pips_col", "n", pip);
         }
         snd.core.graph.GraphSheet sheet = new snd.core.graph.GraphSheet(b, "graphtab");
         sheet.region(Loc.get("ui", "book.value_table"), headers);
-        for (final com.tann.dice.gameplay.content.ent.die.side.EntSide side : sides) {
-            NodeVtable primary = new NodeVtable();
-            primary.controlType = ControlTypes.TEXT;
-            primary.announcements = Arrays.asList(
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return SideText.of(side.getBaseEffect());
-                        }
-                    }, AnnouncementKinds.LABEL),
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return Loc.get("ui", "book.pips_col", "n", 1) + " "
-                                    + graphValue(side, 1, reference);
-                        }
-                    }, AnnouncementKinds.VALUE));
-            Supplier<String>[] cells = makeCells(side, reference, maxPips);
-            sheet.row(primary, side, cells);
+        for (Object o : plotted) {
+            final com.tann.dice.gameplay.content.ent.die.side.EntSide side =
+                    (com.tann.dice.gameplay.content.ent.die.side.EntSide) o;
+            for (final com.tann.dice.gameplay.content.ent.type.EntType reference : references) {
+                NodeVtable primary = new NodeVtable();
+                primary.controlType = ControlTypes.TEXT;
+                primary.announcements = Arrays.asList(
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return SideText.of(side.getBaseEffect()) + ", " + snd.module.GameText.t(reference.getName(true));
+                            }
+                        }, AnnouncementKinds.LABEL),
+                        NodeAnnouncement.kinded(new Supplier<String>() {
+                            @Override
+                            public String get() {
+                                return Loc.get("ui", "book.pips_col", "n", 1) + " "
+                                        + graphValue(side, 1, reference);
+                            }
+                        }, AnnouncementKinds.VALUE));
+                Supplier<String>[] cells = makeCells(side, reference, maxPips);
+                sheet.row(primary, snd.core.graph.CompositeKey.of(side, reference), cells);
+            }
         }
         sheet.finish();
+    }
+
+    private boolean graphMissReported;
+
+    // The graph's "+" button (GraphUtils.make): a direct child of the graph
+    // group, which the game names "graph".
+    private static Runnable graphRunnable(Actor content) {
+        Actor graph = content instanceof com.badlogic.gdx.scenes.scene2d.Group
+                ? ((com.badlogic.gdx.scenes.scene2d.Group) content).findActor("graph") : null;
+        if (!(graph instanceof com.badlogic.gdx.scenes.scene2d.Group)) {
+            return null;
+        }
+        for (Actor child : ((com.badlogic.gdx.scenes.scene2d.Group) graph).getChildren()) {
+            if (child instanceof com.tann.dice.util.ui.standardButton.StandardButton) {
+                Runnable run = snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) child);
+                if (snd.module.Captured.builtBy(run, com.tann.dice.screens.graph.GraphUtils.class, "make")) {
+                    return run;
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
     private Supplier<String>[] makeCells(final com.tann.dice.gameplay.content.ent.die.side.EntSide side,
             final com.tann.dice.gameplay.content.ent.type.EntType reference, int maxPips) {
-        Supplier<String>[] cells = new Supplier[maxPips - 1];
+        Supplier<String>[] cells = new Supplier[Math.max(0, maxPips - 1)];
         for (int pip = 2; pip <= maxPips; pip++) {
             final int p = pip;
             cells[pip - 2] = new Supplier<String>() {
@@ -239,19 +274,6 @@ public class BookScreen extends AccessScreen {
         } catch (Throwable t) {
             SndLog.error("graph value failed", t);
             return "?";
-        }
-    }
-
-    private static void collectSides(Actor actor,
-            List<com.tann.dice.gameplay.content.ent.die.side.EntSide> out) {
-        com.tann.dice.gameplay.content.ent.die.side.EntSide side = ActorNodes.sideOf(actor);
-        if (side != null && !out.contains(side)) {
-            out.add(side);
-        }
-        if (actor instanceof com.badlogic.gdx.scenes.scene2d.Group) {
-            for (Actor child : ((com.badlogic.gdx.scenes.scene2d.Group) actor).getChildren()) {
-                collectSides(child, out);
-            }
         }
     }
 
