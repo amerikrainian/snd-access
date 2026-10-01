@@ -32,12 +32,8 @@ public final class TutorialWatcher {
             known.clear();
             return;
         }
-        TutorialHolder holder;
-        try {
-            holder = ds.getTutorialManager().tutorialHolder;
-        } catch (Throwable t) {
-            return; // the screen is mid-construction
-        }
+        // Null while the screen is mid-construction.
+        TutorialHolder holder = ds.getTutorialManager() != null ? ds.getTutorialManager().tutorialHolder : null;
         if (holder == null) {
             known.clear();
             return;

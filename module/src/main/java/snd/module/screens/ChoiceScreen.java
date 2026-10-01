@@ -74,15 +74,11 @@ public class ChoiceScreen extends AccessScreen {
     }
 
     private static ChoicePhase phase() {
-        try {
-            if (com.tann.dice.Main.getCurrentScreen() == null) {
-                return null;
-            }
-            com.tann.dice.gameplay.phase.Phase p = PhaseManager.get().getPhase();
-            return p instanceof ChoicePhase ? (ChoicePhase) p : null;
-        } catch (Throwable t) {
+        if (com.tann.dice.Main.getCurrentScreen() == null) {
             return null;
         }
+        com.tann.dice.gameplay.phase.Phase p = PhaseManager.get().getPhase();
+        return p instanceof ChoicePhase ? (ChoicePhase) p : null;
     }
 
     @Override

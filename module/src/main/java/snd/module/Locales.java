@@ -61,15 +61,11 @@ final class Locales {
     // The translator's resolved code (it normalizes unknown languages to
     // "en"), or English while the game is still booting.
     private static String gameLanguage() {
-        try {
-            com.tann.dice.Main main = com.tann.dice.Main.self();
-            if (main == null || main.translator == null) {
-                return Loc.FALLBACK_LANGUAGE;
-            }
-            return main.translator.getLanguageCode();
-        } catch (Throwable t) {
+        com.tann.dice.Main main = com.tann.dice.Main.self();
+        if (main == null || main.translator == null) {
             return Loc.FALLBACK_LANGUAGE;
         }
+        return main.translator.getLanguageCode();
     }
 
     private static Map<String, Map<String, String>> read(String lang) {

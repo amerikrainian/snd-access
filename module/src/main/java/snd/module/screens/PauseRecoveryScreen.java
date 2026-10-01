@@ -33,11 +33,7 @@ public class PauseRecoveryScreen extends AccessScreen {
 
     @Override
     public boolean isActive() {
-        try {
-            return Main.getCurrentScreen() instanceof PauseScreen;
-        } catch (Throwable t) {
-            return false;
-        }
+        return Main.getCurrentScreen() instanceof PauseScreen;
     }
 
     @Override

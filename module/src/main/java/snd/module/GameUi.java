@@ -43,12 +43,7 @@ public final class GameUi {
     /** Every modal on the current game screen's stack, bottom first, by {@link #topModal}'s rule. */
     public static List<Actor> modals() {
         List<Actor> modals = new ArrayList<Actor>();
-        Screen screen;
-        try {
-            screen = com.tann.dice.Main.getCurrentScreen();
-        } catch (Throwable t) {
-            return modals;
-        }
+        Screen screen = com.tann.dice.Main.getCurrentScreen();
         if (screen == null) {
             return modals;
         }
@@ -63,12 +58,7 @@ public final class GameUi {
 
     /** Whether a panel of this kind is anywhere on the current screen's modal stack, covered or not. */
     public static boolean modalOpen(Class<? extends Actor> kind) {
-        Screen screen;
-        try {
-            screen = com.tann.dice.Main.getCurrentScreen();
-        } catch (Throwable t) {
-            return false; // the game is still booting
-        }
+        Screen screen = com.tann.dice.Main.getCurrentScreen();
         if (screen == null) {
             return false;
         }

@@ -73,15 +73,11 @@ public class LevelEndScreen extends AccessScreen {
     }
 
     private static LevelEndPhase phase() {
-        try {
-            if (!(com.tann.dice.Main.getCurrentScreen() instanceof DungeonScreen)) {
-                return null;
-            }
-            Phase p = PhaseManager.get().getPhase();
-            return p instanceof LevelEndPhase ? (LevelEndPhase) p : null;
-        } catch (Throwable t) {
+        if (!(com.tann.dice.Main.getCurrentScreen() instanceof DungeonScreen)) {
             return null;
         }
+        Phase p = PhaseManager.get().getPhase();
+        return p instanceof LevelEndPhase ? (LevelEndPhase) p : null;
     }
 
     @Override

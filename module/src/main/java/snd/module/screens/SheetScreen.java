@@ -69,20 +69,16 @@ public class SheetScreen extends AccessScreen {
 
     /** The light-pushed sheet on top of the dungeon's modal stack, or null. */
     private static EntPanelInventory panel() {
-        try {
-            Screen screen = Main.getCurrentScreen();
-            if (!(screen instanceof DungeonScreen)) {
-                return null;
-            }
-            Actor top = screen.getTopPushedActor();
-            if (!(top instanceof EntPanelInventory) || top.getStage() == null) {
-                return null;
-            }
-            EntPanelInventory pan = (EntPanelInventory) top;
-            return pan.ent == null ? null : pan;
-        } catch (Throwable t) {
+        Screen screen = Main.getCurrentScreen();
+        if (!(screen instanceof DungeonScreen)) {
             return null;
         }
+        Actor top = screen.getTopPushedActor();
+        if (!(top instanceof EntPanelInventory) || top.getStage() == null) {
+            return null;
+        }
+        EntPanelInventory pan = (EntPanelInventory) top;
+        return pan.ent == null ? null : pan;
     }
 
     @Override
@@ -287,14 +283,10 @@ public class SheetScreen extends AccessScreen {
     }
 
     static boolean isRolled(Ent ent, int index) {
-        try {
-            EntDie die = ent.getDie();
-            return die.getState() != Die.DieState.Rolling
-                    && die.getCurrentSide() != null
-                    && die.getSideIndex() == index;
-        } catch (Throwable t) {
-            return false;
-        }
+        EntDie die = ent.getDie();
+        return die.getState() != Die.DieState.Rolling
+                && die.getCurrentSide() != null
+                && die.getSideIndex() == index;
     }
 
     // Every line of a sheet concerns the unit the sheet is of.

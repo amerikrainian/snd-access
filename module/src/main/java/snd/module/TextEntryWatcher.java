@@ -48,15 +48,11 @@ final class TextEntryWatcher {
     }
 
     private static TextInput focusedInput() {
-        try {
-            if (com.tann.dice.Main.stage == null) {
-                return null;
-            }
-            Actor focus = com.tann.dice.Main.stage.getKeyboardFocus();
-            return focus instanceof TextInput ? (TextInput) focus : null;
-        } catch (Throwable t) {
+        if (com.tann.dice.Main.stage == null) {
             return null;
         }
+        Actor focus = com.tann.dice.Main.stage.getKeyboardFocus();
+        return focus instanceof TextInput ? (TextInput) focus : null;
     }
 
     // The pushed text dialog's first TextWriter is its title ("rename",

@@ -118,12 +118,7 @@ public class SndModule implements ModModule {
             // it never links against game classes).
             DevDriver.ensureContinuousRendering();
         }
-        com.tann.dice.screens.Screen screen;
-        try {
-            screen = com.tann.dice.Main.getCurrentScreen();
-        } catch (Throwable t) {
-            return; // the game is still booting
-        }
+        com.tann.dice.screens.Screen screen = com.tann.dice.Main.getCurrentScreen();
         if (screen == null) {
             return;
         }

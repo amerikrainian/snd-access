@@ -16,12 +16,7 @@ public final class GameText {
         if (text == null) {
             return null;
         }
-        com.tann.dice.Main main;
-        try {
-            main = com.tann.dice.Main.self();
-        } catch (Throwable th) {
-            return text; // the game is still booting; raw source is all there is
-        }
+        com.tann.dice.Main main = com.tann.dice.Main.self();
         if (main == null || main.translator == null) {
             return text;
         }

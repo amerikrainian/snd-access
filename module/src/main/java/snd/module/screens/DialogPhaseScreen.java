@@ -87,15 +87,11 @@ public class DialogPhaseScreen extends AccessScreen {
     }
 
     private Phase currentDialogPhase() {
-        try {
-            if (com.tann.dice.Main.getCurrentScreen() == null) {
-                return null;
-            }
-            Phase p = PhaseManager.get().getPhase();
-            return p != null && DIALOG_FIELDS.containsKey(p.getClass()) ? p : null;
-        } catch (Throwable t) {
+        if (com.tann.dice.Main.getCurrentScreen() == null) {
             return null;
         }
+        Phase p = PhaseManager.get().getPhase();
+        return p != null && DIALOG_FIELDS.containsKey(p.getClass()) ? p : null;
     }
 
     /** The phase's live dialog actor, or null before activate / after removal. */

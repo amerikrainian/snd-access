@@ -37,13 +37,9 @@ final class SndInput implements InputProcessor {
     // belongs to the field (typing, caret keys, Enter submit, Escape cancel)
     // — the navigator steps aside and TextEntryWatcher echoes what happens.
     static boolean textEntryActive() {
-        try {
-            return com.tann.dice.Main.stage != null
-                    && com.tann.dice.Main.stage.getKeyboardFocus()
-                            instanceof com.tann.dice.util.ui.TextInput;
-        } catch (Throwable t) {
-            return false;
-        }
+        return com.tann.dice.Main.stage != null
+                && com.tann.dice.Main.stage.getKeyboardFocus()
+                        instanceof com.tann.dice.util.ui.TextInput;
     }
 
     @Override

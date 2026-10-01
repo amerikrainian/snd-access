@@ -728,14 +728,11 @@ public class TitleFlowScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        int wins;
-                        int losses;
-                        try {
-                            wins = cc.getWins();
-                            losses = cc.getLosses();
-                        } catch (Throwable t) {
-                            return null;
+                        if (cc.skipStats()) {
+                            return null; // the game keeps no record for it
                         }
+                        int wins = cc.getWins();
+                        int losses = cc.getLosses();
                         if (wins == 0 && losses == 0) {
                             return null;
                         }
