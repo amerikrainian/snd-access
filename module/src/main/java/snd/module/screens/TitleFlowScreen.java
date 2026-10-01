@@ -417,7 +417,7 @@ public class TitleFlowScreen extends AccessScreen {
     // ---- Choose-Party: the five portrait slots + the reroll die ----
 
     private static java.lang.reflect.Field selectorsField;
-    private static java.lang.reflect.Method refreshHeroesMethod;
+    private static java.lang.reflect.Method rerollButtonMethod;
 
     @SuppressWarnings("unchecked")
     private void buildChoosePartySelectors(GraphBuilder b,
@@ -495,21 +495,17 @@ public class TitleFlowScreen extends AccessScreen {
         reroll.onActivate = new Runnable() {
             @Override
             public void run() {
-                // The reroll die's listener body (the actor itself is built
-                // inline with no field to reach).
+                // The reroll die is built inline with no field to reach: a
+                // fresh one from the mode's own maker, pressed.
                 try {
-                    com.tann.dice.statics.sound.Sounds.playSound(com.tann.dice.statics.sound.Sounds.clacks);
-                    for (com.tann.dice.gameplay.mode.chooseParty.HeroSelector hs : live) {
-                        hs.setToRandomHeroType();
+                    if (rerollButtonMethod == null) {
+                        rerollButtonMethod = com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode.class
+                                .getDeclaredMethod("makeRerollButton");
+                        rerollButtonMethod.setAccessible(true);
                     }
-                    if (refreshHeroesMethod == null) {
-                        refreshHeroesMethod = com.tann.dice.gameplay.mode.chooseParty.ChoosePartyMode.class
-                                .getDeclaredMethod("refreshHeroes");
-                        refreshHeroesMethod.setAccessible(true);
-                    }
-                    refreshHeroesMethod.invoke(mode);
-                } catch (Throwable t) {
-                    SndLog.error("party reroll failed", t);
+                    GameUi.activate((com.badlogic.gdx.scenes.scene2d.Actor) rerollButtonMethod.invoke(mode));
+                } catch (Exception e) {
+                    SndLog.error("party reroll failed", e);
                 }
             }
         };
