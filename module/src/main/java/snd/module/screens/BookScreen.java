@@ -375,28 +375,7 @@ public class BookScreen extends AccessScreen {
     }
 
     private NodeVtable boolOptionNode(final com.tann.dice.gameplay.save.settings.option.BOption option) {
-        NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.TOGGLE;
-        vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return snd.module.GameText.t(option.getName());
-                    }
-                }, AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return Loc.get("ui", option.c() ? "state.checked" : "state.unchecked");
-                    }
-                }, AnnouncementKinds.VALUE),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return optionDescription(option);
-                    }
-                }, AnnouncementKinds.TOOLTIP));
-        vt.onActivate = new Runnable() {
+        return OptionNodes.toggle(option, new Runnable() {
             @Override
             public void run() {
                 boolean on = !option.c();
@@ -405,104 +384,27 @@ public class BookScreen extends AccessScreen {
                         : com.tann.dice.statics.sound.Sounds.pop);
                 option.setValue(on, true); // warning dialogs ride manualSelectAction
             }
-        };
-        vt.stateText = new Supplier<String>() {
-            @Override
-            public String get() {
-                return Loc.get("ui", option.c() ? "state.checked" : "state.unchecked");
-            }
-        };
-        return vt;
+        });
     }
 
     private NodeVtable choiceOptionNode(final com.tann.dice.gameplay.save.settings.option.ChOption option) {
-        NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.CHOOSER;
-        vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return snd.module.GameText.t(option.getName());
-                    }
-                }, AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return snd.module.GameText.t(option.getOptions()[option.c()]);
-                    }
-                }, AnnouncementKinds.VALUE),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return optionDescription(option);
-                    }
-                }, AnnouncementKinds.TOOLTIP));
-        vt.onAdjust = new NodeVtable.Adjust() {
+        return OptionNodes.chooser(option, java.util.function.Function.<String>identity(), new NodeVtable.Adjust() {
             @Override
             public void adjust(int sign, boolean large) {
-                String[] values = option.getOptions();
-                int next = ((option.c() + sign) % values.length + values.length) % values.length;
-                option.setValue(next, true);
+                option.setValue(OptionNodes.step(option, sign), true);
             }
-        };
-        vt.stateText = new Supplier<String>() {
-            @Override
-            public String get() {
-                return snd.module.GameText.t(option.getOptions()[option.c()]);
-            }
-        };
-        return vt;
+        });
     }
 
     private NodeVtable sliderOptionNode(final com.tann.dice.gameplay.save.settings.option.FlOption option) {
-        NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.SLIDER;
-        vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return snd.module.GameText.t(option.getName());
-                    }
-                }, AnnouncementKinds.LABEL),
-                new NodeAnnouncement(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return Loc.get("ui", "value.percent", "value", Math.round(option.getVal() * 100f));
-                    }
-                }, true, AnnouncementKinds.VALUE));
-        vt.onAdjust = new NodeVtable.Adjust() {
+        return OptionNodes.slider(option, new NodeVtable.Adjust() {
             @Override
             public void adjust(int sign, boolean large) {
                 float step = large ? 0.2f : 0.05f;
                 float value = Math.max(0f, Math.min(1f, option.getVal() + sign * step));
                 option.setValue(value, true);
             }
-        };
-        vt.stateText = new Supplier<String>() {
-            @Override
-            public String get() {
-                return Loc.get("ui", "value.percent", "value", Math.round(option.getVal() * 100f));
-            }
-        };
-        return vt;
-    }
-
-    // The right-click-only option description, straight off the model.
-    private static Field optionDescField;
-
-    private static String optionDescription(com.tann.dice.gameplay.save.settings.option.Option option) {
-        try {
-            if (optionDescField == null) {
-                optionDescField = com.tann.dice.gameplay.save.settings.option.Option.class
-                        .getDeclaredField("desc");
-                optionDescField.setAccessible(true);
-            }
-            String desc = (String) optionDescField.get(option);
-            return desc != null ? snd.module.GameText.t(desc) : null;
-        } catch (Throwable t) {
-            SndLog.error("option description read failed", t);
-            return null;
-        }
+        });
     }
 
     // The lifetime-stats tab renders name and value as two parallel columns

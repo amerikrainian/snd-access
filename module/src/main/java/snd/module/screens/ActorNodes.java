@@ -122,6 +122,12 @@ final class ActorNodes {
             EntPanelNodes.emit(b, (com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) actor);
             return;
         }
+        com.tann.dice.gameplay.save.settings.option.Option option = optionOf(actor);
+        if (option != null) {
+            b.addItem(ControlId.referenced(option, CompositeKey.of("option", option.getName())),
+                    optionNode(actor, option, place));
+            return;
+        }
         if (interactiveLeaf(actor)) {
             b.addItem(actorId(actor), buttonFor(actor, place));
             return;
@@ -227,6 +233,77 @@ final class ActorNodes {
         return GameUi.iconNameUnder(title);
     }
 
+    // ---- an option's own widgets (Option.makeCogActor, wherever the game
+    // puts one: the cog menu, the jukebox, custom mode, the TextMod page):
+    // one control read from the option, as the Options tab reads it, pressed
+    // through the game's own widgets so warnings and refreshes still run ----
+
+    // A choice option's panel holds it in its info listener
+    // (ChOption.makeCogActor); a yes/no option's row holds its check box,
+    // whose toggle runnable holds the option (BOption.makeComplexEscMenuActor).
+    private static com.tann.dice.gameplay.save.settings.option.Option optionOf(Actor actor) {
+        com.tann.dice.gameplay.save.settings.option.ChOption choice =
+                snd.module.Captured.byListener(actor, com.tann.dice.gameplay.save.settings.option.ChOption.class);
+        if (choice != null) {
+            return choice;
+        }
+        com.tann.dice.util.ui.Checkbox box = snd.module.Captured.byListener(actor, com.tann.dice.util.ui.Checkbox.class);
+        return box != null ? snd.module.Captured.value(toggleOf(box),
+                com.tann.dice.gameplay.save.settings.option.BOption.class) : null;
+    }
+
+    private static NodeVtable optionNode(final Actor actor,
+            final com.tann.dice.gameplay.save.settings.option.Option option, final Place place) {
+        if (option instanceof com.tann.dice.gameplay.save.settings.option.BOption) {
+            return OptionNodes.toggle((com.tann.dice.gameplay.save.settings.option.BOption) option, new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.activate(actor); // the row's listener: its warning, then the toggle
+                }
+            });
+        }
+        final com.tann.dice.gameplay.save.settings.option.ChOption choice =
+                (com.tann.dice.gameplay.save.settings.option.ChOption) option;
+        return OptionNodes.chooser(choice, new java.util.function.Function<String, String>() {
+            @Override
+            public String apply(String caption) {
+                return glyphName(caption, place.glyphs);
+            }
+        }, new NodeVtable.Adjust() {
+            @Override
+            public void adjust(int sign, boolean large) {
+                Actor row = choiceRow(actor, choice, OptionNodes.step(choice, sign));
+                if (row != null) {
+                    GameUi.activate(row);
+                } else {
+                    snd.contracts.SndLog.error("option " + choice.getName() + ": no row for its next choice", null);
+                }
+            }
+        });
+    }
+
+    // The panel's radio row for a choice: the row whose box's toggle runnable
+    // holds that choice's index. Searched on a key press only.
+    private static Actor choiceRow(Actor actor, com.tann.dice.gameplay.save.settings.option.ChOption choice, int index) {
+        com.tann.dice.util.ui.Checkbox box = snd.module.Captured.byListener(actor, com.tann.dice.util.ui.Checkbox.class);
+        if (box != null) {
+            Runnable toggle = toggleOf(box);
+            if (snd.module.Captured.value(toggle, com.tann.dice.gameplay.save.settings.option.ChOption.class) == choice
+                    && Integer.valueOf(index).equals(snd.module.Captured.primitive(toggle, int.class))) {
+                return actor;
+            }
+        }
+        if (actor instanceof Group) {
+            for (Actor child : ((Group) actor).getChildren()) {
+                Actor row = choiceRow(child, choice, index);
+                if (row != null) {
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
     /** Walk an actor's children without re-dispatching on the actor itself. */
     static void emitChildren(GraphBuilder b, Group group) {
         for (Actor child : group.getChildren()) {
@@ -275,7 +352,6 @@ final class ActorNodes {
             @Override
             public List<String> get() {
                 List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
-                lines.addAll(GameUi.infoLines(infoTarget(actor)));
                 lines.addAll(PartyLayouts.pools(actor));
                 return lines;
             }
@@ -383,19 +459,10 @@ final class ActorNodes {
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
-                GameUi.info(infoTarget(actor));
+                GameUi.info(actor);
             }
         };
         return vt;
-    }
-
-    // A ChOption radio row's own info listener is a dead end — the game builds
-    // it with null extra text yet it reports the click handled. The option's
-    // real description listens on the enclosing panel, so start the bubble
-    // above the row.
-    private static Actor infoTarget(Actor actor) {
-        return findCheckbox(actor) instanceof com.tann.dice.util.ui.RadioCheckbox
-                && actor.getParent() != null ? actor.getParent() : actor;
     }
 
     // The jukebox's currently-playing row: a LiveText (the game's only one)
