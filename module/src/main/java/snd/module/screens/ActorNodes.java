@@ -55,7 +55,7 @@ final class ActorNodes {
      * holds in one place is applied in no other.
      */
     static final class Place {
-        static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), null, false);
+        static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), null, false, false);
 
         /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
         final java.util.Map<String, String> glyphs;
@@ -67,24 +67,36 @@ final class ActorNodes {
         final java.util.function.Predicate<Actor> chosenBy;
         /** Each titled section is a Tab-stop of its own, and so is what lies between two of them. */
         final boolean sectionStops;
+        /**
+         * The place draws a die net with letters laid over its faces (the
+         * help page's Dice section, HelpPage.makeDicePositionExplain): the
+         * letters mark positions for the eye, and the legend beside the net
+         * says the same in words.
+         */
+        final boolean dieNetLetters;
 
         private Place(java.util.Map<String, String> glyphs, java.util.function.Predicate<Actor> chosenBy,
-                boolean sectionStops) {
+                boolean sectionStops, boolean dieNetLetters) {
             this.glyphs = glyphs;
             this.chosenBy = chosenBy;
             this.sectionStops = sectionStops;
+            this.dieNetLetters = dieNetLetters;
         }
 
         Place withSectionStops() {
-            return new Place(glyphs, chosenBy, true);
+            return new Place(glyphs, chosenBy, true, dieNetLetters);
         }
 
         static Place glyphs(java.util.Map<String, String> glyphs) {
-            return new Place(glyphs, null, false);
+            return new Place(glyphs, null, false, false);
         }
 
         static Place chosenBy(java.util.function.Predicate<Actor> test) {
-            return new Place(java.util.Collections.<String, String>emptyMap(), test, false);
+            return new Place(java.util.Collections.<String, String>emptyMap(), test, false, false);
+        }
+
+        static Place dieNetLetters() {
+            return new Place(java.util.Collections.<String, String>emptyMap(), null, false, true);
         }
     }
 
@@ -150,12 +162,10 @@ final class ActorNodes {
                 }
                 return;
             }
-            boolean dieNet = isDieNetDiagram(group);
+            boolean dieNet = place.dieNetLetters && isDieNetDiagram(group);
             for (Actor child : group.getChildren()) {
-                // Text laid over a die-net picture marks POSITIONS on it (the
-                // help page's L, M, T, B, r, R on the net's six faces): it
-                // means something only to the eye, and the legend beside the
-                // picture says the same in words ("L: leftmost").
+                // The letters over the net's six faces mean something only to
+                // the eye; the legend says them in words ("L: leftmost").
                 if (dieNet && child instanceof TextWriter) {
                     continue;
                 }
@@ -164,9 +174,8 @@ final class ActorNodes {
         }
     }
 
-    // A group drawn on one of the game's unfolded-die templates
-    // (SpecificSidesType.templateImage): HelpPage.makeDicePositionExplain's
-    // labelled net, CopySide's side-swap pictures.
+    // The net itself: a group drawn on one of the game's unfolded-die
+    // templates (SpecificSidesType.templateImage).
     private static boolean isDieNetDiagram(Group group) {
         for (Actor child : group.getChildren()) {
             if (!(child instanceof com.tann.dice.util.ImageActor)) {

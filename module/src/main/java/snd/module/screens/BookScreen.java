@@ -231,6 +231,9 @@ public class BookScreen extends AccessScreen {
     }
 
     private static ActorNodes.Place place(Object tab) {
+        if (tab == com.tann.dice.screens.dungeon.panels.book.page.helpPage.HelpType.Dice) {
+            return ActorNodes.Place.dieNetLetters();
+        }
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Jukebox) {
             return ActorNodes.Place.glyphs(JUKEBOX_GLYPHS);
         }
