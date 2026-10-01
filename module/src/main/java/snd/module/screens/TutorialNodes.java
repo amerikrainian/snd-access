@@ -36,17 +36,9 @@ final class TutorialNodes {
     }
 
     static void build(GraphBuilder b, DungeonScreen ds) {
-        TutorialHolder holder;
-        try {
-            holder = ds.getTutorialManager().tutorialHolder;
-        } catch (Throwable t) {
-            SndLog.error("tutorial holder read failed", t);
-            return;
-        }
-        if (holder == null || !holder.isVisible() || holder.getStage() == null
-                // Dismissed boxes slide offscreen (y = screen height) keeping
-                // their items; the never-shown box parks at -999.
-                || holder.getX() < -500 || holder.getY() >= com.tann.dice.Main.height) {
+        com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager manager = ds.getTutorialManager();
+        TutorialHolder holder = manager != null ? manager.tutorialHolder : null;
+        if (holder == null || holder.getStage() == null || !shown(manager, holder)) {
             return;
         }
         List<TutorialItem> items = items(holder);
@@ -109,10 +101,21 @@ final class TutorialNodes {
         b.popContext();
     }
 
-    // The box's close control: its only ImageActor with a listener.
+    // The box is up while the tutorial is on and the phase has items for it
+    // that are not all done (TutorialManager.showManagerForPhase, afterAction:
+    // otherwise it slides the box away, keeping its last items).
+    private static boolean shown(com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager manager,
+            TutorialHolder holder) {
+        List<?> actives = (List<?>) snd.module.Captured.field(manager,
+                com.tann.dice.screens.dungeon.panels.tutorial.TutorialManager.class, "actives");
+        return manager.isEnabled() && actives != null && !actives.isEmpty() && !holder.allComplete();
+    }
+
+    // The box's close control: the game's close image (TutorialHolder).
     private static Actor closeButton(TutorialHolder holder) {
         for (Actor child : holder.getChildren()) {
-            if (child instanceof com.tann.dice.util.ImageActor && GameUi.hasTannListener(child)) {
+            if (child instanceof com.tann.dice.util.ImageActor
+                    && ((com.tann.dice.util.ImageActor) child).tr == com.tann.dice.statics.Images.tut_close) {
                 return child;
             }
         }
