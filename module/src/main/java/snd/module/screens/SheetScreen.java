@@ -265,6 +265,16 @@ public class SheetScreen extends AccessScreen {
     }
 
     static String headerText(DungeonScreen ds, Ent ent) {
+        StringBuilder sb = new StringBuilder(identityText(ent));
+        String health = CombatScreen.healthText(ds, ent);
+        if (health != null) {
+            sb.append(", ").append(health);
+        }
+        return sb.toString();
+    }
+
+    /** The unit's name; a hero's colour and level besides. */
+    static String identityText(Ent ent) {
         StringBuilder sb = new StringBuilder(GameUi.entName(ent));
         if (ent instanceof Hero) {
             Hero hero = (Hero) ent;
@@ -272,10 +282,6 @@ public class SheetScreen extends AccessScreen {
             // ("grey heroes only"). The game defines no colour beyond its name.
             sb.append(", ").append(GameText.t(hero.getHeroCol().colName));
             sb.append(", ").append(Loc.get("combat", "level", "n", hero.getLevel()));
-        }
-        String health = CombatScreen.healthText(ds, ent);
-        if (health != null) {
-            sb.append(", ").append(health);
         }
         return sb.toString();
     }

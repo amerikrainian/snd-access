@@ -68,14 +68,45 @@ public final class UnitLines {
                 lines.add(aim);
             }
         }
+        body(lines, ent, present, true);
+        return lines;
+    }
 
+    /**
+     * A unit type, where no unit of it exists (the almanac's tiles, the
+     * Choose-Party class picker): what the game's panel for it shows, read
+     * from a unit of the type at rest, as the panel is built
+     * (HeroType.makeEnt). Its name, colour and level, its hp, then the rest
+     * as {@link #of(Ent)} gives it.
+     */
+    public static List<String> of(EntType type) {
+        return atRest(type.makeEnt());
+    }
+
+    /** A unit outside any fight (a type's fresh unit): its state is the game's blank one. */
+    static List<String> atRest(Ent ent) {
+        List<String> lines = new ArrayList<String>();
+        EntState state = ent.getState(FightLog.Temporality.Present);
+        lines.add(restHeader(ent, state));
+        body(lines, ent, state, false);
+        return lines;
+    }
+
+    /** "Thief, orange, level 1, 4 hp": who a unit at rest is and its hp. */
+    static String restHeader(Ent ent, EntState state) {
+        return SheetScreen.identityText(ent) + ", " + Loc.get("combat", "hp_full", "hp", state.getMaxHp());
+    }
+
+    // The sides, their rules, the statuses and traits the sheet draws, and
+    // the glossary entries the lines use.
+    private static void body(List<String> lines, Ent ent, EntState present, boolean rolledMarks) {
         // A rule is given once, however many sides carry the keyword.
         Set<String> rules = new LinkedHashSet<String>();
         EntSide[] sides = ent.getSides();
         for (int i : SideText.readingOrder()) {
             EntSideState side = sides[i].findState(FightLog.Temporality.Present, ent);
             String line = SideText.at(i, SideText.of(side));
-            lines.add(SheetScreen.isRolled(ent, i) ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
+            lines.add(rolledMarks && SheetScreen.isRolled(ent, i) ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
             try {
                 rules.addAll(CombatScreen.keywordRuleLines(side.getCalculatedEffect()));
             } catch (Throwable t) {
@@ -98,7 +129,6 @@ public final class UnitLines {
         referenced.removeAll(rules);
         lines.addAll(referenced);
         lines.addAll(Terms.glossary(lines));
-        return lines;
     }
 
     /**

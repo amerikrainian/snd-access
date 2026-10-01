@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.tann.dice.gameplay.content.ent.Ent;
+import com.tann.dice.gameplay.content.ent.type.HeroType;
+import com.tann.dice.gameplay.content.ent.type.MonsterType;
 import com.tann.dice.gameplay.content.item.Item;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
@@ -58,19 +60,29 @@ final class Buffers {
                 return NodeLines.lines(nav.focusedNode());
             }
         });
-        // What the control concerns (its subject), wherever it was declared.
+        // What the control concerns (its subject), wherever it was declared:
+        // a unit in the fight, or a unit type (a class, a monster) where no
+        // unit of it exists.
         focusFed(HERO, new Supplier<List<String>>() {
             @Override
             public List<String> get() {
                 Ent unit = CombatScreen.focusedUnit(nav);
-                return unit != null && unit.isPlayer() ? UnitLines.of(unit) : null;
+                if (unit != null) {
+                    return unit.isPlayer() ? UnitLines.of(unit) : null;
+                }
+                Object subject = nav.focusedSubject();
+                return subject instanceof HeroType ? UnitLines.of((HeroType) subject) : null;
             }
         });
         focusFed(MONSTER, new Supplier<List<String>>() {
             @Override
             public List<String> get() {
                 Ent unit = CombatScreen.focusedUnit(nav);
-                return unit != null && !unit.isPlayer() ? UnitLines.of(unit) : null;
+                if (unit != null) {
+                    return unit.isPlayer() ? null : UnitLines.of(unit);
+                }
+                Object subject = nav.focusedSubject();
+                return subject instanceof MonsterType ? UnitLines.of((MonsterType) subject) : null;
             }
         });
         focusFed(ITEMS, new Supplier<List<String>>() {
