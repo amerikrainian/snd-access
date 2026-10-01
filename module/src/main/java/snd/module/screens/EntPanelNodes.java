@@ -73,6 +73,29 @@ final class EntPanelNodes {
         for (Trait t : UnitLines.netTraits(ent, state)) {
             b.addItem(id(ent, "trait", n++), trait(ent, t));
         }
+
+        // The copy button the panel gains under the game's option
+        // (EntPanelInventory.layout → APIUtils.addCopyButton, which skips a
+        // name of "curse"): it copies the unit's name.
+        final String name = ent.getName(false);
+        if (com.tann.dice.gameplay.save.settings.option.OptionUtils.shouldShowCopy()
+                && !name.equalsIgnoreCase("curse")) {
+            NodeVtable copy = unitNode(ent);
+            copy.controlType = ControlTypes.BUTTON;
+            copy.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameText.t("copy");
+                }
+            }, AnnouncementKinds.LABEL));
+            copy.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    com.tann.dice.util.ui.ClipboardUtils.copyWithSoundAndToast(name);
+                }
+            };
+            b.addItem(id(ent, "copy"), copy);
+        }
     }
 
     private static EntState state(Ent ent) {
