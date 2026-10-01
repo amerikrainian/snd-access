@@ -157,6 +157,33 @@ public final class Captured {
     }
 
     /**
+     * Whether the holder's class declares a field of this name: for telling
+     * apart the game's anonymous classes that capture the same types under
+     * different names (the game is final, so its compiled names are fixed).
+     */
+    public static boolean declares(Object holder, String name) {
+        if (holder == null) {
+            return false;
+        }
+        Map<String, Field> fields = NAMED.get(holder.getClass());
+        if (fields == null) {
+            fields = new HashMap<String, Field>();
+            NAMED.put(holder.getClass(), fields);
+        }
+        Field field = fields.get(name);
+        if (field == null) {
+            try {
+                field = holder.getClass().getDeclaredField(name);
+                field.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+                field = NO_FIELD;
+            }
+            fields.put(name, field);
+        }
+        return field != NO_FIELD;
+    }
+
+    /**
      * A named field the game keeps out of reach (private or package-private),
      * declared on owner. A missing field is a game change: logged once, null.
      */

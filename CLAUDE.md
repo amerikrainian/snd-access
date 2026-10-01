@@ -283,14 +283,16 @@ Permanent/reloadable split (verified end-to-end):
   (`BookPage.showThing` swaps a tab's content without changing the tab) — or, when the place is
   anonymous `Pixl` output with nothing typed inside, have the seam hand the walk an
   `ActorNodes.Place`: that place's shorthand captions (`glyphs`: "fs" is "fullscreen" in the
-  cog menu and nowhere else) and how it marks a chosen button. A builder that expects something
+  cog menu and nowhere else) and how it tells a chosen button. A builder that expects something
   the game adds unconditionally logs once when it is missing (builds run every frame).
-- **A chosen button among plain buttons is told by colour, where the place says so.** The game
-  builds choose-one rows out of `StandardButton`s and keeps which one is chosen in no field —
-  only in the arguments the page was built with — so it is read off the colour:
-  `ChosenMark.LIGHT_BORDER` on the almanac's Modifier tab and in the leaderboard picker (the
-  modal the game names `leaderboard_modal`), `LIGHT_CAPTION` among `[grey]` ones on the TextMod
-  tab. No place, no "selected": the custom-mode magnifier is built with a light border too.
+- **A chosen button among plain buttons is read from what the buttons hold, where the place
+  says so.** The game builds choose-one rows out of `StandardButton`s and keeps which one is
+  chosen in no field — only in the arguments the page was built with, which the buttons'
+  runnables capture (`snd.module.Captured`). The place hands the walk an `ActorNodes.Place.chosenBy`
+  test: the leaderboard picker compares each button's board with the one on display, the
+  Modifier tab each filter's value with the current one the other row holds, the TextMod tab
+  each button with the page the game saved as shown. Never the drawn colour. No place, no
+  "selected".
 - **Focus whose node vanished stays in its Tab-stop.** Generic actor nodes are keyed per actor
   instance, and the game answers many buttons by rebuilding the page they sit on (a filter, a
   section switch) — every id in the stop changes at once. `KeyGraph.reconcile` then lands on the

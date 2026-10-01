@@ -48,15 +48,6 @@ final class ActorNodes {
         emit(b, actor, Place.PLAIN);
     }
 
-    /** How a place marks the chosen one of a row of plain buttons, colour being all it has. */
-    enum ChosenMark {
-        NONE,
-        /** A light border where the others keep their own colour. */
-        LIGHT_BORDER,
-        /** A light caption where every other one is greyed. */
-        LIGHT_CAPTION
-    }
-
     /**
      * What the place being read says of its own conventions. The screen that
      * hands an actor to the walk knows where it is (the cog menu by its
@@ -64,43 +55,36 @@ final class ActorNodes {
      * holds in one place is applied in no other.
      */
     static final class Place {
-        static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), ChosenMark.NONE);
-
-        /** Which button is the chosen one, read from what the buttons hold, where the place knows it. */
-        java.util.function.Predicate<Actor> chosenBy;
+        static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), null, false);
 
         /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
         final java.util.Map<String, String> glyphs;
-        final ChosenMark chosen;
+        /**
+         * Which of a row of plain buttons is the chosen one, read from what
+         * the buttons and the page hold, where the place keeps that nowhere
+         * else. Null: no button here is chosen.
+         */
+        final java.util.function.Predicate<Actor> chosenBy;
         /** Each titled section is a Tab-stop of its own, and so is what lies between two of them. */
         final boolean sectionStops;
 
-        Place(java.util.Map<String, String> glyphs, ChosenMark chosen) {
-            this(glyphs, chosen, false);
-        }
-
-        private Place(java.util.Map<String, String> glyphs, ChosenMark chosen, boolean sectionStops) {
+        private Place(java.util.Map<String, String> glyphs, java.util.function.Predicate<Actor> chosenBy,
+                boolean sectionStops) {
             this.glyphs = glyphs;
-            this.chosen = chosen;
+            this.chosenBy = chosenBy;
             this.sectionStops = sectionStops;
         }
 
         Place withSectionStops() {
-            return new Place(glyphs, chosen, true);
+            return new Place(glyphs, chosenBy, true);
         }
 
         static Place glyphs(java.util.Map<String, String> glyphs) {
-            return new Place(glyphs, ChosenMark.NONE);
-        }
-
-        static Place chosen(ChosenMark chosen) {
-            return new Place(java.util.Collections.<String, String>emptyMap(), chosen);
+            return new Place(glyphs, null, false);
         }
 
         static Place chosenBy(java.util.function.Predicate<Actor> test) {
-            Place place = new Place(java.util.Collections.<String, String>emptyMap(), ChosenMark.NONE);
-            place.chosenBy = test;
-            return place;
+            return new Place(java.util.Collections.<String, String>emptyMap(), test, false);
         }
     }
 
@@ -417,8 +401,7 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        boolean chosen = place.chosenBy != null ? place.chosenBy.test(actor)
-                                : chosenAmongButtons(actor, place.chosen) || plottedSide(actor);
+                        boolean chosen = place.chosenBy != null ? place.chosenBy.test(actor) : plottedSide(actor);
                         return chosen ? Loc.get("ui", "state.selected") : null;
                     }
                 }, AnnouncementKinds.SELECTED),
@@ -607,74 +590,6 @@ final class ActorNodes {
             snd.contracts.SndLog.error("hero tile read failed", t);
             return null;
         }
-    }
-
-    private static java.lang.reflect.Field buttonColField;
-
-    private static com.badlogic.gdx.graphics.Color buttonCol(Actor button) throws Exception {
-        if (buttonColField == null) {
-            buttonColField = StandardButton.class.getDeclaredField("col");
-            buttonColField.setAccessible(true);
-        }
-        return (com.badlogic.gdx.graphics.Color) buttonColField.get(button);
-    }
-
-    // The game builds a choose-one row out of plain StandardButtons and marks
-    // the chosen one by colour alone: which button is chosen it keeps in no
-    // field, only in the arguments the page was built with. How a place does
-    // it is the place's to say (ChosenMark); a light button anywhere else is
-    // just a light button.
-    //
-    // LIGHT_BORDER: the almanac's modifier filters (Curses / Blessings / Both,
-    // and the generation row under them), the leaderboard picker.
-    //
-    // LIGHT_CAPTION: the TextMod page's info / api / api-2 sections, its type
-    // row and its letter row ("[notranslate][light]api" among
-    // "[notranslate][grey]info"). The greyed siblings are what tells a row of
-    // this kind from the page's other buttons.
-    private static boolean chosenAmongButtons(Actor actor, ChosenMark mark) {
-        if (mark == ChosenMark.NONE || !(actor instanceof StandardButton) || actor.getParent() == null) {
-            return false;
-        }
-        try {
-            StandardButton button = (StandardButton) actor;
-            if (mark == ChosenMark.LIGHT_BORDER) {
-                return buttonCol(button) == com.tann.dice.util.Colours.light;
-            }
-            if (!openingTags(button).endsWith("[light]")) {
-                return false;
-            }
-            boolean greyedSibling = false;
-            for (Actor sibling : actor.getParent().getChildren()) {
-                if (sibling == actor || !(sibling instanceof StandardButton)) {
-                    continue;
-                }
-                String tags = openingTags((StandardButton) sibling);
-                if (!tags.contains("[grey]") || tags.endsWith("[light]")) {
-                    return false;
-                }
-                greyedSibling = true;
-            }
-            return greyedSibling;
-        } catch (Throwable t) {
-            snd.contracts.SndLog.error("button colour read failed", t);
-            return false;
-        }
-    }
-
-    private static final java.util.regex.Pattern OPENING_TAGS =
-            java.util.regex.Pattern.compile("^(\\[[^\\]]*\\])+");
-
-    // The markup tags a button's caption opens with ("[notranslate][light]"
-    // of "[notranslate][light]api"); empty for an image button or a bare
-    // caption.
-    private static String openingTags(StandardButton button) {
-        String text = button.getText();
-        if (text == null) {
-            return "";
-        }
-        java.util.regex.Matcher tags = OPENING_TAGS.matcher(text);
-        return tags.find() ? tags.group() : "";
     }
 
     private static java.lang.reflect.Field abilityTileField;

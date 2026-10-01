@@ -148,6 +148,88 @@ public class BookScreen extends AccessScreen {
         JUKEBOX_GLYPHS.put("->", "glyph.next_song");
     }
 
+    // The Modifier tab's two filter rows (LedgerUtils.makeModifiersGroup).
+    // Each button's runnable holds its own value (val$blessLoop, val$mt) and
+    // the page's current value of the other row (val$genType, val$bless), so
+    // a button is the chosen one when its value is the current one the other
+    // row's buttons hold. Tested when a button is spoken.
+    private static final java.util.function.Predicate<Actor> CHOSEN_MODIFIER_FILTER =
+            new java.util.function.Predicate<Actor>() {
+                @Override
+                public boolean test(Actor actor) {
+                    Runnable own = filterRunnable(actor);
+                    if (own == null || actor.getParent() == null) {
+                        return false;
+                    }
+                    String ownName = snd.module.Captured.declares(own, "val$blessLoop") ? "val$blessLoop" : "val$mt";
+                    String currentName = ownName.equals("val$blessLoop") ? "val$bless" : "val$genType";
+                    for (Actor sibling : actor.getParent().getChildren()) {
+                        Runnable other = filterRunnable(sibling);
+                        if (other != null && snd.module.Captured.declares(other, currentName)) {
+                            return java.util.Objects.equals(
+                                    snd.module.Captured.field(own, own.getClass(), ownName),
+                                    snd.module.Captured.field(other, other.getClass(), currentName));
+                        }
+                    }
+                    return false;
+                }
+            };
+
+    private static Runnable filterRunnable(Actor actor) {
+        if (!(actor instanceof com.tann.dice.util.ui.standardButton.StandardButton)) {
+            return null;
+        }
+        Runnable run = snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) actor);
+        return snd.module.Captured.builtBy(run,
+                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerUtils.class, "makeModifiersGroup")
+                ? run : null;
+    }
+
+    // The TextMod tab's rows (APIUtils), against the page the game saved as
+    // shown (Settings.lastTextmodPage: "1" info, "2" api, "3" and the pipe's
+    // tag for api-2): the section row's buttons hold their page index, the
+    // letter row's their pipe, and the type row leaves the shown type's
+    // button without a runnable.
+    private static final java.util.function.Predicate<Actor> CHOSEN_TEXTMOD_PAGE =
+            new java.util.function.Predicate<Actor>() {
+                @Override
+                public boolean test(Actor actor) {
+                    if (!(actor instanceof com.tann.dice.util.ui.standardButton.StandardButton)) {
+                        return false;
+                    }
+                    String shown = com.tann.dice.Main.getSettings().getLastTextmodPage();
+                    if (shown == null || shown.isEmpty()) {
+                        return false;
+                    }
+                    Runnable run = snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) actor);
+                    Class<?> api = com.tann.dice.screens.dungeon.panels.book.page.stuffPage.APIUtils.class;
+                    if (snd.module.Captured.builtBy(run, api, "makeTopPixl")) {
+                        return Integer.valueOf(shown.charAt(0) - '1').equals(snd.module.Captured.primitive(run, int.class));
+                    }
+                    if (snd.module.Captured.builtBy(run, api, "makeTMPageAPI2")) {
+                        com.tann.dice.gameplay.content.gen.pipe.Pipe pipe =
+                                snd.module.Captured.value(run, com.tann.dice.gameplay.content.gen.pipe.Pipe.class);
+                        return pipe != null && shown.equals("3" + pipe.getIdTag());
+                    }
+                    return run == null && shown.startsWith("3") && inTypeRow(actor);
+                }
+            };
+
+    // A button among the api-2 page's type buttons, whose runnables hold a PipeType.
+    private static boolean inTypeRow(Actor actor) {
+        if (actor.getParent() == null) {
+            return false;
+        }
+        for (Actor sibling : actor.getParent().getChildren()) {
+            if (sibling instanceof com.tann.dice.util.ui.standardButton.StandardButton && snd.module.Captured.value(
+                    snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) sibling),
+                    com.tann.dice.screens.dungeon.panels.book.page.stuffPage.PipeType.class) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static ActorNodes.Place place(Object tab) {
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Jukebox) {
             return ActorNodes.Place.glyphs(JUKEBOX_GLYPHS);
@@ -155,14 +237,11 @@ public class BookScreen extends AccessScreen {
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Unlock) {
             return ActorNodes.Place.glyphs(UNLOCK_GLYPHS);
         }
-        // The filter rows (LedgerUtils.makeModifiersGroup): the chosen filter
-        // is an argument the page was rebuilt with, drawn as a light border.
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Modifier) {
-            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_BORDER);
+            return ActorNodes.Place.chosenBy(CHOSEN_MODIFIER_FILTER);
         }
-        // The section, type and letter rows (APIUtils): a light caption among greyed ones.
         if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.TextMod) {
-            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_CAPTION);
+            return ActorNodes.Place.chosenBy(CHOSEN_TEXTMOD_PAGE);
         }
         return ActorNodes.Place.PLAIN;
     }
