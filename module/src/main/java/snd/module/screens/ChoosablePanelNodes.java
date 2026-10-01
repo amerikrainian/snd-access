@@ -100,8 +100,15 @@ public final class ChoosablePanelNodes {
             return ((com.tann.dice.gameplay.modifier.Modifier) choosable).getMType()
                     != com.tann.dice.gameplay.modifier.ModifierType.Unrated;
         }
-        return snd.contracts.speech.TextFilter.clean(choosable.getTierString()).matches(".*[0-9IVXLC].*");
+        // A choosable's big panel (ConcisePanel) is an item's or a modifier's;
+        // another kind has no tier rule here.
+        if (untiered.add(choosable.getClass())) {
+            snd.contracts.SndLog.error("no tier rule for " + choosable.getClass().getName(), null);
+        }
+        return false;
     }
+
+    private static final java.util.Set<Class<?>> untiered = new java.util.HashSet<Class<?>>();
 
     static void emit(GraphBuilder b, final ConcisePanel panel) {
         final Choosable choosable = choosable(panel);
