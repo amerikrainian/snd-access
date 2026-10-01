@@ -300,9 +300,11 @@ Permanent/reloadable split (verified end-to-end):
   the stop when the stop itself is gone.
 - **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
   pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
-  achievement's description). `GameUi.activate`/`info` notice a text-only panel arriving on the
-  modal stack, speak it where the player stands, pop it, and keep it for that control's buffer
-  (`GameUi.infoLines`). A panel with anything to click stays a modal, read by `GameModalScreen`.
+  achievement's description). `GameUi.activate`/`info` notice such a panel arriving on the
+  modal stack — one the game closes with a click on it (`Screen.SELF_POP`) and with nothing to
+  operate — speak it where the player stands, pop it, and keep it for that control's buffer
+  (`GameUi.infoLines`). A panel with anything to click, or one the game keeps up until
+  dismissed (a leaderboard while "Loading..."), stays a modal, read by `GameModalScreen`.
 - **Escape closes one panel, not all of them.** The game's Escape is `Screen.popAllMedium` —
   everything at once, which from a details panel over the settings lands on the dungeon. A
   screen reading a stacked panel answers `onCancel` with `GameUi.popTopModalOnly()` (what a click
