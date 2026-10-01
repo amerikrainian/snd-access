@@ -20,13 +20,32 @@ final class SpecialPips {
 
     /** A status or trait in full; a marked pip's with the pip named in place of its image. */
     static String describe(Personal p) {
-        String text = GameText.t(p.describeForTriggerPanel());
         if (!(p instanceof SpecialHp)) {
-            return text;
+            return GameText.t(p.describeForTriggerPanel());
         }
-        // SpecialHp.describeForSelfBuff: image tags, then " = ", then the rule.
-        int eq = text.indexOf(" = ");
-        return Loc.get("combat", "pip", "rule", eq < 0 ? text : text.substring(eq + 3));
+        // SpecialHp.describeForSelfBuff joins the pip's image to its rule and
+        // where the pips sit; the rule and the place, from their own parts.
+        return Loc.get("combat", "pip", "rule", rule((SpecialHp) p));
+    }
+
+    private static java.lang.reflect.Method ruleMethod;
+
+    private static String rule(SpecialHp hp) {
+        try {
+            if (ruleMethod == null) {
+                ruleMethod = SpecialHp.class.getDeclaredMethod("describe");
+                ruleMethod.setAccessible(true);
+            }
+            Object where = snd.module.Captured.field(hp, SpecialHp.class, "pipLoc");
+            String place = where != null
+                    ? " [grey](" + GameText.t(((com.tann.dice.gameplay.trigger.personal.specialPips.pipLoc.PipLoc) where)
+                            .describe()) + ")[cu]"
+                    : "";
+            return GameText.t((String) ruleMethod.invoke(hp)) + place;
+        } catch (Exception e) {
+            snd.contracts.SndLog.error("special hp rule read failed", e);
+            return GameText.t(hp.describeForTriggerPanel());
+        }
     }
 
     /**
