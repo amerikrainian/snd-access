@@ -244,16 +244,26 @@ final class LedgerNodes {
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
+                notePlaceLines(tile, subject, facts);
                 GameUi.activate(tile);
             }
         };
         vt.onSecondary = new Runnable() {
             @Override
             public void run() {
+                notePlaceLines(tile, subject, facts);
                 GameUi.info(tile);
             }
         };
         return vt;
+    }
+
+    // An item's panel opened from the almanac carries the page's chosen
+    // record (LedgerUtils.makeItemsGroup draws it onto the panel).
+    private static void notePlaceLines(Actor tile, Object subject, LedgerFacts facts) {
+        String chosen = facts != null && subject instanceof Item ? facts.chosenLine(subject) : null;
+        GameUi.placeLines(tile, chosen != null ? java.util.Collections.singletonList(chosen)
+                : java.util.Collections.<String>emptyList());
     }
 
     private static String joined(List<String> parts) {

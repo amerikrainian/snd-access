@@ -14,12 +14,12 @@ import snd.module.GameText;
  * subject, so here it is named, and the bar's next marked pip is given as the
  * hp that removing it leaves.
  */
-final class SpecialPips {
+public final class SpecialPips {
     private SpecialPips() {
     }
 
     /** A status or trait in full; a marked pip's with the pip named in place of its image. */
-    static String describe(Personal p) {
+    public static String describe(Personal p) {
         if (!(p instanceof SpecialHp)) {
             return GameText.t(p.describeForTriggerPanel());
         }

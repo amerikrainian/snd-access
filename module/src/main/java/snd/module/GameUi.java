@@ -172,7 +172,7 @@ public final class GameUi {
         if (top == null || top == topBefore || !selfPops(top) || !isTextOnly(top)) {
             return;
         }
-        List<String> lines = popupLines(top);
+        List<String> lines = popupLines(top, source);
         if (lines.isEmpty()) {
             return;
         }
@@ -196,80 +196,99 @@ public final class GameUi {
     /** The lines of the info popup this control last answered with, for its control buffer. */
     public static List<String> infoLines(Actor source) {
         Actor popup = INFO_POPUPS.get(source);
-        return popup != null ? popupLines(popup) : new ArrayList<String>();
+        return popup != null ? popupLines(popup, source) : new ArrayList<String>();
     }
 
-    // A popup's lines: its drawn text — except an item's or modifier's big
-    // panel, which reads from the model like everywhere else (name with its
-    // tier, not a bare "1"; the description whole), followed by whatever the
-    // game drew on it besides (the almanac's "chosen 1/1 (100%)").
-    private static List<String> popupLines(Actor popup) {
-        List<String> drawn = textsUnder(popup);
+    // What the place that opened a popup adds to it, keyed by the control
+    // that opens it (the almanac's chosen record on an item's panel).
+    private static final java.util.Map<Actor, List<String>> PLACE_LINES =
+            new java.util.WeakHashMap<Actor, List<String>>();
+
+    /** Lines the place puts on the popup this control opens, as the game draws them onto it. */
+    public static void placeLines(Actor source, List<String> lines) {
+        PLACE_LINES.put(source, lines);
+    }
+
+    // A popup's lines, from what it shows: an explanation panel's spell, side
+    // or status (Explanel.showing) with its keyword rules and the dialog lines
+    // the game added; an item's or modifier's big panel from its choosable
+    // (ChoosablePanelNodes). The place's own lines follow. Anything else, a
+    // panel of loose text, is its drawn text.
+    private static List<String> popupLines(Actor popup, Actor source) {
+        List<String> lines = null;
         if (popup instanceof com.tann.dice.screens.dungeon.panels.Explanel.Explanel) {
-            // A panel opened with its keyword boxes on already draws the rules.
-            StringBuilder shown = new StringBuilder();
-            for (String line : drawn) {
-                shown.append(snd.contracts.speech.TextFilter.clean(line).toLowerCase()).append('\n');
-            }
-            for (String extra : explanelExtras((com.tann.dice.screens.dungeon.panels.Explanel.Explanel) popup)) {
-                String clean = snd.contracts.speech.TextFilter.clean(extra).toLowerCase();
-                String rules = clean.substring(clean.indexOf(": ") + 1).trim();
-                if (shown.indexOf(rules) < 0) {
-                    drawn.add(extra);
-                }
-            }
-            return drawn;
+            lines = explanelLines((com.tann.dice.screens.dungeon.panels.Explanel.Explanel) popup);
+        } else if (popup instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) {
+            lines = snd.module.screens.ChoosablePanelNodes.lines(
+                    (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) popup);
         }
-        if (!(popup instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel)) {
-            return drawn;
-        }
-        List<String> lines = snd.module.screens.ChoosablePanelNodes.lines(
-                (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) popup);
         if (lines == null) {
-            return drawn;
+            return textsUnder(popup);
         }
-        StringBuilder said = new StringBuilder();
-        for (String line : lines) {
-            said.append(snd.contracts.speech.TextFilter.clean(line).toLowerCase()).append('\n');
-        }
-        for (String extra : drawn) {
-            String clean = snd.contracts.speech.TextFilter.clean(extra).toLowerCase();
-            if (!clean.isEmpty() && said.indexOf(clean) < 0) {
-                lines.add(extra);
-            }
+        List<String> place = PLACE_LINES.get(source);
+        if (place != null) {
+            lines.addAll(place);
         }
         return lines;
     }
 
-    private static java.lang.reflect.Field explanelShowingField;
-
-    // What an ability's or a die side's explanation panel draws as pictures or
-    // leaves out: a spell's mana cost (pips), a tactic's (die faces), and the
-    // rules of the keywords it names — the almanac opens these panels with
-    // the keyword boxes off.
-    private static List<String> explanelExtras(com.tann.dice.screens.dungeon.panels.Explanel.Explanel panel) {
+    // Explanel: its subject as the game words it, then the rules of the
+    // keywords it uses, then whatever the game added below it as a dialog
+    // (its extras that are not keyword boxes). Null for a panel built
+    // without a subject.
+    @SuppressWarnings("unchecked")
+    private static List<String> explanelLines(com.tann.dice.screens.dungeon.panels.Explanel.Explanel panel) {
+        Class<?> cls = com.tann.dice.screens.dungeon.panels.Explanel.Explanel.class;
+        Object showing = Captured.field(panel, cls, "showing");
         List<String> lines = new ArrayList<String>();
-        try {
-            if (explanelShowingField == null) {
-                explanelShowingField = com.tann.dice.screens.dungeon.panels.Explanel.Explanel.class
-                        .getDeclaredField("showing");
-                explanelShowingField.setAccessible(true);
+        if (showing instanceof com.tann.dice.gameplay.effect.targetable.ability.Ability) {
+            com.tann.dice.gameplay.effect.targetable.ability.Ability ability =
+                    (com.tann.dice.gameplay.effect.targetable.ability.Ability) showing;
+            lines.add(GameText.t(ability.getTitle()));
+            lines.add(GameText.t(ability.describe()));
+            String cost = snd.module.screens.CombatScreen.baseCostText(ability);
+            if (cost != null) {
+                lines.add(cost);
             }
-            Object showing = explanelShowingField.get(panel);
-            if (showing instanceof com.tann.dice.gameplay.effect.targetable.ability.Ability) {
-                com.tann.dice.gameplay.effect.targetable.ability.Ability ability =
-                        (com.tann.dice.gameplay.effect.targetable.ability.Ability) showing;
-                String cost = snd.module.screens.CombatScreen.baseCostText(ability);
-                if (cost != null) {
-                    lines.add(cost);
+            lines.addAll(snd.module.screens.Terms.forEff(ability.getDerivedEffects()));
+        } else if (showing instanceof com.tann.dice.gameplay.content.ent.die.side.EntSide) {
+            com.tann.dice.gameplay.content.ent.die.side.EntSide side =
+                    (com.tann.dice.gameplay.content.ent.die.side.EntSide) showing;
+            // The unit the side is shown for: the side panel the explanation
+            // draws holds it (Explanel(EntSide, Ent)); none for a bare side.
+            com.tann.dice.gameplay.content.ent.Ent source = null;
+            for (Actor child : panel.getChildren()) {
+                if (child instanceof com.tann.dice.screens.dungeon.panels.DieSidePanel) {
+                    source = (com.tann.dice.gameplay.content.ent.Ent) Captured.field(child,
+                            com.tann.dice.screens.dungeon.panels.DieSidePanel.class, "ent");
                 }
-                lines.addAll(snd.module.screens.Terms.forEff(ability.getDerivedEffects()));
-            } else if (showing instanceof com.tann.dice.gameplay.content.ent.die.side.EntSide) {
-                lines.addAll(snd.module.screens.Terms.forEff(
-                        ((com.tann.dice.gameplay.content.ent.die.side.EntSide) showing).getBaseEffect()));
             }
-        } catch (Throwable t) {
-            SndLog.error("explanation panel read failed", t);
+            com.tann.dice.gameplay.effect.eff.Eff effect = side.getBaseEffect();
+            if (source != null) {
+                com.tann.dice.gameplay.fightLog.EntSideState state =
+                        side.findState(com.tann.dice.gameplay.fightLog.FightLog.Temporality.Visual, source);
+                if (state != null) {
+                    effect = state.getCalculatedEffect();
+                }
+            }
+            lines.add(GameText.t(side.toString(source)));
+            lines.addAll(snd.module.screens.Terms.forEff(effect));
+        } else if (showing instanceof com.tann.dice.gameplay.trigger.personal.Personal) {
+            com.tann.dice.gameplay.trigger.personal.Personal personal =
+                    (com.tann.dice.gameplay.trigger.personal.Personal) showing;
+            lines.add(snd.module.screens.SpecialPips.describe(personal));
+            lines.addAll(snd.module.screens.Terms.forPersonal(personal));
+        } else {
+            return null;
+        }
+        List<Actor> extras = (List<Actor>) Captured.field(panel, cls, "extras");
+        List<Actor> keywordBoxes = (List<Actor>) Captured.field(panel, cls, "belowActors");
+        if (extras != null) {
+            for (Actor extra : extras) {
+                if (keywordBoxes == null || !keywordBoxes.contains(extra)) {
+                    lines.addAll(textsUnder(extra));
+                }
+            }
         }
         return lines;
     }
