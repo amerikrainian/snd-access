@@ -32,6 +32,7 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.KeyOffer;
+import snd.module.Captured;
 import snd.module.ChoicePhases;
 import snd.module.GameKeys;
 import snd.module.GameText;
@@ -368,80 +369,73 @@ public class ChoiceScreen extends AccessScreen {
     private boolean rerollMissReported;
 
     // The tiny unlabeled icon button top-right of first-fight offers: reroll
-    // the starting party and options. Found by its texture under the offer
-    // group; activation fires the game's own listener, warning dialogs and
-    // all.
+    // the starting party and options. The game adds it to the offer group
+    // under exactly these conditions (ChoicePhase.addRerollButtonMaybe), and
+    // greys it when no reroll is left; activation fires its own listener,
+    // warning dialogs and all.
     private void buildAnticheeseReroll(GraphBuilder b, ChoicePhase p, int optionCount) {
-        try {
-            DungeonScreen ds = DungeonScreen.get();
-            if (ds == null || optionCount == 2) {
-                return; // mirrors the game's addRerollButtonMaybe condition
-            }
-            com.tann.dice.gameplay.context.DungeonContext dc = ds.getDungeonContext();
-            if (!dc.isFirstLevel() || !dc.getContextConfig().usesAnticheese()) {
-                return;
-            }
-            Group group = ChoicePhases.choiceGroup(p);
-            if (group == null) {
-                return;
-            }
-            final Actor button = findFlaffButton(group);
-            if (button == null) {
-                // The game adds it under exactly the conditions above. Built
-                // every frame, so said once per miss.
-                if (!rerollMissReported) {
-                    rerollMissReported = true;
-                    SndLog.error("first-fight reroll button not found in the offer", null);
-                }
-                return;
-            }
-            rerollMissReported = false;
-            NodeVtable vt = new NodeVtable();
-            vt.controlType = ControlTypes.BUTTON;
-            vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
-                @Override
-                public String get() {
-                    return Loc.get("ui", "choice.reroll_start");
-                }
-            }, AnnouncementKinds.LABEL));
-            vt.onActivate = new Runnable() {
-                @Override
-                public void run() {
-                    GameUi.activate(button);
-                }
-            };
-            b.addItem(ControlId.referenced(button, CompositeKey.of("choice", "anticheese")), vt);
-        } catch (Throwable t) {
-            SndLog.error("anticheese reroll node failed", t);
+        DungeonScreen ds = DungeonScreen.get();
+        if (ds == null || optionCount == 2) {
+            return;
         }
+        com.tann.dice.gameplay.context.DungeonContext dc = ds.getDungeonContext();
+        if (!dc.isFirstLevel() || !dc.getContextConfig().usesAnticheese()) {
+            return;
+        }
+        Group group = ChoicePhases.choiceGroup(p);
+        if (group == null) {
+            return;
+        }
+        final Actor button = rerollButton(group);
+        if (button == null) {
+            // Built every frame, so said once per miss.
+            if (!rerollMissReported) {
+                rerollMissReported = true;
+                SndLog.error("first-fight reroll button not found in the offer", null);
+            }
+            return;
+        }
+        rerollMissReported = false;
+        final com.tann.dice.gameplay.context.config.ContextConfig cc = dc.getContextConfig();
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", "choice.reroll_start");
+                    }
+                }, AnnouncementKinds.LABEL),
+                // What the game says on pressing it: why it is greyed, or
+                // that this reroll costs a loss.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        com.tann.dice.gameplay.save.antiCheese.AnticheeseData acd = cc.getAnticheese();
+                        if (acd != null && !acd.canReroll()) {
+                            return GameText.t("Reach fight 3 on this mode or fight 10 on some other modes to reroll again.");
+                        }
+                        return acd != null && acd.rerollCountsAsLoss()
+                                ? GameText.t("This will count as a loss because you have already rerolled once without playing")
+                                : null;
+                    }
+                }, AnnouncementKinds.TOOLTIP));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                GameUi.activate(button);
+            }
+        };
+        b.addItem(ControlId.structural(CompositeKey.of("choice", "anticheese")), vt);
     }
 
-    // The reroll button is the direct child of the offer group that carries a
-    // listener and the flaff icon.
-    private static Actor findFlaffButton(Group group) {
+    private static Actor rerollButton(Group group) {
         for (Actor child : group.getChildren()) {
-            if (!GameUi.hasTannListener(child)) {
-                continue;
-            }
-            if (hasFlaffImage(child)) {
+            if (Captured.listenerBuiltBy(child, ChoicePhase.class, "addRerollButtonMaybe") != null) {
                 return child;
             }
         }
         return null;
-    }
-
-    private static boolean hasFlaffImage(Actor actor) {
-        if (actor instanceof com.tann.dice.util.ImageActor) {
-            return ((com.tann.dice.util.ImageActor) actor).tr == com.tann.dice.statics.Images.flaff;
-        }
-        if (actor instanceof Group) {
-            for (Actor child : ((Group) actor).getChildren()) {
-                if (hasFlaffImage(child)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     // ---- what each option IS: name, short value, full effect ----
