@@ -314,9 +314,29 @@ public class LevelEndScreen extends AccessScreen {
             }
         }
         if (phase instanceof ChoicePhase) {
-            String header = ChoicePhases.header((ChoicePhase) phase);
+            ChoicePhase choice = (ChoicePhase) phase;
+            String header = ChoicePhases.header(choice);
             if (header != null) {
                 return header;
+            }
+            // An optional offer has no header and an icon for a button: its
+            // own message, else what it offers.
+            String top = ChoicePhases.topMessage(choice);
+            if (top != null && !top.trim().isEmpty()) {
+                return GameText.t(top);
+            }
+            List<com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable> options =
+                    ChoicePhases.options(choice);
+            if (!options.isEmpty()) {
+                return ChoiceScreen.nameOf(options.get(0));
+            }
+        }
+        if (phase instanceof com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.SeqPhase) {
+            // A choice of paths: its message, where its button says "chain".
+            Object message = snd.module.Captured.field(phase,
+                    com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.SeqPhase.class, "message");
+            if (message != null) {
+                return GameText.t((String) message);
             }
         }
         String key = fixedRewardKey(phase);
