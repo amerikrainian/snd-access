@@ -742,26 +742,12 @@ final class ActorNodes {
         if (jukebox != null) {
             return jukebox;
         }
-        com.tann.dice.util.ui.Checkbox box = findCheckbox(actor);
-        if (box == null) {
+        // Every check box the game draws is an option's (read as the option)
+        // or the jukebox's (above); one that is neither says its own state.
+        if (!(actor instanceof com.tann.dice.util.ui.Checkbox)) {
             return null;
         }
-        return Loc.get("ui", box.isOn() ? "state.checked" : "state.unchecked");
-    }
-
-    private static com.tann.dice.util.ui.Checkbox findCheckbox(Actor actor) {
-        if (actor instanceof com.tann.dice.util.ui.Checkbox) {
-            return (com.tann.dice.util.ui.Checkbox) actor;
-        }
-        if (actor instanceof Group) {
-            for (Actor child : ((Group) actor).getChildren()) {
-                com.tann.dice.util.ui.Checkbox found = findCheckbox(child);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
+        return Loc.get("ui", ((com.tann.dice.util.ui.Checkbox) actor).isOn() ? "state.checked" : "state.unchecked");
     }
 
     private static java.lang.reflect.Field choosableField;
