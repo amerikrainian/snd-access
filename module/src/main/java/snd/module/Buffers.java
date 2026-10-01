@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.tann.dice.gameplay.content.ent.Ent;
+import com.tann.dice.gameplay.content.ent.type.EntType;
 import com.tann.dice.gameplay.content.ent.type.HeroType;
 import com.tann.dice.gameplay.content.ent.type.MonsterType;
 import com.tann.dice.gameplay.content.item.Item;
@@ -61,28 +62,18 @@ final class Buffers {
             }
         });
         // What the control concerns (its subject), wherever it was declared:
-        // a unit in the fight, or a unit type (a class, a monster) where no
-        // unit of it exists.
+        // a unit in the fight, a unit outside it (a class's details panel),
+        // or a unit type (a class, a monster) where no unit of it exists.
         focusFed(HERO, new Supplier<List<String>>() {
             @Override
             public List<String> get() {
-                Ent unit = CombatScreen.focusedUnit(nav);
-                if (unit != null) {
-                    return unit.isPlayer() ? UnitLines.of(unit) : null;
-                }
-                Object subject = nav.focusedSubject();
-                return subject instanceof HeroType ? UnitLines.of((HeroType) subject) : null;
+                return unitLines(true);
             }
         });
         focusFed(MONSTER, new Supplier<List<String>>() {
             @Override
             public List<String> get() {
-                Ent unit = CombatScreen.focusedUnit(nav);
-                if (unit != null) {
-                    return unit.isPlayer() ? null : UnitLines.of(unit);
-                }
-                Object subject = nav.focusedSubject();
-                return subject instanceof MonsterType ? UnitLines.of((MonsterType) subject) : null;
+                return unitLines(false);
             }
         });
         focusFed(ITEMS, new Supplier<List<String>>() {
@@ -115,6 +106,21 @@ final class Buffers {
                 return events.lines();
             }
         }).followLatest = true;
+    }
+
+    private List<String> unitLines(boolean heroes) {
+        Ent unit = CombatScreen.focusedUnit(nav);
+        if (unit != null) {
+            return unit.isPlayer() == heroes ? UnitLines.of(unit) : null;
+        }
+        Object subject = nav.focusedSubject();
+        if (subject instanceof Ent) {
+            return ((Ent) subject).isPlayer() == heroes ? UnitLines.atRest((Ent) subject) : null;
+        }
+        if (heroes ? subject instanceof HeroType : subject instanceof MonsterType) {
+            return UnitLines.of((EntType) subject);
+        }
+        return null;
     }
 
     private static boolean inDungeon() {

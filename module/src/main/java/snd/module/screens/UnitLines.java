@@ -83,8 +83,8 @@ public final class UnitLines {
         return atRest(type.makeEnt());
     }
 
-    /** A unit outside any fight (a type's fresh unit): its state is the game's blank one. */
-    static List<String> atRest(Ent ent) {
+    /** A unit outside the fight (a type's fresh unit, a panel's): its state is the game's blank one. */
+    public static List<String> atRest(Ent ent) {
         List<String> lines = new ArrayList<String>();
         EntState state = ent.getState(FightLog.Temporality.Present);
         lines.add(restHeader(ent, state));
@@ -94,7 +94,9 @@ public final class UnitLines {
 
     /** "Thief, orange, level 1, 4 hp": who a unit at rest is and its hp. */
     static String restHeader(Ent ent, EntState state) {
-        return SheetScreen.identityText(ent) + ", " + Loc.get("combat", "hp_full", "hp", state.getMaxHp());
+        String hp = state.isAtMaxHp() ? Loc.get("combat", "hp_full", "hp", state.getMaxHp())
+                : Loc.get("combat", "hp", "hp", state.getHp(), "max", state.getMaxHp());
+        return SheetScreen.identityText(ent) + ", " + hp;
     }
 
     /** "4 hp": a unit type's hp, as the panel for it shows. */

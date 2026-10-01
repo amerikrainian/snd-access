@@ -108,6 +108,11 @@ final class ActorNodes {
             LeaderboardNodes.emit(b, (com.tann.dice.gameplay.leaderboard.LeaderboardDisplay) actor);
             return;
         }
+        if (actor instanceof com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) {
+            // A unit's panel, its parts read from the unit.
+            EntPanelNodes.emit(b, (com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) actor);
+            return;
+        }
         if (interactiveLeaf(actor)) {
             b.addItem(actorId(actor), buttonFor(actor, place));
             return;
