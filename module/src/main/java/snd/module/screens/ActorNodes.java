@@ -294,6 +294,9 @@ final class ActorNodes {
                             label = nowPlayingLabel(actor);
                         }
                         if (label == null) {
+                            label = jukeboxLabel(actor);
+                        }
+                        if (label == null) {
                             label = glyphName(GameUi.labelOf(actor), place.glyphs);
                         }
                         if (label == null) {
@@ -414,6 +417,73 @@ final class ActorNodes {
             }
         }
         return null;
+    }
+
+    // ---- the jukebox's songs (JukeboxUtils.makeSong / makeCheckbox /
+    // makeMusicianActor): a song row's listener holds its song, a check
+    // box's toggle runnable its song or, for the box over a musician's
+    // songs, the musician. Named and stated from those, not the three
+    // stacked copies of the name the row draws. ----
+
+    private static com.tann.dice.statics.sound.music.MusicData songOf(Actor actor) {
+        return snd.module.Captured.byListener(actor, com.tann.dice.statics.sound.music.MusicData.class);
+    }
+
+    private static Runnable toggleOf(com.tann.dice.util.ui.Checkbox box) {
+        return (Runnable) snd.module.Captured.field(box, com.tann.dice.util.ui.Checkbox.class, "toggleRunnable");
+    }
+
+    private static String songName(com.tann.dice.statics.sound.music.MusicData song) {
+        return com.tann.dice.statics.sound.music.MusicFormat.getNiceName(song.path);
+    }
+
+    private static String jukeboxLabel(Actor actor) {
+        if (actor instanceof com.tann.dice.util.ui.Checkbox) {
+            Runnable toggle = toggleOf((com.tann.dice.util.ui.Checkbox) actor);
+            com.tann.dice.statics.sound.music.MusicData song =
+                    snd.module.Captured.value(toggle, com.tann.dice.statics.sound.music.MusicData.class);
+            if (song != null) {
+                return songName(song);
+            }
+            com.tann.dice.statics.sound.music.Musician musician =
+                    snd.module.Captured.value(toggle, com.tann.dice.statics.sound.music.Musician.class);
+            return musician != null ? musician.name : null;
+        }
+        com.tann.dice.statics.sound.music.MusicData song = songOf(actor);
+        if (song == null) {
+            return null;
+        }
+        boolean playing = song == com.tann.dice.statics.sound.music.MusicManager.getCurrentSongData(true)
+                && !com.tann.dice.statics.sound.music.MusicManager.isMusicDisabled();
+        return playing ? Loc.get("ui", "jukebox.now_playing", "song", songName(song)) : songName(song);
+    }
+
+    // Enabled in the jukebox: the song, or all of the musician's songs.
+    private static String jukeboxState(Actor actor) {
+        if (!(actor instanceof com.tann.dice.util.ui.Checkbox)) {
+            return null;
+        }
+        Runnable toggle = toggleOf((com.tann.dice.util.ui.Checkbox) actor);
+        com.tann.dice.gameplay.save.settings.Settings settings = com.tann.dice.Main.getSettings();
+        com.tann.dice.statics.sound.music.MusicData song =
+                snd.module.Captured.value(toggle, com.tann.dice.statics.sound.music.MusicData.class);
+        if (song != null) {
+            return Loc.get("ui", settings.isDisabledSong(song) ? "state.unchecked" : "state.checked");
+        }
+        com.tann.dice.statics.sound.music.Musician musician =
+                snd.module.Captured.value(toggle, com.tann.dice.statics.sound.music.Musician.class);
+        List<?> songs = musician != null
+                ? (List<?>) snd.module.Captured.field(musician, com.tann.dice.statics.sound.music.Musician.class, "songs")
+                : null;
+        if (songs == null) {
+            return null;
+        }
+        for (Object o : songs) {
+            if (settings.isDisabledSong((com.tann.dice.statics.sound.music.MusicData) o)) {
+                return Loc.get("ui", "state.unchecked");
+            }
+        }
+        return Loc.get("ui", "state.checked");
     }
 
     // A caption the place reads as shorthand, named. Whole-caption matches
@@ -677,6 +747,10 @@ final class ActorNodes {
 
     // A Checkbox draws its own tick state; find one under the row.
     private static String checkboxState(Actor actor) {
+        String jukebox = jukeboxState(actor);
+        if (jukebox != null) {
+            return jukebox;
+        }
         com.tann.dice.util.ui.Checkbox box = findCheckbox(actor);
         if (box == null) {
             return null;
