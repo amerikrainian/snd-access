@@ -99,6 +99,11 @@ public final class CombatChanges {
         if (pre == null) {
             return Loc.get("combat", "change.joins");
         }
+        if (pre.isDead() && post.isDead()) {
+            // The game keeps ticking a unit killed this turn at the turn's end
+            // (poison, regen) though its panel is gone; none of that is news.
+            return null;
+        }
         List<String> all = new ArrayList<String>();
         String parts = parts(pre, post);
         if (parts != null) {
