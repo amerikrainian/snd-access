@@ -564,9 +564,9 @@ public class TitleFlowScreen extends AccessScreen {
     private void buildPasteCard(GraphBuilder b,
             final com.tann.dice.gameplay.mode.creative.pastey.PasteMode mode) {
         b.addItem(ControlId.structural(CompositeKey.of("card", "paste-go")),
-                cardButtonByText("Paste!"));
+                pasteCardButton("Paste!", true));
         b.addItem(ControlId.structural(CompositeKey.of("card", "paste-store")),
-                cardButtonByText("Store"));
+                pasteCardButton("Store", false));
 
         List<com.tann.dice.gameplay.mode.creative.pastey.Scenario> scenarios =
                 com.tann.dice.Main.getSettings().getScenarios();
@@ -600,8 +600,7 @@ public class TitleFlowScreen extends AccessScreen {
             vt.onSecondary = new Runnable() {
                 @Override
                 public void run() {
-                    com.tann.dice.util.ui.standardButton.StandardButton button =
-                            findCardButton(scenario.getTitle());
+                    com.tann.dice.util.ui.standardButton.StandardButton button = scenarioButton(scenario);
                     if (button == null) {
                         host.speech().speak(Loc.get("ui", "title.unavailable"), true);
                         return;
@@ -614,23 +613,23 @@ public class TitleFlowScreen extends AccessScreen {
         buildContinue(b, mode);
     }
 
-    // A card button the game builds inline (no field): found by its visible
-    // text, activated through its own listener.
-    private NodeVtable cardButtonByText(final String text) {
+    // "Paste!" or "Store" (PasteMode.makeStartGameCard builds both inline and
+    // keeps neither): pressed through its own runnable, found when pressed.
+    private NodeVtable pasteCardButton(final String caption, final boolean paste) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
             @Override
             public String get() {
-                return GameText.t(text);
+                return GameText.t(caption);
             }
         }, AnnouncementKinds.LABEL));
         vt.onActivate = new Runnable() {
             @Override
             public void run() {
-                com.tann.dice.util.ui.standardButton.StandardButton button = findCardButton(text);
+                com.tann.dice.util.ui.standardButton.StandardButton button = pasteButton(titleRoot(), paste);
                 if (button == null) {
-                    SndLog.error("card button not found: " + text, null);
+                    SndLog.error("paste card button not found: " + caption, null);
                     host.speech().speak(Loc.get("ui", "title.unavailable"), true);
                     return;
                 }
@@ -640,12 +639,71 @@ public class TitleFlowScreen extends AccessScreen {
         return vt;
     }
 
-    private static com.tann.dice.util.ui.standardButton.StandardButton findCardButton(String cleanText) {
+    private static com.badlogic.gdx.scenes.scene2d.Group titleRoot() {
         com.tann.dice.screens.Screen screen = com.tann.dice.Main.getCurrentScreen();
-        if (!(screen instanceof TitleScreen)) {
+        return screen instanceof TitleScreen ? (TitleScreen) screen : null;
+    }
+
+    // The two runnables makeStartGameCard builds; the paste one carries the
+    // input step it runs (doInput).
+    private static com.tann.dice.util.ui.standardButton.StandardButton pasteButton(
+            com.badlogic.gdx.scenes.scene2d.Group group, boolean paste) {
+        if (group == null) {
             return null;
         }
-        return GameUi.findButtonByText((TitleScreen) screen, cleanText);
+        for (com.badlogic.gdx.scenes.scene2d.Actor child : group.getChildren()) {
+            if (child instanceof com.tann.dice.util.ui.standardButton.StandardButton) {
+                Runnable run = snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) child);
+                if (snd.module.Captured.builtBy(run, com.tann.dice.gameplay.mode.creative.pastey.PasteMode.class,
+                        "makeStartGameCard") && declaresInputStep(run.getClass()) == paste) {
+                    return (com.tann.dice.util.ui.standardButton.StandardButton) child;
+                }
+            }
+            if (child instanceof com.badlogic.gdx.scenes.scene2d.Group) {
+                com.tann.dice.util.ui.standardButton.StandardButton found =
+                        pasteButton((com.badlogic.gdx.scenes.scene2d.Group) child, paste);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean declaresInputStep(Class<?> cls) {
+        for (java.lang.reflect.Method m : cls.getDeclaredMethods()) {
+            if (m.getName().equals("doInput")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // A stored scenario's row: the button whose listener holds that scenario.
+    private static com.tann.dice.util.ui.standardButton.StandardButton scenarioButton(
+            com.tann.dice.gameplay.mode.creative.pastey.Scenario scenario) {
+        return scenarioButton(titleRoot(), scenario);
+    }
+
+    private static com.tann.dice.util.ui.standardButton.StandardButton scenarioButton(
+            com.badlogic.gdx.scenes.scene2d.Group group, com.tann.dice.gameplay.mode.creative.pastey.Scenario scenario) {
+        if (group == null) {
+            return null;
+        }
+        for (com.badlogic.gdx.scenes.scene2d.Actor child : group.getChildren()) {
+            if (child instanceof com.tann.dice.util.ui.standardButton.StandardButton && snd.module.Captured.byListener(
+                    child, com.tann.dice.gameplay.mode.creative.pastey.Scenario.class) == scenario) {
+                return (com.tann.dice.util.ui.standardButton.StandardButton) child;
+            }
+            if (child instanceof com.badlogic.gdx.scenes.scene2d.Group) {
+                com.tann.dice.util.ui.standardButton.StandardButton found =
+                        scenarioButton((com.badlogic.gdx.scenes.scene2d.Group) child, scenario);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private void buildStartButtons(GraphBuilder b, Mode mode) {

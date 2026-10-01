@@ -568,31 +568,6 @@ public final class GameUi {
     }
 
     /**
-     * Depth-first search for a StandardButton whose cleaned text matches —
-     * for driving card buttons the game builds inline without keeping fields
-     * (Paste!/Store, stored scenarios). Null when absent; callers speak the
-     * failure.
-     */
-    public static StandardButton findButtonByText(Group root, String needle) {
-        String clean = snd.contracts.speech.TextFilter.clean(needle);
-        for (Actor child : root.getChildren()) {
-            if (child instanceof StandardButton) {
-                String text = ((StandardButton) child).getText();
-                if (text != null && snd.contracts.speech.TextFilter.clean(text).equalsIgnoreCase(clean)) {
-                    return (StandardButton) child;
-                }
-            }
-            if (child instanceof Group) {
-                StandardButton found = findButtonByText((Group) child, needle);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
      * Depth-first search for a StandardButton whose runnable the game built
      * in owner.method: a button the game builds inline and keeps nowhere,
      * found by what it does rather than what it says.
