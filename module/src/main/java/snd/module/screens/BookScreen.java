@@ -129,7 +129,8 @@ public class BookScreen extends AccessScreen {
             buildGraphTable(b, content);
         } else if (!(tab instanceof com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType)
                 || !LedgerNodes.emit(b, content,
-                        (com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType) tab)) {
+                        (com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType) tab,
+                        LedgerFacts.of(page))) {
             ActorNodes.emit(b, content, place(tab));
         }
         b.popContext();

@@ -90,8 +90,10 @@ public class GameModalScreen extends AccessScreen {
             // A choosable's big panel reads from the model, not the actors.
             ChoosablePanelNodes.emit(b,
                     (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) modal);
+        } else if (modal instanceof com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) {
+            unitPanel(b, (com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) modal);
         } else if (!LedgerNodes.emit(b, modal,
-                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero)) {
+                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero, null)) {
             // Hero tiles (the Choose-Party class picker, a past run's party)
             // are grouped by colour as in the almanac; anything else is walked.
             ActorNodes.emit(b, modal, place(modal));
@@ -144,6 +146,46 @@ public class GameModalScreen extends AccessScreen {
             return ActorNodes.Place.glyphs(SURRENDER_GLYPHS);
         }
         return ActorNodes.Place.PLAIN;
+    }
+
+    // A unit's panel. Opened from the almanac's hero page, it carries what the
+    // page puts on it (LedgerUtils.makeHeroGroup): the chosen record above a
+    // hero past tier one, and its marks in the run below. The page works
+    // these out once, as it builds the panel; so are they here, per panel.
+    private java.lang.ref.WeakReference<Actor> notedPanel = new java.lang.ref.WeakReference<Actor>(null);
+    private final java.util.List<String> notedAbove = new java.util.ArrayList<String>();
+    private final java.util.List<String> notedBelow = new java.util.ArrayList<String>();
+
+    private void unitPanel(GraphBuilder b, com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory panel) {
+        if (notedPanel.get() != panel) {
+            notedPanel = new java.lang.ref.WeakReference<Actor>(panel);
+            notedAbove.clear();
+            notedBelow.clear();
+            com.tann.dice.screens.dungeon.panels.book.page.BookPage page = almanacPage();
+            if (page != null && panel.ent instanceof com.tann.dice.gameplay.content.ent.Hero
+                    && BookScreen.focusedTabIdentifier(page)
+                            == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero) {
+                com.tann.dice.gameplay.content.ent.type.HeroType hero =
+                        ((com.tann.dice.gameplay.content.ent.Hero) panel.ent).getHeroType();
+                LedgerFacts facts = LedgerFacts.of(page);
+                String chosen = facts != null ? facts.chosenLine(hero) : null;
+                if (chosen != null) {
+                    notedAbove.add(chosen);
+                }
+                notedBelow.addAll(LedgerFacts.runMarks(hero));
+            }
+        }
+        EntPanelNodes.emit(b, panel, notedAbove, notedBelow);
+    }
+
+    // The almanac's focused page, when the almanac is open under the modal.
+    private static com.tann.dice.screens.dungeon.panels.book.page.BookPage almanacPage() {
+        for (Actor modal : GameUi.modals()) {
+            if (modal instanceof Book) {
+                return BookScreen.focusedPage((Book) modal);
+            }
+        }
+        return null;
     }
 
     // The board the almanac's online page displays, under the picker.

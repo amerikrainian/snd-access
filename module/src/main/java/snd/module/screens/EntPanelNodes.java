@@ -40,6 +40,14 @@ final class EntPanelNodes {
     }
 
     static void emit(GraphBuilder b, EntPanelInventory panel) {
+        emit(b, panel, java.util.Collections.<String>emptyList(), java.util.Collections.<String>emptyList());
+    }
+
+    /**
+     * With the lines the place that pushed the panel adds to it, above and
+     * below (the almanac's chosen record, a hero's marks in the run).
+     */
+    static void emit(GraphBuilder b, EntPanelInventory panel, List<String> above, List<String> below) {
         final Ent ent = panel.ent;
 
         NodeVtable header = unitNode(ent);
@@ -50,6 +58,11 @@ final class EntPanelNodes {
             }
         }, AnnouncementKinds.LABEL));
         b.addItem(id(ent, "header"), header);
+        // Drawn above the panel, read after the unit's name: the name says
+        // whose record it is.
+        for (int i = 0; i < above.size(); i++) {
+            b.addItem(id(ent, "above", i), line(ent, above.get(i)));
+        }
 
         int[] order = SideText.readingOrder();
         for (int digit = 0; digit < order.length; digit++) {
@@ -96,6 +109,20 @@ final class EntPanelNodes {
             };
             b.addItem(id(ent, "copy"), copy);
         }
+        for (int i = 0; i < below.size(); i++) {
+            b.addItem(id(ent, "below", i), line(ent, below.get(i)));
+        }
+    }
+
+    private static NodeVtable line(Ent ent, final String text) {
+        NodeVtable vt = unitNode(ent);
+        vt.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return text;
+            }
+        }, AnnouncementKinds.LABEL));
+        return vt;
     }
 
     private static EntState state(Ent ent) {

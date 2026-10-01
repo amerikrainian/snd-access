@@ -42,9 +42,10 @@ import snd.module.GameUi;
  * comes from the type or item it holds, which also names the group it opens
  * (a jump region) and keys the node, so focus survives the page being rebuilt.
  *
- * <p>What the game decided while building the page and kept nowhere is read
- * off the tile it drew it on: the veil over one not met yet, the seen and
- * banned marks of the current run.
+ * <p>What the game decided while building the page and kept nowhere (the
+ * veil over one not met yet, the seen and banned marks of the current run)
+ * comes from {@link LedgerFacts}: the page's stats and the run, never the
+ * drawn marks. Tiles shown outside the almanac carry no marks.
  */
 final class LedgerNodes {
     private LedgerNodes() {
@@ -54,12 +55,12 @@ final class LedgerNodes {
      * False when the content is not this tab's tiles (another tab, or a page
      * of another kind shown in its place): the generic walk reads it.
      */
-    static boolean emit(GraphBuilder b, Actor content, LedgerPageType tab) {
+    static boolean emit(GraphBuilder b, Actor content, LedgerPageType tab, LedgerFacts facts) {
         Class<? extends Actor> tile = tileClass(tab);
         if (tile == null || !holds(content, tile)) {
             return false;
         }
-        Walk walk = new Walk(b, tile);
+        Walk walk = new Walk(b, tile, facts);
         walk.visit(content);
         walk.closeGroup();
         return true;
@@ -95,11 +96,13 @@ final class LedgerNodes {
     private static final class Walk {
         private final GraphBuilder b;
         private final Class<? extends Actor> tile;
+        private final LedgerFacts facts;
         private Object openGroup;
 
-        Walk(GraphBuilder b, Class<? extends Actor> tile) {
+        Walk(GraphBuilder b, Class<? extends Actor> tile, LedgerFacts facts) {
             this.b = b;
             this.tile = tile;
+            this.facts = facts;
         }
 
         void visit(Actor actor) {
@@ -145,17 +148,17 @@ final class LedgerNodes {
                         Loc.get("ui", "book.hero_group", "colour", GameText.t(hero.heroCol.colName),
                                 "tier", hero.level));
                 b.addItem(ControlId.referenced(hero, CompositeKey.of("ledger-hero", hero.getName(false))),
-                        tileNode(actor, hero, entName(hero), hero));
+                        tileNode(actor, hero, entName(hero), hero, facts));
             } else if (monster != null) {
                 group(CompositeKey.of("ledger-monsters", monster.size), sizeName(monster.size));
                 b.addItem(ControlId.referenced(monster, CompositeKey.of("ledger-monster", monster.getName(false))),
-                        tileNode(actor, monster, entName(monster), monster));
+                        tileNode(actor, monster, entName(monster), monster, facts));
             } else if (item != null) {
                 String tier = ChoosablePanelNodes.tierText(item);
                 group(CompositeKey.of("ledger-items", item.getTier()),
                         tier != null ? tier : Loc.get("ui", "book.no_tier"));
                 b.addItem(ControlId.referenced(item, CompositeKey.of("ledger-item", item.getName(false))),
-                        tileNode(actor, item, itemName(item), item));
+                        tileNode(actor, item, itemName(item), item, facts));
             } else {
                 closeGroup();
                 ActorNodes.emit(b, actor); // the tile's field could not be read (logged there)
@@ -205,7 +208,7 @@ final class LedgerNodes {
     }
 
     private static NodeVtable tileNode(final Actor tile, final Unlockable unlockable, final Supplier<String> name,
-            final Object subject) {
+            final Object subject, final LedgerFacts facts) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         // A locked tile is a padlock: the game keeps what it is to itself, and
@@ -229,7 +232,7 @@ final class LedgerNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return marks((Group) tile);
+                        return facts != null && !UnUtil.isLocked(unlockable) ? joined(facts.marks(subject)) : null;
                     }
                 }, AnnouncementKinds.VALUE));
         vt.details = new Supplier<List<String>>() {
@@ -253,48 +256,17 @@ final class LedgerNodes {
         return vt;
     }
 
-    // What the game drew over the tile, in the words its opened panel uses:
-    // the dark veil over one not met in any run (HeroLedgerView.addUnencountered),
-    // the corner marks of a hero seen or banned in this one.
-    private static String marks(Group tile) {
-        List<String> marks = new ArrayList<String>();
-        if (veiled(tile)) {
-            marks.add(GameText.t("Not encountered yet..."));
-        }
-        for (Actor child : tile.getChildren()) {
-            if (!(child instanceof ImageActor)) {
-                continue;
-            }
-            if (((ImageActor) child).tr == com.tann.dice.statics.Images.heroSeen) {
-                marks.add(GameText.t("Seen this run"));
-            } else if (((ImageActor) child).tr == com.tann.dice.statics.Images.heroBanned) {
-                marks.add(GameText.t("Banned this run [blue](mana)"));
-            }
-        }
-        if (marks.isEmpty()) {
+    private static String joined(List<String> parts) {
+        if (parts.isEmpty()) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        for (String mark : marks) {
+        for (String part : parts) {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(mark);
+            sb.append(part);
         }
         return sb.toString();
-    }
-
-    // An item tile wraps its art in a group of its own and veils that.
-    private static boolean veiled(Group group) {
-        for (Actor child : group.getChildren()) {
-            if (child instanceof Rectactor
-                    && child.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled) {
-                return true;
-            }
-            if (child instanceof Group && veiled((Group) child)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
