@@ -290,10 +290,24 @@ public class BookScreen extends AccessScreen {
                 continue;
             }
             b.pushContext(snd.module.GameText.t(category.toString()), Loc.get("ui", "role.group"));
-            for (final com.tann.dice.gameplay.save.settings.option.Option option : category.getOptions()) {
-                if (!option.isValid() || option.isDebug()) {
-                    continue;
+            // OptionsMenu.boxType's list: the font option is left out in
+            // Russian, and the unlocked options come before the locked ones.
+            List<com.tann.dice.gameplay.save.settings.option.Option> options =
+                    new java.util.ArrayList<com.tann.dice.gameplay.save.settings.option.Option>(category.getOptions());
+            if ("ru".equals(com.tann.dice.Main.self().translator.getLanguageCode())) {
+                options.remove(com.tann.dice.gameplay.save.settings.option.OptionLib.FONT);
+            }
+            List<com.tann.dice.gameplay.save.settings.option.Option> ordered =
+                    new java.util.ArrayList<com.tann.dice.gameplay.save.settings.option.Option>();
+            for (boolean locked : com.tann.dice.util.Tann.BOTH) {
+                for (com.tann.dice.gameplay.save.settings.option.Option option : options) {
+                    if (option.isValid() && !option.isDebug()
+                            && com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(option) == locked) {
+                        ordered.add(option);
+                    }
                 }
+            }
+            for (final com.tann.dice.gameplay.save.settings.option.Option option : ordered) {
                 ControlId id = ControlId.referenced(option,
                         CompositeKey.of("book-option", option.getName()));
                 if (com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(option)) {
@@ -337,22 +351,35 @@ public class BookScreen extends AccessScreen {
         // section's display/sound shortcut into the cog menu.
         if (content instanceof com.badlogic.gdx.scenes.scene2d.Group) {
             com.badlogic.gdx.scenes.scene2d.Group root = (com.badlogic.gdx.scenes.scene2d.Group) content;
-            addFoundButton(b, root, "display/sound", "book-opt-cog");
-            addFoundButton(b, root, "Reset All", "book-opt-reset");
+            addFoundButton(b, root, com.tann.dice.screens.dungeon.panels.book.page.cogPage.menuPanel.OptionsMenu.class,
+                    "boxType", "book-opt-cog");
+            addFoundButton(b, root, com.tann.dice.screens.dungeon.panels.book.page.cogPage.menuPanel.OptionsMenu.class,
+                    "makeResetButton", "book-opt-reset");
         }
     }
 
     private final java.util.Set<Object> missingButtons = new java.util.HashSet<Object>();
+    // Each page's buttons, found once per page the game builds.
+    private final java.util.Map<Actor, java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton>> foundButtons =
+            new java.util.WeakHashMap<Actor, java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton>>();
 
+    // A button the page builds inline (the game keeps it in no field), found
+    // by the game method that built its runnable.
     private void addFoundButton(GraphBuilder b, com.badlogic.gdx.scenes.scene2d.Group root,
-            String text, Object key) {
-        final com.tann.dice.util.ui.standardButton.StandardButton button =
-                GameUi.findButtonByText(root, text);
+            Class<?> owner, String method, Object key) {
+        java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton> found = foundButtons.get(root);
+        if (found == null) {
+            found = new java.util.HashMap<Object, com.tann.dice.util.ui.standardButton.StandardButton>();
+            foundButtons.put(root, found);
+        }
+        if (!found.containsKey(key)) {
+            found.put(key, GameUi.findButtonBuiltBy(root, owner, method));
+        }
+        final com.tann.dice.util.ui.standardButton.StandardButton button = found.get(key);
         if (button == null) {
-            // The game adds these unconditionally: a miss means its caption
-            // changed. Built every frame, so said once per miss.
+            // The game adds these unconditionally. Said once per miss.
             if (missingButtons.add(key)) {
-                SndLog.error("almanac button not found: " + text, null);
+                SndLog.error("almanac button not found: built by " + owner.getSimpleName() + "." + method, null);
             }
             return;
         }
@@ -447,7 +474,9 @@ public class BookScreen extends AccessScreen {
 
         if (content instanceof com.badlogic.gdx.scenes.scene2d.Group) {
             // Its own confirm dialog follows.
-            addFoundButton(b, (com.badlogic.gdx.scenes.scene2d.Group) content, "Reset Stats", "book-reset-stats");
+            addFoundButton(b, (com.badlogic.gdx.scenes.scene2d.Group) content,
+                    com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.class, "makeNumbersPage",
+                    "book-reset-stats");
         }
     }
 

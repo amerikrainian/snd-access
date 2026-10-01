@@ -592,6 +592,27 @@ public final class GameUi {
         return null;
     }
 
+    /**
+     * Depth-first search for a StandardButton whose runnable the game built
+     * in owner.method: a button the game builds inline and keeps nowhere,
+     * found by what it does rather than what it says.
+     */
+    public static StandardButton findButtonBuiltBy(Group root, Class<?> owner, String method) {
+        for (Actor child : root.getChildren()) {
+            if (child instanceof StandardButton
+                    && Captured.builtBy(Captured.runnable((StandardButton) child), owner, method)) {
+                return (StandardButton) child;
+            }
+            if (child instanceof Group) {
+                StandardButton found = findButtonBuiltBy((Group) child, owner, method);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
     // ---- hero rename: the title-bar group of a hero's inventory panel
     // carries the game's rename listener (opens its text input). It's the
     // panel's only plain-Group direct child with a TannListener besides the
