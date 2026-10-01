@@ -310,23 +310,20 @@ public class BookScreen extends AccessScreen {
 
     private boolean graphMissReported;
 
-    // The graph's "+" button (GraphUtils.make): a direct child of the graph
-    // group, which the game names "graph".
-    private static Runnable graphRunnable(Actor content) {
-        Actor graph = content instanceof com.badlogic.gdx.scenes.scene2d.Group
-                ? ((com.badlogic.gdx.scenes.scene2d.Group) content).findActor("graph") : null;
-        if (!(graph instanceof com.badlogic.gdx.scenes.scene2d.Group)) {
-            return null;
+    // A button GraphUtils.make built (its "+" and its hero/monster toggle
+    // both hold what the graph was made with). Found once per graph the game
+    // builds (the content holds hundreds of plot lines): kept while it is on
+    // stage, searched again once the game has swapped the graph out.
+    private com.tann.dice.util.ui.standardButton.StandardButton graphButton;
+
+    private Runnable graphRunnable(Actor content) {
+        if (graphButton == null || graphButton.getStage() == null) {
+            graphButton = content instanceof com.badlogic.gdx.scenes.scene2d.Group
+                    ? GameUi.findButtonBuiltBy((com.badlogic.gdx.scenes.scene2d.Group) content,
+                            com.tann.dice.screens.graph.GraphUtils.class, "make")
+                    : null;
         }
-        for (Actor child : ((com.badlogic.gdx.scenes.scene2d.Group) graph).getChildren()) {
-            if (child instanceof com.tann.dice.util.ui.standardButton.StandardButton) {
-                Runnable run = snd.module.Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) child);
-                if (snd.module.Captured.builtBy(run, com.tann.dice.screens.graph.GraphUtils.class, "make")) {
-                    return run;
-                }
-            }
-        }
-        return null;
+        return graphButton != null ? snd.module.Captured.runnable(graphButton) : null;
     }
 
     @SuppressWarnings("unchecked")
@@ -438,23 +435,21 @@ public class BookScreen extends AccessScreen {
     }
 
     private final java.util.Set<Object> missingButtons = new java.util.HashSet<Object>();
-    // Each page's buttons, found once per page the game builds.
-    private final java.util.Map<Actor, java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton>> foundButtons =
-            new java.util.WeakHashMap<Actor, java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton>>();
+    // Each page's buttons, found once per page the game builds: kept while
+    // on stage, searched again once the game has swapped the page out.
+    private final java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton> foundButtons =
+            new java.util.HashMap<Object, com.tann.dice.util.ui.standardButton.StandardButton>();
 
     // A button the page builds inline (the game keeps it in no field), found
     // by the game method that built its runnable.
     private void addFoundButton(GraphBuilder b, com.badlogic.gdx.scenes.scene2d.Group root,
             Class<?> owner, String method, Object key) {
-        java.util.Map<Object, com.tann.dice.util.ui.standardButton.StandardButton> found = foundButtons.get(root);
-        if (found == null) {
-            found = new java.util.HashMap<Object, com.tann.dice.util.ui.standardButton.StandardButton>();
-            foundButtons.put(root, found);
+        com.tann.dice.util.ui.standardButton.StandardButton cached = foundButtons.get(key);
+        if (cached == null || cached.getStage() == null) {
+            cached = GameUi.findButtonBuiltBy(root, owner, method);
+            foundButtons.put(key, cached);
         }
-        if (!found.containsKey(key)) {
-            found.put(key, GameUi.findButtonBuiltBy(root, owner, method));
-        }
-        final com.tann.dice.util.ui.standardButton.StandardButton button = found.get(key);
+        final com.tann.dice.util.ui.standardButton.StandardButton button = cached;
         if (button == null) {
             // The game adds these unconditionally. Said once per miss.
             if (missingButtons.add(key)) {
