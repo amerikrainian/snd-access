@@ -160,9 +160,6 @@
   "state.checked": "coché",
   "state.unchecked": "non coché",
 
-  "glyph.windowed": "fenêtré",
-  "glyph.fullscreen": "plein écran",
-  "glyph.fullscreen2": "plein écran 2",
   "glyph.decrease": "diminuer",
   "glyph.increase": "augmenter",
   "glyph.skip_back": "reculer",

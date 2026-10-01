@@ -101,18 +101,13 @@ public class GameModalScreen extends AccessScreen {
         b.popContext();
     }
 
-    // The cog menu's screen modes (DesktopControl.SCREEN_MODE's values, which
-    // its own description spells out), its UI-size steppers and the jukebox
-    // transport it carries.
+    // The cog menu's UI-size steppers and the jukebox transport it carries.
     private static final java.util.Map<String, String> COG_GLYPHS = new java.util.HashMap<String, String>();
     // The surrender dialog's purple "?" between its no and yes (SurrenderPhase):
     // the explanation. Punctuation alone is silent in speech.
     private static final java.util.Map<String, String> SURRENDER_GLYPHS =
             java.util.Collections.singletonMap("?", "glyph.help");
     static {
-        COG_GLYPHS.put("w", "glyph.windowed");
-        COG_GLYPHS.put("fs", "glyph.fullscreen");
-        COG_GLYPHS.put("fs2", "glyph.fullscreen2");
         COG_GLYPHS.put("-", "glyph.decrease");
         COG_GLYPHS.put("+", "glyph.increase");
         COG_GLYPHS.putAll(BookScreen.JUKEBOX_GLYPHS);

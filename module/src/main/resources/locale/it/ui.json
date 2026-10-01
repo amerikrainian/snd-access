@@ -160,9 +160,6 @@
   "state.checked": "selezionato",
   "state.unchecked": "non selezionato",
 
-  "glyph.windowed": "finestra",
-  "glyph.fullscreen": "schermo intero",
-  "glyph.fullscreen2": "schermo intero 2",
   "glyph.decrease": "diminuisci",
   "glyph.increase": "aumenta",
   "glyph.skip_back": "indietro",

@@ -160,9 +160,6 @@
   "state.checked": "marcado",
   "state.unchecked": "no marcado",
 
-  "glyph.windowed": "ventana",
-  "glyph.fullscreen": "pantalla completa",
-  "glyph.fullscreen2": "pantalla completa 2",
   "glyph.decrease": "disminuir",
   "glyph.increase": "aumentar",
   "glyph.skip_back": "retroceder",

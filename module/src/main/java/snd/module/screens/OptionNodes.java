@@ -54,7 +54,9 @@ final class OptionNodes {
         final Supplier<String> value = new Supplier<String>() {
             @Override
             public String get() {
-                return valueName.apply(GameText.t(option.getOptions()[option.c()]));
+                String caption = option.getOptions()[option.c()];
+                return option == com.tann.dice.platform.control.desktop.DesktopControl.SCREEN_MODE
+                        ? screenModeWord(option, caption) : valueName.apply(GameText.t(caption));
             }
         };
         vt.announcements = Arrays.asList(
@@ -81,6 +83,23 @@ final class OptionNodes {
         vt.onAdjust = adjust;
         vt.stateText = value;
         return vt;
+    }
+
+    // The screen modes' captions are shorthand ("w", "fs", "fs2") that the
+    // option's description spells out a line each, every line a translated
+    // game string ("w: [blue]windowed[cu]"): the word after the caption.
+    private static String screenModeWord(ChOption option, String caption) {
+        String shorthand = snd.contracts.speech.TextFilter.clean(caption).trim();
+        String desc = (String) Captured.field(option, Option.class, "desc");
+        if (desc != null) {
+            for (String line : desc.split("\\[n\\]")) {
+                if (snd.contracts.speech.TextFilter.clean(line).startsWith(shorthand + ":")) {
+                    String spoken = snd.contracts.speech.TextFilter.clean(GameText.t(line));
+                    return spoken.substring(spoken.indexOf(':') + 1).trim();
+                }
+            }
+        }
+        return shorthand;
     }
 
     /** The next choice from the current one, wrapping. */

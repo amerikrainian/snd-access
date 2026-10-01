@@ -160,9 +160,6 @@
   "state.checked": "отмечено",
   "state.unchecked": "не отмечено",
 
-  "glyph.windowed": "оконный режим",
-  "glyph.fullscreen": "полный экран",
-  "glyph.fullscreen2": "полный экран 2",
   "glyph.decrease": "уменьшить",
   "glyph.increase": "увеличить",
   "glyph.skip_back": "назад",

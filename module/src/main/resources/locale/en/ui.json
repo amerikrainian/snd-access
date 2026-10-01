@@ -160,9 +160,6 @@
   "state.checked": "checked",
   "state.unchecked": "unchecked",
 
-  "glyph.windowed": "windowed",
-  "glyph.fullscreen": "fullscreen",
-  "glyph.fullscreen2": "fullscreen 2",
   "glyph.decrease": "decrease",
   "glyph.increase": "increase",
   "glyph.skip_back": "skip back",

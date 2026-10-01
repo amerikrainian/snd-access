@@ -160,9 +160,6 @@
   "state.checked": "marcado",
   "state.unchecked": "desmarcado",
 
-  "glyph.windowed": "janela",
-  "glyph.fullscreen": "tela cheia",
-  "glyph.fullscreen2": "tela cheia 2",
   "glyph.decrease": "diminuir",
   "glyph.increase": "aumentar",
   "glyph.skip_back": "voltar",
