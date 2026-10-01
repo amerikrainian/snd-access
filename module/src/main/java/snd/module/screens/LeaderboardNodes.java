@@ -63,6 +63,25 @@ final class LeaderboardNodes {
                     }
                 });
 
+        // The line under the title until your score qualifies
+        // (LeaderboardDisplay.layout): the score needed, and yours if any.
+        if (!board.disableSubmit() && !board.isScoreHighEnough(board.getScore())) {
+            b.addLabel(snd.core.graph.ControlId.structural(snd.core.graph.CompositeKey.of("lb-qualify")),
+                    new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            Leaderboard lb = boardOf(display);
+                            StringBuilder sb = new StringBuilder(GameText.t("Qualifying score"))
+                                    .append(": ").append(lb.getRequiredScoreString());
+                            if (lb.getScore() != 0) {
+                                sb.append(" (").append(GameText.t("your score")).append(": ")
+                                        .append(lb.getScoreString(lb.getScore())).append(")");
+                            }
+                            return sb.toString();
+                        }
+                    });
+        }
+
         long myId = com.tann.dice.Main.getSettings().getHighscoreIdentifier();
         GraphSheet sheet = new GraphSheet(b, "lb");
         sheet.region(GameText.t(board.getName()), new String[]{
