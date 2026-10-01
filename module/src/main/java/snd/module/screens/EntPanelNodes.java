@@ -48,7 +48,11 @@ final class EntPanelNodes {
      * below (the almanac's chosen record, a hero's marks in the run).
      */
     static void emit(GraphBuilder b, EntPanelInventory panel, List<String> above, List<String> below) {
-        final Ent ent = panel.ent;
+        unit(b, panel.ent, above, below);
+    }
+
+    /** A unit as its panel reads, where a place shows one (a dialog's hero). */
+    static void unit(GraphBuilder b, final Ent ent, List<String> above, List<String> below) {
 
         NodeVtable header = unitNode(ent);
         header.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {

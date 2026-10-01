@@ -17,6 +17,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc.ItemCombinePhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.SeqPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.misc.PositionSwapPhase;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.reveal.RandomRevealPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.trade.TradePhase;
 
@@ -213,10 +214,224 @@ public class DialogPhaseScreen extends AccessScreen {
         b.pushContext(Loc.get("ui", "modal.dialog"), null, false);
         if (p instanceof SeqPhase) {
             seqNodes(b, (SeqPhase) p);
-        } else {
+        } else if (!modelNodes(b, p)) {
             ActorNodes.emit(b, dialog);
         }
         b.popContext();
+    }
+
+    // ---- the event dialogs, read from their phase: what each one asks,
+    // what it offers or costs, and its own answers. False for a phase read
+    // by walking its dialog (the curse loop's reset panel). ----
+
+    private boolean modelNodes(GraphBuilder b, Phase p) {
+        if (p instanceof ItemCombinePhase) {
+            anvil(b, (ItemCombinePhase) p);
+        } else if (p instanceof ChallengePhase) {
+            challenge(b, (ChallengePhase) p);
+        } else if (p instanceof TradePhase) {
+            cursedChest(b, (TradePhase) p);
+        } else if (p instanceof HeroChangePhase) {
+            classReroll(b, (HeroChangePhase) p);
+        } else if (p instanceof PositionSwapPhase) {
+            positionSwap(b, (PositionSwapPhase) p);
+        } else if (p instanceof MessagePhase) {
+            message(b, (MessagePhase) p);
+        } else if (p instanceof RandomRevealPhase) {
+            reveal(b, (RandomRevealPhase) p);
+        } else if (p instanceof com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase) {
+            runEnd(b, (com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase) p);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    private static com.tann.dice.util.ui.choice.ChoiceDialog dialogOf(Phase p, String field) {
+        return (com.tann.dice.util.ui.choice.ChoiceDialog) Captured.field(p, p.getClass(), field);
+    }
+
+    // The runnable a dialog's accept answer runs (index 1, its key route's).
+    private static Object acceptOf(com.tann.dice.util.ui.choice.ChoiceDialog dialog) {
+        Object[] choices = (Object[]) Captured.field(dialog, com.tann.dice.util.ui.choice.ChoiceDialog.class, "choices");
+        return choices != null && choices.length > 1
+                ? Captured.field(choices[1], com.tann.dice.util.ui.choice.CDChoice.class, "onClick") : null;
+    }
+
+    // ItemCombinePhase: its question, the items it takes (held by the accept
+    // answer), what they become, then accept or decline.
+    @SuppressWarnings("unchecked")
+    private static void anvil(GraphBuilder b, ItemCombinePhase p) {
+        com.tann.dice.util.ui.choice.ChoiceDialog cd = dialogOf(p, "cd");
+        Object type = Captured.field(p, ItemCombinePhase.class, "combineType");
+        DialogNodes.text(b, "prompt", GameText.t((String) Captured.field(type, type.getClass(), "description")));
+        Object accept = acceptOf(cd);
+        List<com.tann.dice.gameplay.content.item.Item> lost = Captured.value(accept, List.class);
+        if (lost != null) {
+            for (int i = 0; i < lost.size(); i++) {
+                DialogNodes.choosable(b, CompositeKey.of("lost", i), lost.get(i));
+            }
+        }
+        Choosable reward = Captured.value(accept, Choosable.class);
+        if (reward != null) {
+            DialogNodes.text(b, "reward", GameText.t(reward.describe()));
+        }
+        DialogNodes.answers(b, cd);
+    }
+
+    // ChallengePhase: the extra monsters, the rewards, then accept or decline.
+    private static void challenge(GraphBuilder b, ChallengePhase p) {
+        List<com.tann.dice.gameplay.content.ent.type.MonsterType> monsters = p.getChallengeType().getMonsterTypes();
+        DialogNodes.text(b, "challenge", GameText.t("[orange]Challenge:"));
+        DialogNodes.text(b, "extra", GameText.t("[text]Extra "
+                + com.tann.dice.util.lang.Words.plural("monster", monsters.size())));
+        for (int i = 0; i < monsters.size(); i++) {
+            monster(b, CompositeKey.of("monster", i), monsters.get(i));
+        }
+        Object reward = Captured.field(p, ChallengePhase.class, "challengeReward");
+        List<Choosable> rewards = reward != null
+                ? ((com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.challenge.ChallengeReward) reward)
+                        .getRewards()
+                : java.util.Collections.<Choosable>emptyList();
+        DialogNodes.text(b, "rewards", GameText.t("[green]"
+                + com.tann.dice.util.lang.Words.plural("Reward", rewards.size()) + ":"));
+        for (int i = 0; i < rewards.size(); i++) {
+            DialogNodes.choosable(b, CompositeKey.of("reward", i), rewards.get(i));
+        }
+        DialogNodes.answers(b, dialogOf(p, "choiceDialog"));
+    }
+
+    private static void monster(GraphBuilder b, Object key,
+            final com.tann.dice.gameplay.content.ent.type.MonsterType type) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.TEXT;
+        vt.subject = type;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return GameText.t(type.getName(true));
+                    }
+                }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return UnitLines.restHp(type);
+                    }
+                }, AnnouncementKinds.VALUE));
+        b.addItem(ControlId.referenced(type, CompositeKey.of("dialog", key)), vt);
+    }
+
+    // TradePhase: the chest's question, what opening it gives, then answers.
+    @SuppressWarnings("unchecked")
+    private static void cursedChest(GraphBuilder b, TradePhase p) {
+        DialogNodes.text(b, "prompt", GameText.t("[purple]Open cursed chest?"));
+        List<Choosable> gain = (List<Choosable>) Captured.field(p, TradePhase.class, "gain");
+        if (gain != null) {
+            for (int i = 0; i < gain.size(); i++) {
+                DialogNodes.choosable(b, CompositeKey.of("gain", i), gain.get(i));
+            }
+        }
+        DialogNodes.answers(b, dialogOf(p, "cd"));
+    }
+
+    // HeroChangePhase: its question about the hero (held by the accept
+    // answer), the hero as its panel reads, then yes or no. The game's arrow
+    // to a question mark says only that the result is unknown, which the
+    // question says already.
+    private static void classReroll(GraphBuilder b, HeroChangePhase p) {
+        com.tann.dice.util.ui.choice.ChoiceDialog cd = dialogOf(p, "cd");
+        com.tann.dice.gameplay.content.ent.Hero hero =
+                Captured.value(acceptOf(cd), com.tann.dice.gameplay.content.ent.Hero.class);
+        Object type = Captured.field(p, HeroChangePhase.class, "type");
+        if (hero != null && type != null) {
+            String desc = (String) Captured.field(type, type.getClass(), "desc");
+            DialogNodes.text(b, "prompt", GameText.t(desc.replaceAll("Z", hero.getName(true)) + "?"));
+            EntPanelNodes.unit(b, hero, java.util.Collections.<String>emptyList(),
+                    java.util.Collections.<String>emptyList());
+        }
+        DialogNodes.answers(b, cd);
+    }
+
+    // PositionSwapPhase: the two heroes it would swap, by their places among
+    // the living (its own lookup), then yes or no.
+    private static void positionSwap(GraphBuilder b, PositionSwapPhase p) {
+        Object a = Captured.field(p, PositionSwapPhase.class, "swapA");
+        Object c = Captured.field(p, PositionSwapPhase.class, "swapB");
+        List<com.tann.dice.gameplay.content.ent.Hero> heroes = com.tann.dice.screens.dungeon.DungeonScreen.get()
+                .getFightLog().getSnapshot(com.tann.dice.gameplay.fightLog.FightLog.Temporality.Present)
+                .getAliveHeroEntities();
+        if (a != null && c != null && (Integer) a < heroes.size() && (Integer) c < heroes.size()) {
+            DialogNodes.text(b, "prompt", GameText.t("Swap " + heroes.get((Integer) a).getName(true) + " with "
+                    + heroes.get((Integer) c).getName(true) + "?[n][n][purple](no side-effects)"));
+        }
+        DialogNodes.answers(b, dialogOf(p, "cd"));
+    }
+
+    // MessagePhase: its message and its one button (its key route).
+    private static void message(GraphBuilder b, final MessagePhase p) {
+        DialogNodes.text(b, "message", GameText.t("[text]" + Captured.field(p, MessagePhase.class, "msg")));
+        DialogNodes.button(b, "ok", GameText.t((String) Captured.field(p, MessagePhase.class, "conf")), new Runnable() {
+            @Override
+            public void run() {
+                p.keyPress(66);
+            }
+        });
+    }
+
+    // RandomRevealPhase: what was gained, a hero as its panel reads, then ok.
+    private final java.util.Map<Object, com.tann.dice.gameplay.content.ent.Ent> revealedHeroes =
+            new java.util.WeakHashMap<Object, com.tann.dice.gameplay.content.ent.Ent>();
+
+    @SuppressWarnings("unchecked")
+    private void reveal(GraphBuilder b, final RandomRevealPhase p) {
+        DialogNodes.text(b, "title", GameText.t("[yellow]Gained:"));
+        List<Choosable> gained = (List<Choosable>) Captured.field(p, RandomRevealPhase.class, "choosables");
+        if (gained != null) {
+            for (int i = 0; i < gained.size(); i++) {
+                Choosable c = gained.get(i);
+                if (c instanceof com.tann.dice.gameplay.content.ent.type.HeroType) {
+                    // The game shows a fresh unit of the class: one per class
+                    // per reveal, so the panel's lines keep their identity.
+                    com.tann.dice.gameplay.content.ent.Ent unit = revealedHeroes.get(c);
+                    if (unit == null) {
+                        unit = ((com.tann.dice.gameplay.content.ent.type.HeroType) c).makeEnt();
+                        revealedHeroes.put(c, unit);
+                    }
+                    EntPanelNodes.unit(b, unit, java.util.Collections.<String>emptyList(),
+                            java.util.Collections.<String>emptyList());
+                } else {
+                    DialogNodes.choosable(b, CompositeKey.of("gained", i), c);
+                }
+            }
+        }
+        DialogNodes.button(b, "ok", GameText.t("[green][b]ok"), new Runnable() {
+            @Override
+            public void run() {
+                p.onOk();
+            }
+        });
+    }
+
+    // RunEndPhase: the band's left column (the mode's own end text and
+    // extras) and its buttons; its pictures are left out.
+    @SuppressWarnings("unchecked")
+    private static void runEnd(GraphBuilder b, com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase p) {
+        Object panel = Captured.field(p, com.tann.dice.gameplay.phase.endPhase.runEnd.RunEndPhase.class, "endPanel");
+        if (panel == null) {
+            return;
+        }
+        Class<?> cls = com.tann.dice.gameplay.phase.endPhase.RunEndPanel.class;
+        Actor left = (Actor) Captured.field(panel, cls, "left");
+        if (left != null) {
+            ActorNodes.emit(b, left);
+        }
+        List<Actor> buttons = (List<Actor>) Captured.field(panel, cls, "rightButtons");
+        if (buttons != null) {
+            for (Actor button : buttons) {
+                ActorNodes.emit(b, button);
+            }
+        }
     }
 
     private static java.lang.reflect.Method pickPhase;
