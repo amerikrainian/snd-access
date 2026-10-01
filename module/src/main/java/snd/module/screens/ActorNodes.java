@@ -66,6 +66,9 @@ final class ActorNodes {
     static final class Place {
         static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), ChosenMark.NONE);
 
+        /** Which button is the chosen one, read from what the buttons hold, where the place knows it. */
+        java.util.function.Predicate<Actor> chosenBy;
+
         /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
         final java.util.Map<String, String> glyphs;
         final ChosenMark chosen;
@@ -92,6 +95,12 @@ final class ActorNodes {
 
         static Place chosen(ChosenMark chosen) {
             return new Place(java.util.Collections.<String, String>emptyMap(), chosen);
+        }
+
+        static Place chosenBy(java.util.function.Predicate<Actor> test) {
+            Place place = new Place(java.util.Collections.<String, String>emptyMap(), ChosenMark.NONE);
+            place.chosenBy = test;
+            return place;
         }
     }
 
@@ -329,7 +338,9 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return chosenAmongButtons(actor, place.chosen) ? Loc.get("ui", "state.selected") : null;
+                        boolean chosen = place.chosenBy != null ? place.chosenBy.test(actor)
+                                : chosenAmongButtons(actor, place.chosen);
+                        return chosen ? Loc.get("ui", "state.selected") : null;
                     }
                 }, AnnouncementKinds.SELECTED),
                 // Checkbox rows (options, jukebox songs): the box's state.

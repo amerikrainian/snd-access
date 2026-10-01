@@ -151,7 +151,7 @@ final class LeaderboardNodes {
 
     private static Field boardField;
 
-    private static Leaderboard boardOf(LeaderboardDisplay display) {
+    static Leaderboard boardOf(LeaderboardDisplay display) {
         try {
             if (boardField == null) {
                 boardField = LeaderboardDisplay.class.getDeclaredField("leaderboard");

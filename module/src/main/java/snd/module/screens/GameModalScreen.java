@@ -10,6 +10,7 @@ import snd.core.graph.GraphBuilder;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.KeyOffer;
 import snd.module.GameKeys;
+import snd.module.Captured;
 import snd.module.GameUi;
 
 /**
@@ -121,15 +122,40 @@ public class GameModalScreen extends AccessScreen {
             return ActorNodes.Place.glyphs(COG_GLYPHS).withSectionStops();
         }
         // The almanac's leaderboard picker, under the name the game pops it by
-        // (StuffPage.makeLeaderboard): the board on show has a light border.
+        // (StuffPage.makeLeaderboard): the chosen board is the one the page
+        // under it displays, and each button's runnable holds its board.
         if ("leaderboard_modal".equals(modal.getName())) {
-            return ActorNodes.Place.chosen(ActorNodes.ChosenMark.LIGHT_BORDER);
+            // Tested only when a button is spoken, never per frame.
+            return ActorNodes.Place.chosenBy(new java.util.function.Predicate<Actor>() {
+                @Override
+                public boolean test(Actor actor) {
+                    if (!(actor instanceof com.tann.dice.util.ui.standardButton.StandardButton)) {
+                        return false;
+                    }
+                    com.tann.dice.gameplay.leaderboard.Leaderboard shown = shownLeaderboard();
+                    return shown != null && Captured.value(
+                            Captured.runnable((com.tann.dice.util.ui.standardButton.StandardButton) actor),
+                            com.tann.dice.gameplay.leaderboard.Leaderboard.class) == shown;
+                }
+            });
         }
         if (com.tann.dice.gameplay.phase.PhaseManager.get().getPhase()
                 instanceof com.tann.dice.gameplay.phase.gameplay.SurrenderPhase) {
             return ActorNodes.Place.glyphs(SURRENDER_GLYPHS);
         }
         return ActorNodes.Place.PLAIN;
+    }
+
+    // The board the almanac's online page displays, under the picker.
+    private static com.tann.dice.gameplay.leaderboard.Leaderboard shownLeaderboard() {
+        for (Actor modal : GameUi.modals()) {
+            if (modal instanceof Book) {
+                com.tann.dice.gameplay.leaderboard.LeaderboardDisplay display = com.tann.dice.util.Tann.findByClass(
+                        (com.badlogic.gdx.scenes.scene2d.Group) modal, com.tann.dice.gameplay.leaderboard.LeaderboardDisplay.class);
+                return display != null ? LeaderboardNodes.boardOf(display) : null;
+            }
+        }
+        return null;
     }
 
     // The cog/settings menu marks itself with a CogTag child — the same tag
