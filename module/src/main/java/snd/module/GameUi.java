@@ -36,24 +36,29 @@ public final class GameUi {
      * read.
      */
     public static Actor topModal() {
-        com.badlogic.gdx.scenes.scene2d.Actor top = null;
+        List<Actor> modals = modals();
+        return modals.isEmpty() ? null : modals.get(modals.size() - 1);
+    }
+
+    /** Every modal on the current game screen's stack, bottom first, by {@link #topModal}'s rule. */
+    public static List<Actor> modals() {
+        List<Actor> modals = new ArrayList<Actor>();
         Screen screen;
         try {
             screen = com.tann.dice.Main.getCurrentScreen();
         } catch (Throwable t) {
-            return null;
+            return modals;
         }
         if (screen == null) {
-            return null;
+            return modals;
         }
-        List<Pair<Actor, ?>> stack = castStack(screen.modalStack);
-        for (Pair<Actor, ?> pair : stack) {
+        for (Pair<Actor, ?> pair : castStack(screen.modalStack)) {
             if (pair.a != null && pair.a.getStage() != null
                     && (pair.b != null || pair.a instanceof com.tann.dice.util.ui.choice.ChoiceDialog)) {
-                top = pair.a;
+                modals.add(pair.a);
             }
         }
-        return top;
+        return modals;
     }
 
     /** Whether a panel of this kind is anywhere on the current screen's modal stack, covered or not. */

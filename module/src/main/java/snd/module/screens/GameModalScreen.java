@@ -21,11 +21,41 @@ import snd.module.GameUi;
  * falls through to the game's own modal-pop handling. Screens with dedicated
  * readers (the Book, the party management panel) opt out of this generic
  * floor.
+ *
+ * <p>One instance reads each level of the modal stack, so a panel covered by
+ * another one (a hero's details over the class picker) is a covered screen
+ * that keeps its place: closing the cover lands back on the control that
+ * opened it. The deepest instance reads whatever lies past it.
  */
 public class GameModalScreen extends AccessScreen {
+    public static final int LEVELS = 4;
+
+    private final int level;
+
+    /** Register in ascending level: the same layer, so the later (higher) one wins. */
+    public GameModalScreen(int level) {
+        this.level = level;
+    }
+
     @Override
     public String key() {
-        return "game-modal";
+        return "game-modal-" + level;
+    }
+
+    // This level's modal, or null when the stack is shallower or a modal
+    // with a screen of its own sits at or over it (that screen reads it).
+    private Actor modal() {
+        List<Actor> modals = GameUi.modals();
+        if (modals.size() <= level) {
+            return null;
+        }
+        for (Actor above : modals.subList(level, modals.size())) {
+            if (above instanceof com.tann.dice.screens.generalPanels.PartyManagementPanel
+                    || above instanceof Book) {
+                return null;
+            }
+        }
+        return modals.get(level == LEVELS - 1 ? modals.size() - 1 : level);
     }
 
     @Override
@@ -45,17 +75,12 @@ public class GameModalScreen extends AccessScreen {
 
     @Override
     public boolean isActive() {
-        Actor modal = GameUi.topModal();
-        // The party management panel and the Book have their own screens
-        // (InventoryScreen, BookScreen).
-        return modal != null
-                && !(modal instanceof com.tann.dice.screens.generalPanels.PartyManagementPanel)
-                && !(modal instanceof Book);
+        return modal() != null;
     }
 
     @Override
     public void build(GraphBuilder b) {
-        Actor modal = GameUi.topModal();
+        Actor modal = modal();
         if (modal == null) {
             return;
         }
