@@ -89,7 +89,10 @@ public class GameModalScreen extends AccessScreen {
             // A choosable's big panel reads from the model, not the actors.
             ChoosablePanelNodes.emit(b,
                     (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) modal);
-        } else {
+        } else if (!LedgerNodes.emit(b, modal,
+                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero)) {
+            // Hero tiles (the Choose-Party class picker, a past run's party)
+            // are grouped by colour as in the almanac; anything else is walked.
             ActorNodes.emit(b, modal, place(modal));
         }
         b.popContext();
