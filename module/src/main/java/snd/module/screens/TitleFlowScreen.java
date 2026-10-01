@@ -445,6 +445,8 @@ public class TitleFlowScreen extends AccessScreen {
             final int slot = i;
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.BUTTON;
+            // The class in the slot: the hero buffer and the side keys read it.
+            vt.subject = selector.getType();
             vt.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
@@ -456,6 +458,12 @@ public class TitleFlowScreen extends AccessScreen {
                         @Override
                         public String get() {
                             return GameText.t(selector.getType().getName(true));
+                        }
+                    }, AnnouncementKinds.VALUE),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return UnitLines.restHp(selector.getType());
                         }
                     }, AnnouncementKinds.VALUE));
             // The slot's own listeners: click opens the picker grid (a pushed

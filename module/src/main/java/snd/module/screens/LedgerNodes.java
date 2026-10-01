@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.tann.dice.gameplay.content.ent.EntSize;
+import com.tann.dice.gameplay.content.ent.type.EntType;
 import com.tann.dice.gameplay.content.ent.type.HeroType;
 import com.tann.dice.gameplay.content.ent.type.MonsterType;
 import com.tann.dice.gameplay.content.item.Item;
@@ -204,7 +205,7 @@ final class LedgerNodes {
     }
 
     private static NodeVtable tileNode(final Actor tile, final Unlockable unlockable, final Supplier<String> name,
-            Object subject) {
+            final Object subject) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         // A locked tile is a padlock: the game keeps what it is to itself, and
@@ -217,6 +218,14 @@ final class LedgerNodes {
                         return UnUtil.isLocked(unlockable) ? Loc.get("ui", "icon.locked") : name.get();
                     }
                 }, AnnouncementKinds.LABEL),
+                // A hero's or monster's hp, which only its opened panel draws.
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return subject instanceof EntType && !UnUtil.isLocked(unlockable)
+                                ? UnitLines.restHp((EntType) subject) : null;
+                    }
+                }, AnnouncementKinds.VALUE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {

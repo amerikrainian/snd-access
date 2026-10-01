@@ -97,6 +97,12 @@ public final class UnitLines {
         return SheetScreen.identityText(ent) + ", " + Loc.get("combat", "hp_full", "hp", state.getMaxHp());
     }
 
+    /** "4 hp": a unit type's hp, as the panel for it shows. */
+    public static String restHp(EntType type) {
+        return Loc.get("combat", "hp_full", "hp",
+                type.makeEnt().getState(FightLog.Temporality.Present).getMaxHp());
+    }
+
     // The sides, their rules, the statuses and traits the sheet draws, and
     // the glossary entries the lines use.
     private static void body(List<String> lines, Ent ent, EntState present, boolean rolledMarks) {

@@ -247,6 +247,12 @@ final class ActorNodes {
     static NodeVtable buttonFor(final Actor actor, final Place place) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
+        // A class tile (the Choose-Party picker) concerns its class: the
+        // hero buffer and the side keys read it.
+        com.tann.dice.gameplay.content.ent.type.HeroType tileClass = heroTypeOf(actor);
+        final com.tann.dice.gameplay.content.ent.type.HeroType heroClass = tileClass != null
+                && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileClass) ? tileClass : null;
+        vt.subject = heroClass;
         // What the game's info popup said when this control was last asked
         // (Enter on an info-only row, Backspace anywhere): read on the spot,
         // kept here to step through. A party-layout card adds the heroes
@@ -307,6 +313,12 @@ final class ActorNodes {
                                 : Loc.get("ui", "modal.unlabeled", "type", actor.getClass().getSimpleName());
                     }
                 }, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return heroClass != null ? UnitLines.restHp(heroClass) : null;
+                    }
+                }, AnnouncementKinds.VALUE),
                 // A row of the game's buttons that works as a radio group,
                 // in a place that marks the chosen one by colour.
                 NodeAnnouncement.kinded(new Supplier<String>() {
