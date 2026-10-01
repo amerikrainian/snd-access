@@ -14,8 +14,10 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choi
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.ChoiceType;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.special.LevelupHeroChoosable;
+import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.special.SkipChoosable;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 import com.tann.dice.util.lang.Words;
+import com.tann.dice.util.ui.choice.CDChoice;
 import com.tann.dice.util.ui.choice.ChoiceDialog;
 
 import snd.contracts.SndLog;
@@ -29,6 +31,7 @@ import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.KeyOffer;
+import snd.module.Captured;
 import snd.module.ChoicePhases;
 import snd.module.GameKeys;
 import snd.module.GameText;
@@ -73,13 +76,21 @@ public class ChoiceConfirmScreen extends AccessScreen {
         return p instanceof ChoicePhase ? (ChoicePhase) p : null;
     }
 
-    /** The pushed confirmation dialog, or null. */
+    /**
+     * The pushed confirmation dialog, or null. It is the one ChoiceDialog
+     * whose pop runnable ChoicePhase.choose sets; any other dialog over the
+     * offer (the first-fight reroll's question) is the modal reader's.
+     */
     private static ChoiceDialog dialog() {
         if (phase() == null) {
             return null;
         }
         Object modal = GameUi.topModal();
-        return modal instanceof ChoiceDialog ? (ChoiceDialog) modal : null;
+        if (!(modal instanceof ChoiceDialog)) {
+            return null;
+        }
+        Object pop = Captured.field(modal, ChoiceDialog.class, "popRunnable");
+        return Captured.builtBy(pop, ChoicePhase.class, "choose") ? (ChoiceDialog) modal : null;
     }
 
     /** The pending selection the dialog is asking about. */
@@ -101,8 +112,39 @@ public class ChoiceConfirmScreen extends AccessScreen {
         if (chosen.isEmpty()) {
             return null;
         }
-        // The game's own title composition; the full phrase is a lang key.
+        // ChoicePhase.choose's title: a warning for skipping a level-two
+        // level-up, else the confirmation (the full phrase is a lang key).
+        ChoicePhase p = phase();
+        if (chosen.size() == 1 && chosen.get(0) instanceof SkipChoosable && p != null
+                && hasLevelTwoLevelups(ChoicePhases.options(p))) {
+            return GameText.t("[purple]Warning- not recommended");
+        }
         return GameText.t("Confirm " + Words.plural("choice", chosen.size()));
+    }
+
+    private static java.lang.reflect.Method levelTwoLevelups;
+
+    private static boolean hasLevelTwoLevelups(List<Choosable> options) {
+        try {
+            if (levelTwoLevelups == null) {
+                levelTwoLevelups = ChoicePhase.class.getDeclaredMethod("hasLevelTwoLevelups", List.class);
+                levelTwoLevelups.setAccessible(true);
+            }
+            return (Boolean) levelTwoLevelups.invoke(null, options);
+        } catch (Exception e) {
+            SndLog.error("ChoicePhase.hasLevelTwoLevelups failed", e);
+            return false;
+        }
+    }
+
+    // The dialog's own answer, by its key-route index (0 decline, 1 accept).
+    private static String answer(ChoiceDialog cd, int index) {
+        Object[] choices = (Object[]) Captured.field(cd, ChoiceDialog.class, "choices");
+        if (choices == null || index >= choices.length) {
+            return null;
+        }
+        Object name = Captured.field(choices[index], CDChoice.class, "name");
+        return name != null ? GameText.t((String) name) : null;
     }
 
     @Override
@@ -152,8 +194,8 @@ public class ChoiceConfirmScreen extends AccessScreen {
         // Below the choice, one under the other: Down from what is being
         // confirmed reaches cancel, then yes. The dialog's own key route:
         // index 0 = decline, 1 = accept.
-        addButton(b, "cancel", GameText.t("cancel"), cd, 67);
-        addButton(b, "yes", GameText.t("yes"), cd, 66);
+        addButton(b, "cancel", answer(cd, 0), cd, 67);
+        addButton(b, "yes", answer(cd, 1), cd, 66);
     }
 
     // The before and after sheets as two rows sharing a key, so vertical
