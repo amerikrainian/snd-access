@@ -300,7 +300,7 @@ final class ActorNodes {
                             label = GameUi.iconNameUnder(actor); // icon-only buttons
                         }
                         if (label == null) {
-                            label = sideIconName(actor); // bare die-side images
+                            label = sideIconName(actor); // bare die-side tiles
                         }
                         if (label == null && actor instanceof com.tann.dice.screens.dungeon.panels.DieSidePanel) {
                             // Die-net previews in dialogs (level-ups, sheets).
@@ -339,7 +339,7 @@ final class ActorNodes {
                     @Override
                     public String get() {
                         boolean chosen = place.chosenBy != null ? place.chosenBy.test(actor)
-                                : chosenAmongButtons(actor, place.chosen);
+                                : chosenAmongButtons(actor, place.chosen) || plottedSide(actor);
                         return chosen ? Loc.get("ui", "state.selected") : null;
                     }
                 }, AnnouncementKinds.SELECTED),
@@ -635,35 +635,44 @@ final class ActorNodes {
         return item != null ? GameText.t(item.getDescription()) : null;
     }
 
-    // Bare die-side images (the graph tab's series icons and add-side popup)
-    // carry no text; name them via a texture-to-side map.
-    private static java.util.Map<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide> sidesByTexture;
-
+    // Bare die-side tiles carry no text: named by the side they hold.
     private static String sideIconName(Actor actor) {
         com.tann.dice.gameplay.content.ent.die.side.EntSide side = sideOf(actor);
         return side != null ? SideText.of(side.getBaseEffect()) : null;
     }
 
-    /** The die side an ImageActor displays, or null. */
+    /**
+     * The die side a side tile's listener holds: the Graph tab's plotted
+     * series and its add popup (GraphUtils.make), the TextMod tab's side list.
+     */
     static com.tann.dice.gameplay.content.ent.die.side.EntSide sideOf(Actor actor) {
-        if (!(actor instanceof com.tann.dice.util.ImageActor)) {
-            return null;
+        return snd.module.Captured.byListener(actor, com.tann.dice.gameplay.content.ent.die.side.EntSide.class);
+    }
+
+    // In the Graph tab's add popup, a tile's listener lives in the "+"
+    // button's runnable, which holds the plotted list: a side in it is
+    // plotted (GraphUtils.indexOf's test, EntSide.same).
+    private static boolean plottedSide(Actor actor) {
+        com.tann.dice.gameplay.content.ent.die.side.EntSide side = sideOf(actor);
+        if (side == null) {
+            return false;
         }
-        try {
-            if (sidesByTexture == null) {
-                java.util.Map<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide> map =
-                        new java.util.IdentityHashMap<Object, com.tann.dice.gameplay.content.ent.die.side.EntSide>();
-                for (com.tann.dice.gameplay.content.ent.die.side.EntSide side
-                        : com.tann.dice.gameplay.content.ent.die.side.EntSidesLib.getAllSidesWithValue()) {
-                    map.put(side.getTexture(), side);
-                }
-                sidesByTexture = map;
+        for (com.badlogic.gdx.scenes.scene2d.EventListener listener : actor.getListeners()) {
+            if (!(listener instanceof com.tann.dice.util.listener.TannListener)) {
+                continue;
             }
-            return sidesByTexture.get(((com.tann.dice.util.ImageActor) actor).tr);
-        } catch (Throwable t) {
-            snd.contracts.SndLog.error("side icon lookup failed", t);
-            return null;
+            List<?> plotted = snd.module.Captured.value(snd.module.Captured.value(listener, Runnable.class), List.class);
+            if (plotted == null) {
+                continue;
+            }
+            for (Object o : plotted) {
+                if (o instanceof com.tann.dice.gameplay.content.ent.die.side.EntSide
+                        && ((com.tann.dice.gameplay.content.ent.die.side.EntSide) o).same(side)) {
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     // A Checkbox draws its own tick state; find one under the row.
