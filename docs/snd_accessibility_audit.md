@@ -84,8 +84,8 @@ All are unlabeled icon-only squares (`DungeonUtils.makeBasicButton`), mouse-clic
 
 > **Coverage:** the cluster's icons are named rather than described by their art — Menu,
 Almanac, Language, Search, and the bypass-unlocks toggle — with the conditional ones appearing
-only when the game shows them. Language is a left/right chooser instead of the icon-then-modal
-flow, since the underlying option is a simple cycle. The back-out-of-folder control lives on the
+only when the game shows them. Language is a dropdown over the option itself instead of the
+icon-then-modal flow. The back-out-of-folder control lives on the
 card, where the folder contents are. The new-version button is not surfaced: it reports a remote
 version check, not a game action.
 
@@ -768,13 +768,14 @@ Book → stuff → Options (`OptionsMenu`). Header hint: "(right-click a checkbo
 
 > **Coverage:** built from the option registry (`OptionUtils.EscBopType` → `Option`) rather
 than the pointer-only widgets, inside the Book's content stop. BOptions are toggles speaking
-checked/unchecked with the right-click-only description read on focus; ChOptions are choosers
-cycling with Left/Right; FlOptions are sliders adjusting in 5%/20% steps with percent
+checked/unchecked with the right-click-only description read on focus; ChOptions are dropdowns
+(Enter opens the list of values on the one held, Enter chooses, Escape closes; the description,
+which often spells the values out, is in the control buffer); FlOptions are sliders adjusting in 5%/20% steps with percent
 readout. Every change goes through the option's own `setValue(manual)`, so warning dialogs,
 saves, and title-screen rebuilds behave exactly as a click; toggles play the game's own
 pip/pop. Locked options read as "locked" like the sighted padlock, with the unlock
 requirement on Backspace. The tab's Reset All and display/sound buttons are driven directly.
-Verified live: toggle round-trip (show timer), chooser round-trip (roll speed 1x→1.5x→1x),
+Verified live: toggle round-trip (show timer), dropdown round-trip (roll speed 1x→1.5x→1x),
 descriptions spoken.
 
 ---

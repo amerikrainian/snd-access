@@ -5,7 +5,7 @@
   "role.radio_button": "радиокнопка",
   "role.tab": "вкладка",
   "role.group": "группа",
-  "role.chooser": "выбор",
+  "role.dropdown": "раскрывающийся список",
   "role.list": "список",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
@@ -123,7 +123,6 @@
   "sys.context": "Система",
   "sys.menu": "Меню",
   "sys.almanac": "Альманах",
-  "sys.language": "Язык",
   "sys.bypass": "Разблокировки обойдены",
   "sys.search": "Поиск",
 

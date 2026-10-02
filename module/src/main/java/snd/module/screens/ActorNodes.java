@@ -257,19 +257,19 @@ final class ActorNodes {
         }
         final com.tann.dice.gameplay.save.settings.option.ChOption choice =
                 (com.tann.dice.gameplay.save.settings.option.ChOption) option;
-        return OptionNodes.chooser(choice, new java.util.function.Function<String, String>() {
+        return OptionNodes.dropdown(choice, new java.util.function.Function<String, String>() {
             @Override
             public String apply(String caption) {
                 return glyphName(caption, place.glyphs);
             }
-        }, new NodeVtable.Adjust() {
+        }, new java.util.function.IntConsumer() {
             @Override
-            public void adjust(int sign, boolean large) {
-                Actor row = choiceRow(actor, choice, OptionNodes.step(choice, sign));
+            public void accept(int index) {
+                Actor row = choiceRow(actor, choice, index);
                 if (row != null) {
                     GameUi.activate(row);
                 } else {
-                    snd.contracts.SndLog.error("option " + choice.getName() + ": no row for its next choice", null);
+                    snd.contracts.SndLog.error("option " + choice.getName() + ": no row for choice " + index, null);
                 }
             }
         });

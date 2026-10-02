@@ -48,6 +48,7 @@ public class SndModule implements ModModule {
     private TargetingWatcher targeting;
     private BannerWatcher banners;
     private TextEntryWatcher textEntry;
+    private snd.module.screens.DropdownScreen dropdown;
     private snd.module.screens.TutorialWatcher tutorial;
     private Object lastScreen;
     private boolean greeted;
@@ -83,6 +84,8 @@ public class SndModule implements ModModule {
         screens.register(new PauseRecoveryScreen());
         screens.register(new RunEndStatsScreen());
         screens.register(new BookScreen(h));
+        dropdown = new snd.module.screens.DropdownScreen(h, nav);
+        screens.register(dropdown);
         help = new HelpScreen(h, nav);
         screens.register(help);
         events = new EventLog(h.speech());
@@ -139,6 +142,7 @@ public class SndModule implements ModModule {
         reassertInput();
         screens.tick();
         help.tick();
+        dropdown.tick();
         buffers.tick();
         popups.tick();
         commands.tick(); // ahead of the phases: a turn's last steps are said before the next turn's banner

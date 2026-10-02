@@ -845,7 +845,7 @@ public class TitleFlowScreen extends AccessScreen {
                         Book.openBook(true);
                     }
                 }));
-        b.addItem(ControlId.structural(CompositeKey.of("sys", "language")), languageChooser());
+        b.addItem(ControlId.structural(CompositeKey.of("sys", "language")), languageDropdown());
         // The conditional members of the game's icon cluster.
         if (com.tann.dice.Main.getSettings().isBypass()) {
             b.addItem(ControlId.structural(CompositeKey.of("sys", "bypass")),
@@ -869,42 +869,19 @@ public class TitleFlowScreen extends AccessScreen {
         b.popContext();
     }
 
-    // The game's globe button pushes a chooser; a left/right cycle over the
-    // same option is directer for keyboard use. Changing it reloads the
+    // The game's globe button pushes a panel of radio rows; the option itself
+    // as a dropdown is directer for keyboard use. Changing it reloads the
     // translator and rebuilds the stage; our screens rebuild with it.
-    private NodeVtable languageChooser() {
+    private NodeVtable languageDropdown() {
         final com.tann.dice.gameplay.save.settings.option.ChOption lang =
                 com.tann.dice.gameplay.save.settings.option.OptionLib.LANGUAGE;
-        NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.CHOOSER;
-        vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(new Supplier<String>() {
+        return OptionNodes.dropdown(lang, java.util.function.Function.<String>identity(),
+                new java.util.function.IntConsumer() {
                     @Override
-                    public String get() {
-                        return Loc.get("ui", "sys.language");
+                    public void accept(int index) {
+                        lang.setValue(index, true);
                     }
-                }, AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return lang.getOptions()[lang.c()];
-                    }
-                }, AnnouncementKinds.VALUE));
-        vt.onAdjust = new NodeVtable.Adjust() {
-            @Override
-            public void adjust(int sign, boolean large) {
-                String[] options = lang.getOptions();
-                int next = ((lang.c() + sign) % options.length + options.length) % options.length;
-                lang.setValue(next, true);
-            }
-        };
-        vt.stateText = new Supplier<String>() {
-            @Override
-            public String get() {
-                return lang.getOptions()[lang.c()];
-            }
-        };
-        return vt;
+                });
     }
 
     private static NodeVtable systemButton(final String label, Runnable action) {

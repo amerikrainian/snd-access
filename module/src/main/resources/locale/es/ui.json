@@ -5,7 +5,7 @@
   "role.radio_button": "botón de opción",
   "role.tab": "pestaña",
   "role.group": "grupo",
-  "role.chooser": "selector",
+  "role.dropdown": "desplegable",
   "role.list": "lista",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
@@ -123,7 +123,6 @@
   "sys.context": "Sistema",
   "sys.menu": "Menú",
   "sys.almanac": "Almanaque",
-  "sys.language": "Idioma",
   "sys.bypass": "Desbloqueos omitidos",
   "sys.search": "Buscar",
 

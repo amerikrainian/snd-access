@@ -5,7 +5,7 @@
   "role.radio_button": "pulsante di opzione",
   "role.tab": "scheda",
   "role.group": "gruppo",
-  "role.chooser": "selettore",
+  "role.dropdown": "menu a tendina",
   "role.list": "elenco",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
@@ -123,7 +123,6 @@
   "sys.context": "Sistema",
   "sys.menu": "Menu",
   "sys.almanac": "Almanacco",
-  "sys.language": "Lingua",
   "sys.bypass": "Sblocchi ignorati",
   "sys.search": "Cerca",
 

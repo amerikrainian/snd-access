@@ -5,7 +5,7 @@
   "role.radio_button": "radio button",
   "role.tab": "tab",
   "role.group": "group",
-  "role.chooser": "chooser",
+  "role.dropdown": "dropdown",
   "role.list": "list",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
@@ -123,7 +123,6 @@
   "sys.context": "System",
   "sys.menu": "Menu",
   "sys.almanac": "Almanac",
-  "sys.language": "Language",
   "sys.bypass": "Unlocks bypassed",
   "sys.search": "Search",
 

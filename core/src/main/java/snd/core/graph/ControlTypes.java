@@ -48,9 +48,9 @@ public final class ControlTypes {
     public static final ControlType TAB = make("tab", true);
     public static final ControlType GROUP = make("group", true);
     public static final ControlType TEXT = make("text", false);
-    /** A cycle-through-options control (left/right changes the value). */
-    public static final ControlType CHOOSER = make("chooser", true);
+    /** A value chosen from a list Enter opens. */
+    public static final ControlType DROPDOWN = make("dropdown", true);
 
     public static final List<ControlType> ALL = Arrays.asList(
-            BUTTON, TOGGLE, SLIDER, RADIO, TAB, GROUP, TEXT, CHOOSER);
+            BUTTON, TOGGLE, SLIDER, RADIO, TAB, GROUP, TEXT, DROPDOWN);
 }

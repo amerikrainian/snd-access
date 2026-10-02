@@ -5,7 +5,7 @@
   "role.radio_button": "bouton radio",
   "role.tab": "onglet",
   "role.group": "groupe",
-  "role.chooser": "sélecteur",
+  "role.dropdown": "liste déroulante",
   "role.list": "liste",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position} : {side}",
@@ -123,7 +123,6 @@
   "sys.context": "Système",
   "sys.menu": "Menu",
   "sys.almanac": "Almanach",
-  "sys.language": "Langue",
   "sys.bypass": "Déblocages contournés",
   "sys.search": "Rechercher",
 

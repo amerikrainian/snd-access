@@ -1,7 +1,11 @@
 package snd.module.screens;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 import com.tann.dice.gameplay.save.settings.option.BOption;
@@ -19,7 +23,7 @@ import snd.module.GameText;
 
 /**
  * A game option as one control, read from the option: a yes/no option as a
- * toggle, a choice option as a chooser, a fraction as a slider, each with its
+ * toggle, a choice option as a dropdown, a fraction as a slider, each with its
  * name, its value and the description the game shows on right-click. How a
  * change is made is the caller's: the Options tab sets the option, a place
  * showing the game's own widgets presses them.
@@ -46,26 +50,52 @@ final class OptionNodes {
         return vt;
     }
 
-    /** valueName turns a choice's caption into its spoken word (a place's shorthand). */
-    static NodeVtable chooser(final ChOption option, final Function<String, String> valueName,
-            NodeVtable.Adjust adjust) {
+    /**
+     * A choice option as a dropdown: Enter opens the list of its values on
+     * the one it holds ({@link DropdownScreen}), and choose applies the index
+     * picked. valueName turns a choice's caption into its spoken word (a
+     * place's shorthand). The values are in the list, so the description,
+     * which often spells them out, is the control buffer's.
+     */
+    static NodeVtable dropdown(final ChOption option, final Function<String, String> valueName,
+            final IntConsumer choose) {
         NodeVtable vt = new NodeVtable();
-        vt.controlType = ControlTypes.CHOOSER;
+        vt.controlType = ControlTypes.DROPDOWN;
         final Supplier<String> value = new Supplier<String>() {
             @Override
             public String get() {
-                String caption = option.getOptions()[option.c()];
-                return option == com.tann.dice.platform.control.desktop.DesktopControl.SCREEN_MODE
-                        ? screenModeWord(option, caption) : valueName.apply(GameText.t(caption));
+                return valueWord(option, option.c(), valueName);
             }
         };
+        final Supplier<String> name = name(option);
+        final Supplier<String> description = description(option);
         vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(name(option), AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(value, AnnouncementKinds.VALUE),
-                NodeAnnouncement.kinded(description(option), AnnouncementKinds.TOOLTIP));
-        vt.onAdjust = adjust;
-        vt.stateText = value;
+                NodeAnnouncement.kinded(name, AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(value, AnnouncementKinds.VALUE));
+        vt.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                String desc = description.get();
+                return desc != null ? Collections.singletonList(desc) : Collections.<String>emptyList();
+            }
+        };
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                List<String> values = new ArrayList<String>();
+                for (int i = 0; i < option.getOptions().length; i++) {
+                    values.add(valueWord(option, i, valueName));
+                }
+                DropdownScreen.open(name.get(), values, option.c(), choose, value);
+            }
+        };
         return vt;
+    }
+
+    private static String valueWord(ChOption option, int index, Function<String, String> valueName) {
+        String caption = option.getOptions()[index];
+        return option == com.tann.dice.platform.control.desktop.DesktopControl.SCREEN_MODE
+                ? screenModeWord(option, caption) : valueName.apply(GameText.t(caption));
     }
 
     static NodeVtable slider(final FlOption option, NodeVtable.Adjust adjust) {
@@ -100,12 +130,6 @@ final class OptionNodes {
             }
         }
         return shorthand;
-    }
-
-    /** The next choice from the current one, wrapping. */
-    static int step(ChOption option, int sign) {
-        int count = option.getOptions().length;
-        return ((option.c() + sign) % count + count) % count;
     }
 
     private static Supplier<String> name(final Option option) {

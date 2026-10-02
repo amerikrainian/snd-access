@@ -357,7 +357,7 @@ public class BookScreen extends AccessScreen {
     }
 
     // The options screen, from the option registry rather than its pointer-
-    // only widgets: checkboxes become toggles, radio rows become choosers,
+    // only widgets: checkboxes become toggles, radio rows become dropdowns,
     // sliders adjust with Left/Right — every value change through the
     // option's own setValue, so warning dialogs, saves, and rebuild side
     // effects behave exactly as a click. Locked options read as the padlock
@@ -492,12 +492,14 @@ public class BookScreen extends AccessScreen {
     }
 
     private NodeVtable choiceOptionNode(final com.tann.dice.gameplay.save.settings.option.ChOption option) {
-        return OptionNodes.chooser(option, java.util.function.Function.<String>identity(), new NodeVtable.Adjust() {
-            @Override
-            public void adjust(int sign, boolean large) {
-                option.setValue(OptionNodes.step(option, sign), true);
-            }
-        });
+        return OptionNodes.dropdown(option, java.util.function.Function.<String>identity(),
+                new java.util.function.IntConsumer() {
+                    @Override
+                    public void accept(int index) {
+                        com.tann.dice.statics.sound.Sounds.playSound(com.tann.dice.statics.sound.Sounds.pip);
+                        option.setValue(index, true);
+                    }
+                });
     }
 
     private NodeVtable sliderOptionNode(final com.tann.dice.gameplay.save.settings.option.FlOption option) {
