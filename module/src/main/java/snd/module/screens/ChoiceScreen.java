@@ -129,7 +129,7 @@ public class ChoiceScreen extends AccessScreen {
         List<Choosable> options = ChoicePhases.options(p);
         boolean sheets = false;
         for (Choosable option : options) {
-            sheets |= option instanceof LevelupHeroChoosable;
+            sheets |= option instanceof LevelupHeroChoosable || !recruits(option).isEmpty();
         }
 
         for (int i = 0; i < options.size(); i++) {
@@ -139,8 +139,14 @@ public class ChoiceScreen extends AccessScreen {
             // EntPanelInventory panel); it reads as a row — the choose button
             // followed by the sheet's nodes — instead of one tooltip burst.
             final boolean levelup = option instanceof LevelupHeroChoosable;
+            // So is a blessing that adds a hero (GlobalAddHero, whose big
+            // panel is the hero's EntPanelInventory): the choose button, then
+            // the hero as its panel reads.
+            List<com.tann.dice.gameplay.trigger.global.GlobalAddHero> recruits = recruits(option);
             if (levelup) {
                 b.startRow("levelup");
+            } else if (!recruits.isEmpty()) {
+                b.startRow("recruit");
             }
             NodeVtable vt = new NodeVtable();
             vt.controlType = optional ? ControlTypes.TEXT : ControlTypes.BUTTON;
@@ -225,6 +231,12 @@ public class ChoiceScreen extends AccessScreen {
             b.addItem(ControlId.referenced(option, CompositeKey.of("choice", i, option.getSaveString())), vt);
             if (levelup) {
                 buildLevelupSheet(b, (LevelupHeroChoosable) option, index);
+                b.endRow();
+            } else if (!recruits.isEmpty()) {
+                for (com.tann.dice.gameplay.trigger.global.GlobalAddHero recruit : recruits) {
+                    EntPanelNodes.unit(b, recruitHero(recruit), java.util.Collections.<String>emptyList(),
+                            java.util.Collections.<String>emptyList());
+                }
                 b.endRow();
             }
         }
@@ -436,6 +448,36 @@ public class ChoiceScreen extends AccessScreen {
             }
         }
         return null;
+    }
+
+    // The heroes a modifier adds to the party, one per GlobalAddHero.
+    private static List<com.tann.dice.gameplay.trigger.global.GlobalAddHero> recruits(Choosable option) {
+        List<com.tann.dice.gameplay.trigger.global.GlobalAddHero> recruits =
+                new java.util.ArrayList<com.tann.dice.gameplay.trigger.global.GlobalAddHero>();
+        if (option instanceof com.tann.dice.gameplay.modifier.Modifier) {
+            for (com.tann.dice.gameplay.trigger.global.Global g
+                    : ((com.tann.dice.gameplay.modifier.Modifier) option).getGlobals()) {
+                if (g instanceof com.tann.dice.gameplay.trigger.global.GlobalAddHero) {
+                    recruits.add((com.tann.dice.gameplay.trigger.global.GlobalAddHero) g);
+                }
+            }
+        }
+        return recruits;
+    }
+
+    // The panel shows a fresh unit of the class (GlobalAddHero.makePanelActorI):
+    // one per offer, so the sheet's lines keep their identity.
+    private final java.util.Map<Object, com.tann.dice.gameplay.content.ent.Ent> recruitHeroes =
+            new java.util.WeakHashMap<Object, com.tann.dice.gameplay.content.ent.Ent>();
+
+    private com.tann.dice.gameplay.content.ent.Ent recruitHero(com.tann.dice.gameplay.trigger.global.GlobalAddHero recruit) {
+        com.tann.dice.gameplay.content.ent.Ent hero = recruitHeroes.get(recruit);
+        if (hero == null) {
+            hero = ((HeroType) Captured.field(recruit, com.tann.dice.gameplay.trigger.global.GlobalAddHero.class, "type"))
+                    .makeEnt();
+            recruitHeroes.put(recruit, hero);
+        }
+        return hero;
     }
 
     // ---- what each option IS: name, short value, full effect ----

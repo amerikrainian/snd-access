@@ -460,7 +460,10 @@ verified live: exact-N (auto-confirm dialog via the modal reader), up-to-N (Conf
 refusal), optional (accept/decline nodes running the dialog's own routes). The anticheese
 reroll surfaces as a named button (found by its flaff texture, fired through the game's
 listener) — code-complete but not yet exercised live, since it only exists on first-fight
-offers. The game's digit keys keep working alongside.
+offers. The game's digit keys keep working alongside. A blessing that adds a hero
+(`GlobalAddHero`, whose big panel is the hero's `EntPanelInventory`) reads as a row like a
+level-up: the choose button, then the hero's sheet (`EntPanelNodes`), whose nodes concern the
+hero, so the digits read its sides there and the hero buffer holds it.
 
 ## 4.6 Event Phases — DONE
 
