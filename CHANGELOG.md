@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.1.4
+
+- Options no longer read their first dropdown options when opening.
+- Converted previous choosers to proper dropdowns.
+- Added hero buffers to party blessings.
+
 ## V0.1.3
 
 - Fixed unit effects being announced for an already dead unit.
