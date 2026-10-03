@@ -1,5 +1,9 @@
 # Changelog
 
+## V0.1.5
+
+- Added support for renaming heroes.
+
 ## V0.1.4
 
 - Options no longer read their first dropdown options when opening.
