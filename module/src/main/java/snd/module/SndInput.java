@@ -35,15 +35,29 @@ final class SndInput implements InputProcessor {
 
     // While the game's own text input holds stage keyboard focus, every key
     // belongs to the field (typing, caret keys, Enter submit, Escape cancel)
-    // — the navigator steps aside and TextEntryWatcher echoes what happens.
+    // — the navigator steps aside, and reads the field as it changes. A word
+    // jump is answered here, through the field's own jump (TextInputNodes).
     static boolean textEntryActive() {
-        return com.tann.dice.Main.stage != null
-                && com.tann.dice.Main.stage.getKeyboardFocus()
-                        instanceof com.tann.dice.util.ui.TextInput;
+        return focusedField() != null;
     }
+
+    private static com.tann.dice.util.ui.TextInput focusedField() {
+        if (com.tann.dice.Main.stage == null) {
+            return null;
+        }
+        Object focus = com.tann.dice.Main.stage.getKeyboardFocus();
+        return focus instanceof com.tann.dice.util.ui.TextInput ? (com.tann.dice.util.ui.TextInput) focus : null;
+    }
+
+    // The field that held the keyboard when the current press went down.
+    // The backend follows Enter's keyDown with a newline keyTyped (Backspace,
+    // Tab and Delete with theirs, and a held key repeats only the keyTyped):
+    // a field that press opened would take it, and Enter submits it empty.
+    private Object fieldAtPress;
 
     @Override
     public boolean keyDown(int keycode) {
+        fieldAtPress = focusedField();
         boolean shift = Gdx.input.isKeyPressed(59) || Gdx.input.isKeyPressed(60);
         boolean ctrl = Gdx.input.isKeyPressed(129) || Gdx.input.isKeyPressed(130);
         boolean alt = Gdx.input.isKeyPressed(57) || Gdx.input.isKeyPressed(58);
@@ -52,8 +66,12 @@ final class SndInput implements InputProcessor {
 
     /** A key press with its modifier state given (the dev driver fakes held modifiers here). */
     boolean key(int keycode, boolean shift, boolean ctrl, boolean alt) {
-        if (textEntryActive()) {
-            return false;
+        com.tann.dice.util.ui.TextInput field = focusedField();
+        if (field != null) {
+            snd.core.text.CaretMove move = snd.module.screens.TextInputNodes.caretMove(keycode);
+            nav.caretKey(move);
+            return move == snd.core.text.CaretMove.WORD
+                    && snd.module.screens.TextInputNodes.jumpWord(field, keycode);
         }
         int digit = digitOf(keycode);
         return run(keys.match(keycode, digit, shift, ctrl, alt), digit);
@@ -110,7 +128,12 @@ final class SndInput implements InputProcessor {
 
     @Override
     public boolean keyTyped(char character) {
-        if (textEntryActive() || !screens.ownsKeyboard()) {
+        Object field = focusedField();
+        if (field != null) {
+            // Typed into the field, unless the press that opened it typed it.
+            return field != fieldAtPress;
+        }
+        if (!screens.ownsKeyboard()) {
             return false;
         }
         boolean wasActive = nav.searchActive();

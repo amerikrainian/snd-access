@@ -410,4 +410,123 @@ class GraphNavigatorTest {
         assertEquals(base, mgr.current());
         assertTrue(cap.lines.contains("base2"), "expected base2 restore in " + cap.lines);
     }
+
+    // A field over a fake widget: the test edits it the way the game does.
+    static final class FieldScreen extends ListScreen {
+        final StringBuilder text = new StringBuilder();
+        int caret;
+
+        FieldScreen(String... others) {
+            super(others);
+        }
+
+        @Override
+        public void build(GraphBuilder b) {
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = snd.core.graph.ControlTypes.TEXT_FIELD;
+            vt.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return "Name";
+                        }
+                    }, AnnouncementKinds.LABEL),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return text.length() == 0 ? "blank" : text.toString();
+                        }
+                    }, AnnouncementKinds.VALUE));
+            vt.textField = new snd.core.text.TextField() {
+                @Override
+                public String text() {
+                    return text.toString();
+                }
+
+                @Override
+                public int caret() {
+                    return caret;
+                }
+
+                @Override
+                public int anchor() {
+                    return -1;
+                }
+            };
+            b.addItem(ControlId.structural("field"), vt);
+            super.build(b);
+        }
+
+        void type(String s) {
+            text.insert(caret, s);
+            caret += s.length();
+        }
+    }
+
+    private static void installFieldWording() {
+        java.util.Map<String, String> ui = new java.util.HashMap<String, String>();
+        ui.put("role.text_field", "text field");
+        ui.put("text.blank", "blank");
+        ui.put("text.space", "space");
+        ui.put("text.capital", "cap {letter}");
+        java.util.Map<String, java.util.Map<String, String>> tables =
+                new java.util.HashMap<String, java.util.Map<String, String>>();
+        tables.put("ui", ui);
+        snd.core.loc.Loc.installFallback(tables);
+    }
+
+    @Test
+    void aFocusedFieldEchoesEditsButNotWhatItHeldOnLanding() {
+        installFieldWording();
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        FieldScreen screen = new FieldScreen();
+        screen.type("Al");
+        nav.attach(screen);
+        nav.ensureFocus();
+        assertEquals(Arrays.asList("Name, text field, Al"), cap.lines);
+
+        screen.type("f");
+        nav.ensureFocus();
+        nav.ensureFocus();
+        assertEquals(Arrays.asList("Name, text field, Al", "!f"), cap.lines);
+    }
+
+    @Test
+    void aCaretKeyThatMovesNothingReReadsWhereTheCaretStands() {
+        installFieldWording();
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        FieldScreen screen = new FieldScreen();
+        screen.type("Al");
+        nav.attach(screen);
+        nav.ensureFocus();
+        cap.lines.clear();
+
+        screen.caret = 0; // Home
+        nav.caretKey(snd.core.text.CaretMove.CHAR);
+        nav.ensureFocus();
+        nav.caretKey(snd.core.text.CaretMove.CHAR); // Left at the start
+        nav.ensureFocus();
+        nav.ensureFocus(); // the press is read once
+        assertEquals(Arrays.asList("!cap A", "!cap A"), cap.lines);
+    }
+
+    @Test
+    void focusReturningToAFieldTakesItInAgainSilently() {
+        installFieldWording();
+        Capture cap = new Capture();
+        GraphNavigator nav = new GraphNavigator(cap.pipeline);
+        FieldScreen screen = new FieldScreen("other");
+        nav.attach(screen);
+        nav.ensureFocus();
+        nav.onAction(NavAction.DOWN);
+        nav.ensureFocus();
+        screen.type("Bob"); // changed while focus was elsewhere
+        nav.onAction(NavAction.UP);
+        nav.ensureFocus();
+        cap.lines.clear();
+        nav.ensureFocus();
+        assertEquals(java.util.Collections.<String>emptyList(), cap.lines);
+    }
 }

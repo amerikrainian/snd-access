@@ -214,4 +214,39 @@ public final class Captured {
             return null;
         }
     }
+
+    private static final Map<Class<?>, Map<String, Method>> CALLED = new HashMap<Class<?>, Map<String, Method>>();
+
+    /**
+     * A no-argument method the game keeps out of reach (protected), declared
+     * on owner, called on obj (its override, if obj's class has one). A
+     * missing method is a game change: logged once, null.
+     */
+    public static Object call(Object obj, Class<?> owner, String name) {
+        Map<String, Method> methods = CALLED.get(owner);
+        if (methods == null) {
+            methods = new HashMap<String, Method>();
+            CALLED.put(owner, methods);
+        }
+        Method method = methods.get(name);
+        if (method == null) {
+            try {
+                method = owner.getDeclaredMethod(name);
+                method.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                SndLog.error("method " + owner.getSimpleName() + "." + name + " is gone", e);
+                method = NO_METHOD;
+            }
+            methods.put(name, method);
+        }
+        if (method == NO_METHOD) {
+            return null;
+        }
+        try {
+            return method.invoke(obj);
+        } catch (Exception e) {
+            SndLog.error("method " + owner.getSimpleName() + "." + name + " call failed", e);
+            return null;
+        }
+    }
 }

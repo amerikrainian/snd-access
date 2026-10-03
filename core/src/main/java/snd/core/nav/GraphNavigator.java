@@ -20,6 +20,9 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.GraphDir;
 import snd.core.graph.Transition;
 import snd.core.search.TypeAheadSearch;
+import snd.core.text.CaretMove;
+import snd.core.text.TextEcho;
+import snd.core.text.TextField;
 import snd.contracts.speech.SpeechPipeline;
 import snd.contracts.speech.TextFilter;
 
@@ -93,6 +96,7 @@ public final class GraphNavigator {
             pendingFocus = null;
             pendingStop = null;
             liveKey = null;
+            textKey = null;
         }
         graph = newScreen != null ? new KeyGraph(new Supplier<GraphRender>() {
             @Override
@@ -197,6 +201,7 @@ public final class GraphNavigator {
         }
 
         watchLive(node);
+        watchText(node);
     }
 
     // ---- live announcements: watch the FOCUSED node's live parts and speak
@@ -241,6 +246,46 @@ public final class GraphNavigator {
                     speak(v, false);
                 }
             }
+        }
+    }
+
+    // ---- the focused text field: its edits and caret, as the game applies them ----
+
+    private final TextEcho textEcho = new TextEcho();
+    private ControlId textKey;
+    private CaretMove caretMove = CaretMove.NONE;
+
+    /**
+     * A caret key reached the focused field (the field's own key handling
+     * moves the caret; this says how the landing reads). Read on the next
+     * frame's watch.
+     */
+    public void caretKey(CaretMove move) {
+        caretMove = move;
+    }
+
+    private void watchText(GraphNode node) {
+        CaretMove move = caretMove;
+        caretMove = CaretMove.NONE;
+        TextField field = node.vtable.textField;
+        if (field == null) {
+            textKey = null;
+            return;
+        }
+        if (textKey == null || !textKey.equals(node.id)) {
+            // A field newly focused: its landing announcement said what it holds.
+            textKey = node.id;
+            textEcho.reset();
+        }
+        String said;
+        try {
+            said = textEcho.observe(field.text(), field.caret(), field.anchor(), move);
+        } catch (Throwable t) {
+            SndLog.error("text field read threw", t);
+            return;
+        }
+        if (said != null) {
+            speak(said, true);
         }
     }
 

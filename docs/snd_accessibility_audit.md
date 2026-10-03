@@ -510,12 +510,21 @@ character sheet on activate or Backspace; slots speak their item or "empty"; bag
 name, tier, held/new/force-equip glows, and description (the zoom list's content, in place).
 Randomize and Done drive the panel's own R/Enter key routes. Verified live: equip from bag,
 pick-up from slot, unequip to bag, re-equip, close, focus restore. Each hero row ends in a
-**Rename** button that fires the game's own title-bar listener; the game's in-stage text input
-(it is NOT a native dialog) is covered generally — while a `TextInput` holds keyboard focus,
-`SndInput` passes every key through to the field (typing, caret keys, Enter submit, Escape
-cancel) and `TextEntryWatcher` announces the field on focus and echoes edits (typed chars,
-pastes, deletions). The same coverage serves every other text input in the game (scenario
-names, custom-mode saves).
+**Rename** button that fires the game's own name-box listener (`addNameChangeListener`). The
+game's in-stage text input (`DesktopControl.textInput`, NOT a native dialog) is covered
+generally: while a `TextInput` holds keyboard focus, `SndInput` passes every key through to
+the field (typing, caret keys, Enter submit, Escape cancel), and the modal reader shows the
+panel as one text field (`TextInputNodes`) labelled from the listener it reports to and the
+game method that built it (a rename names its hero, a search its resolver, a wish what it
+wishes for; the high-score name, custom-mode save, scenario title and bug description by the
+game's own string for them). The navigator echoes its edits and reads its caret moves
+(`TextEcho`): typed or removed text bare, the character or word the caret lands on, selection
+spans; Up/Down (which the field ignores) read the whole text. The Rename button says its hero's
+current name, so returning to it after a rename confirms the new one. The press
+that opens a field is never typed into it (the backend follows Enter's keyDown with a newline
+keyTyped, which would submit the new field empty). The same coverage serves every other text
+input in the game (scenario names, custom-mode saves); one with no reader for its listener is
+labelled by its panel's title and logged.
 
 ---
 
@@ -839,7 +848,7 @@ submit panel's name field is the covered in-game text input — actual submissio
 > **Coverage:** completion toasts already rode the popup watcher; they now also speak the
 achievement's description (the toast shows only the name, with detail behind right-click on a
 5-second timer) — verified live by showing a real toast through the holder's own
-`addAchievement` ("Notification: Gambler-pick, Choose Gambler twice"). Locked-content
+`addAchievement` ("Gambler-pick, Choose Gambler twice"). Locked-content
 presentation is covered where it appears: modes list by name with a "locked" state and open
 the game's unlock-requirement panel on activation, options read as the padlock with the
 requirement on Backspace, ledger tiles read "Locked", and the Unlock tab (7.2) is the

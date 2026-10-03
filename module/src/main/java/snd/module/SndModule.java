@@ -47,7 +47,6 @@ public class SndModule implements ModModule {
     private CommandWatcher commands;
     private TargetingWatcher targeting;
     private BannerWatcher banners;
-    private TextEntryWatcher textEntry;
     private snd.module.screens.DropdownScreen dropdown;
     private snd.module.screens.TutorialWatcher tutorial;
     private Object lastScreen;
@@ -93,13 +92,12 @@ public class SndModule implements ModModule {
         InputRegistry keys = SndKeys.build(help, nav, buffers, h.speech());
         help.setKeys(keys);
         input = new SndInput(screens, nav, help, keys);
-        popups = new PopupWatcher(events);
+        popups = new PopupWatcher(events, h.speech());
         phases = new PhaseWatcher(events);
         dice = new DiceWatcher(h.speech(), events);
         commands = new CommandWatcher(events);
         targeting = new TargetingWatcher(h.speech(), events);
         banners = new BannerWatcher(events);
-        textEntry = new TextEntryWatcher(h.speech());
         tutorial = new snd.module.screens.TutorialWatcher(events);
         SndLog.info("module generation " + h.generation() + " loaded, version " + ModVersion.current());
         if (h.generation() == 1) {
@@ -150,7 +148,6 @@ public class SndModule implements ModModule {
         dice.tick();
         targeting.tick();
         banners.tick();
-        textEntry.tick();
         tutorial.tick();
         // Last: after the screen change (entering the title clears the log) and
         // the focus readout, so the notice queues behind what the player is on.

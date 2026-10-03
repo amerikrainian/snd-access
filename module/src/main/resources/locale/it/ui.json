@@ -7,6 +7,7 @@
   "role.group": "gruppo",
   "role.dropdown": "menu a tendina",
   "role.list": "elenco",
+  "role.text_field": "campo di testo",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
   "side.position.left": "sinistra",
@@ -25,7 +26,6 @@
   "greeting": "Slice and Dice access {version} caricato",
   "update_available": "Aggiornamento {version} di Slice and Dice access disponibile",
   "module_reloaded": "Modulo ricaricato, generazione {generation}",
-  "notification": "Notifica: {text}",
 
   "nav.no_match": "nessuna corrispondenza per {text}",
   "nav.search_cleared": "ricerca cancellata",
@@ -234,11 +234,12 @@
   "inv.cannot_use": "{hero} non può usare {item}",
   "inv.done": "Fatto",
   "inv.randomize": "Equipaggiamento casuale",
-  "inv.rename": "Rinomina",
+  "inv.rename_hero": "Rinomina {hero}",
   "inv.rename_unavailable": "rinomina non disponibile",
 
-  "textentry.open": "inserimento testo, {title}",
-  "textentry.blank": "vuoto",
-  "textentry.space": "spazio",
-  "textentry.deleted": "cancellato {text}"
+  "text.blank": "vuoto",
+  "text.space": "spazio",
+  "text.capital": "maiuscola {letter}",
+  "text.selected": "{text} selezionato",
+  "text.unselected": "{text} deselezionato"
 }

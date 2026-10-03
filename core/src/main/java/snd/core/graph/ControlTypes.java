@@ -50,7 +50,9 @@ public final class ControlTypes {
     public static final ControlType TEXT = make("text", false);
     /** A value chosen from a list Enter opens. */
     public static final ControlType DROPDOWN = make("dropdown", true);
+    /** A field the player types into ({@link NodeVtable#textField}). */
+    public static final ControlType TEXT_FIELD = make("text_field", true);
 
     public static final List<ControlType> ALL = Arrays.asList(
-            BUTTON, TOGGLE, SLIDER, RADIO, TAB, GROUP, TEXT, DROPDOWN);
+            BUTTON, TOGGLE, SLIDER, RADIO, TAB, GROUP, TEXT, DROPDOWN, TEXT_FIELD);
 }

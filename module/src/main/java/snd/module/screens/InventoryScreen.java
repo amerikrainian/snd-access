@@ -52,12 +52,17 @@ public class InventoryScreen extends AccessScreen {
 
     @Override
     public int layer() {
-        return 20; // replaces the generic modal reader for this panel
+        // Replaces the generic modal reader for this panel, and lies under it
+        // for one pushed over the panel (a hero's rename).
+        return 19;
     }
 
     @Override
     public boolean isActive() {
-        return GameUi.topModal() instanceof PartyManagementPanel;
+        // While the panel is open at all, not only while it is on top: a
+        // panel pushed over it covers this screen rather than closing it, so
+        // closing that panel lands back on the control that opened it.
+        return GameUi.modalOpen(PartyManagementPanel.class);
     }
 
     @Override
@@ -205,14 +210,15 @@ public class InventoryScreen extends AccessScreen {
             rename.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    return Loc.get("ui", "inv.rename");
+                    // The live name: back from a rename, the button says the new one.
+                    return Loc.get("ui", "inv.rename_hero", "hero", GameText.t(hero.getName(true)));
                 }
             }, AnnouncementKinds.LABEL));
             rename.onActivate = new Runnable() {
                 @Override
                 public void run() {
-                    // The title-bar click: opens the game's text input, which
-                    // TextEntryWatcher then speaks.
+                    // The name box's click: opens the game's text entry panel,
+                    // read by the modal reader (TextInputNodes).
                     com.badlogic.gdx.scenes.scene2d.Actor target =
                             GameUi.heroRenameTarget(hero.getDiePanel());
                     if (target == null) {

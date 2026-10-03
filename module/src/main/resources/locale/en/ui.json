@@ -7,6 +7,7 @@
   "role.group": "group",
   "role.dropdown": "dropdown",
   "role.list": "list",
+  "role.text_field": "text field",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
   "side.position.left": "left",
@@ -25,7 +26,6 @@
   "greeting": "Slice and Dice access {version} loaded",
   "update_available": "Slice and Dice access update {version} available",
   "module_reloaded": "Module reloaded, generation {generation}",
-  "notification": "Notification: {text}",
 
   "nav.no_match": "no match for {text}",
   "nav.search_cleared": "search cleared",
@@ -234,11 +234,12 @@
   "inv.cannot_use": "{hero} cannot use {item}",
   "inv.done": "Done",
   "inv.randomize": "Randomize equipment",
-  "inv.rename": "Rename",
+  "inv.rename_hero": "Rename {hero}",
   "inv.rename_unavailable": "rename not available",
 
-  "textentry.open": "text entry, {title}",
-  "textentry.blank": "blank",
-  "textentry.space": "space",
-  "textentry.deleted": "deleted {text}"
+  "text.blank": "blank",
+  "text.space": "space",
+  "text.capital": "cap {letter}",
+  "text.selected": "{text} selected",
+  "text.unselected": "{text} unselected"
 }

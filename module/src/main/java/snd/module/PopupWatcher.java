@@ -6,7 +6,9 @@ import java.util.WeakHashMap;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 
+import snd.contracts.speech.SpeechPipeline;
 import snd.core.buffers.EventLog;
+import snd.core.text.TextEcho;
 
 /**
  * Speaks the game's transient top-right popups (achievement toasts, stat
@@ -14,13 +16,16 @@ import snd.core.buffers.EventLog;
  * "alwaysontop" on the stage; popups slide in, sit ~5s, and vanish — visual
  * users can glance, so each new popup is spoken once, queued. Polled from the
  * module tick; seen-tracking is weak so removed popups don't accumulate.
+ * The clipboard toast of a copy in a text field is that field's echo instead.
  */
 final class PopupWatcher {
     private final EventLog events;
+    private final SpeechPipeline speech;
     private final WeakHashMap<Actor, Boolean> seen = new WeakHashMap<Actor, Boolean>();
 
-    PopupWatcher(EventLog events) {
+    PopupWatcher(EventLog events, SpeechPipeline speech) {
         this.events = events;
+        this.speech = speech;
     }
 
     void tick() {
@@ -34,6 +39,17 @@ final class PopupWatcher {
         }
         for (Actor popup : ((Group) holder).getChildren()) {
             if (seen.put(popup, Boolean.TRUE) != null) {
+                continue;
+            }
+            if (SndInput.textEntryActive() && Captured.listenerBuiltBy(
+                    popup, com.tann.dice.util.ui.ClipboardUtils.class, "showClipboardToast") != null) {
+                // A copy in a text field (TextInput's Ctrl+C) answers the
+                // player's own keystroke: the text copied, as the field's
+                // echoes are, whole (the toast cuts it at ten characters).
+                String copied = com.badlogic.gdx.Gdx.app.getClipboard().getContents();
+                if (copied != null && !copied.isEmpty()) {
+                    speech.speak(TextEcho.echo(copied), true);
+                }
                 continue;
             }
             List<String> texts = GameUi.textsUnder(popup);
@@ -53,7 +69,7 @@ final class PopupWatcher {
             if (description != null) {
                 sb.append(", ").append(description);
             }
-            events.say(snd.core.loc.Loc.get("ui", "notification", "text", sb), false);
+            events.say(sb.toString(), false);
         }
     }
 

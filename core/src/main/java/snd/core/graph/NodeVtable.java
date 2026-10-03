@@ -53,6 +53,14 @@ public final class NodeVtable {
      */
     public java.util.function.BooleanSupplier selected;
 
+    /**
+     * Optional. The text field this control is: while it is focused, the
+     * navigator echoes its edits and reads its caret moves
+     * ({@link snd.core.text.TextEcho}). Its announcements carry the text as
+     * it stands when focus lands, never live.
+     */
+    public snd.core.text.TextField textField;
+
     /** Optional. Primary activation — the left-click equivalent (Enter). */
     public Runnable onActivate;
 

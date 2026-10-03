@@ -7,6 +7,7 @@
   "role.group": "группа",
   "role.dropdown": "раскрывающийся список",
   "role.list": "список",
+  "role.text_field": "поле ввода",
   "side.keyword_pips": "{keywords} {n}, {side}",
   "side.at": "{position}: {side}",
   "side.position.left": "слева",
@@ -25,7 +26,6 @@
   "greeting": "Slice and Dice access {version} загружен",
   "update_available": "Доступно обновление Slice and Dice access {version}",
   "module_reloaded": "Модуль перезагружен, поколение {generation}",
-  "notification": "Уведомление: {text}",
 
   "nav.no_match": "нет совпадений для {text}",
   "nav.search_cleared": "поиск очищен",
@@ -234,11 +234,12 @@
   "inv.cannot_use": "{hero} не может использовать: {item}",
   "inv.done": "Готово",
   "inv.randomize": "Случайная экипировка",
-  "inv.rename": "Переименовать",
+  "inv.rename_hero": "Переименовать: {hero}",
   "inv.rename_unavailable": "переименование недоступно",
 
-  "textentry.open": "ввод текста, {title}",
-  "textentry.blank": "пусто",
-  "textentry.space": "пробел",
-  "textentry.deleted": "удалено {text}"
+  "text.blank": "пусто",
+  "text.space": "пробел",
+  "text.capital": "заглавная {letter}",
+  "text.selected": "{text} выделено",
+  "text.unselected": "{text} не выделено"
 }
