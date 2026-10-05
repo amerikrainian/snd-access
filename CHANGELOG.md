@@ -1,5 +1,14 @@
 # Changelog
 
+## V0.1.6
+
+- Added hero panels as a separate tab stop where you might care to look: rewards, dialogues and events are just a few examples.
+- You should have always been able to see next combat's enemies, and now you can in between fights! Hopefully this explains my skill issues with the game.
+- Heroes now announce themselves wherever there are more than one and you cross over rows. No more bare empty slots.
+- Did some more work on compendium to clean up modifier presentation, pin search results, and the text mod.
+- Alt up/down default to marked groups/containers on screen. They should be more useful now.
+- You can actually see all the info for the given leaderboard in the compendium now and cycle through its pages.
+
 ## V0.1.5
 
 - Added support for renaming heroes.
