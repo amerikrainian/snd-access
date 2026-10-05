@@ -238,6 +238,7 @@
   "inv.rename": "Переименовать",
   "inv.rename_unavailable": "переименование недоступно",
   "pin.unpin": "открепить",
+  "textmod.more": "+more",
 
   "text.blank": "пусто",
   "text.space": "пробел",
