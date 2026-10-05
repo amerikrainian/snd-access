@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Array;
 import com.tann.dice.gameplay.leaderboard.Leaderboard;
 import com.tann.dice.gameplay.leaderboard.LeaderboardDisplay;
+import com.tann.dice.gameplay.leaderboard.LeaderboardDisplaySettings;
 import com.tann.dice.gameplay.leaderboard.LeaderboardEntry;
 import com.tann.dice.util.Tann;
 import com.tann.dice.util.ui.standardButton.StandardButton;
@@ -45,8 +46,10 @@ final class LeaderboardNodes {
         }
         Array<LeaderboardEntry> entries = board.getEntries();
         if (entries == null) {
-            // Loading / failed: the display's own text says which.
+            // Loading / failed: the display's own text says which. A page
+            // turn keeps its row, so focus stays on the button pressed.
             ActorNodes.emitChildren(b, display);
+            paging(b, display, board);
             return;
         }
 
@@ -135,8 +138,90 @@ final class LeaderboardNodes {
         }
         sheet.finish();
 
-        // The paging/refresh controls beneath the table.
+        // The page row and any buttons beneath the table.
+        paging(b, display, board);
         emitButtons(b, display);
+    }
+
+    // LeaderboardDisplaySettings.makeActor: a paged board draws "<", "page N"
+    // and ">" under the table once there is more than one page to show; the
+    // arrows are bordered text whose click listener turns the page, and one
+    // that leads nowhere is drawn grey with no listener.
+    private static void paging(GraphBuilder b, final LeaderboardDisplay display, Leaderboard board) {
+        final LeaderboardDisplaySettings settings = (LeaderboardDisplaySettings) snd.module.Captured.field(display,
+                LeaderboardDisplay.class, "displaySettings");
+        if (settings == null || settings.type != LeaderboardDisplaySettings.LeaderboardDisplaySettingsType.Page) {
+            return;
+        }
+        boolean loading = board.getEntries() == null;
+        boolean full = !loading && board.getEntries().size == 10;
+        if (settings.arg == 0L && !full && !loading) {
+            return;
+        }
+        b.startRow();
+        pageButton(b, display, settings, -1, "board.prev_page");
+        pageButton(b, display, settings, 1, "board.next_page");
+        b.endRow();
+    }
+
+    // The page shown ("page N", drawn between the arrows) and whether the
+    // arrow leads anywhere are live: a turn says the page it goes to at once,
+    // and the end it reaches once the page has loaded.
+    private static void pageButton(GraphBuilder b, final LeaderboardDisplay display,
+            final LeaderboardDisplaySettings settings, final int dir, final String labelKey) {
+        NodeVtable vt = new NodeVtable();
+        vt.controlType = ControlTypes.BUTTON;
+        vt.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", labelKey);
+                    }
+                }, AnnouncementKinds.LABEL),
+                new NodeAnnouncement(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return Loc.get("ui", "board.page", "n", settings.arg + 1);
+                    }
+                }, true, AnnouncementKinds.VALUE),
+                new NodeAnnouncement(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        // While a page loads neither arrow is drawn; that is no end.
+                        Leaderboard board = boardOf(display);
+                        boolean loaded = board != null && board.getEntries() != null;
+                        return loaded && pageArrow(display, dir) == null ? Loc.get("ui", "state.unavailable") : null;
+                    }
+                }, true, AnnouncementKinds.STATE));
+        vt.onActivate = new Runnable() {
+            @Override
+            public void run() {
+                Actor arrow = pageArrow(display, dir);
+                if (arrow != null) {
+                    snd.module.GameUi.activate(arrow);
+                }
+            }
+        };
+        b.addItem(snd.core.graph.ControlId.structural(snd.core.graph.CompositeKey.of("lb-page", dir)), vt);
+    }
+
+    // The arrow whose listener turns the page by dir, or null where the game
+    // drew it without one.
+    private static Actor pageArrow(Actor actor, int dir) {
+        com.tann.dice.util.listener.TannListener turn = snd.module.Captured.listenerBuiltBy(actor,
+                LeaderboardDisplaySettings.class, "makeActor");
+        if (turn != null && Integer.valueOf(dir).equals(snd.module.Captured.primitive(turn, int.class))) {
+            return actor;
+        }
+        if (actor instanceof Group) {
+            for (Actor child : ((Group) actor).getChildren()) {
+                Actor found = pageArrow(child, dir);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static void emitButtons(GraphBuilder b, Group group) {

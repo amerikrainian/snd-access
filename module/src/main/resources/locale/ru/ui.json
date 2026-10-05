@@ -179,6 +179,10 @@
   "tutorial.complete": "задание выполнено: {quest}",
 
   "board.you": "ваш счёт",
+  "board.page": "страница {n}",
+  "board.prev_page": "предыдущая страница",
+  "board.next_page": "следующая страница",
+  "state.unavailable": "недоступно",
 
   "choice.header": "Выберите",
   "choice.tier": "уровень {tier}",

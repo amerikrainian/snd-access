@@ -179,6 +179,10 @@
   "tutorial.complete": "misión completada: {quest}",
 
   "board.you": "tu puntuación",
+  "board.page": "página {n}",
+  "board.prev_page": "página anterior",
+  "board.next_page": "página siguiente",
+  "state.unavailable": "no disponible",
 
   "choice.header": "Elige",
   "choice.tier": "rango {tier}",

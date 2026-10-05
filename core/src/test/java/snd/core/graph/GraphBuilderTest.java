@@ -274,6 +274,28 @@ class GraphBuilderTest {
     }
 
     @Test
+    void everyCellOfASheetsLastRowStepsDownIntoTheRowBelow() {
+        // A table's paging row under it: Down from any column of the last
+        // entry reaches it; Up returns to that entry's primary.
+        GraphBuilder b = new GraphBuilder();
+        GraphSheet sheet = new GraphSheet(b, "t");
+        sheet.region("Board", new String[]{"time"});
+        sheet.row(vt("#1"), "one", () -> "3m");
+        sheet.row(vt("#2"), "two", () -> "4m");
+        sheet.finish();
+        GraphRender render = b.startRow().addItem(id("prev"), vt("Prev")).addItem(id("next"), vt("Next")).endRow()
+                .build();
+
+        ControlId twoPrimary = ControlId.structural(CompositeKey.of("t", "row", "two", 0));
+        ControlId twoTime = ControlId.structural(CompositeKey.of("t", "row", "two", 1));
+        ControlId oneTime = ControlId.structural(CompositeKey.of("t", "row", "one", 1));
+        assertEquals(id("prev"), render.nodes.get(twoPrimary).transitions.get(GraphDir.DOWN).destination);
+        assertEquals(id("prev"), render.nodes.get(twoTime).transitions.get(GraphDir.DOWN).destination);
+        assertEquals(twoTime, render.nodes.get(oneTime).transitions.get(GraphDir.DOWN).destination);
+        assertEquals(twoPrimary, render.nodes.get(id("next")).transitions.get(GraphDir.UP).destination);
+    }
+
+    @Test
     void rawModeWiresExplicitEdges() {
         GraphRender render = new GraphBuilder()
                 .addNode(id("a"), vt("A"))

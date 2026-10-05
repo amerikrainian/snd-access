@@ -463,21 +463,29 @@ public final class GraphBuilder {
                     cur.transitions.put(GraphDir.UP, new Transition(row.items.get(0).id));
                 } else { // raw content above a menu row
                     Row row = rowOf.get(cur);
-                    // The raw side's bottom = the latest raw node (walking back) missing a Down.
-                    GraphNode bottom = null;
+                    // The raw side's bottom edge: walking back, the run of raw
+                    // nodes missing a Down (a sheet's whole last row, every
+                    // column of it). Each gains the Down; Up returns to the
+                    // run's first, a sheet row's primary.
+                    List<GraphNode> bottom = new ArrayList<GraphNode>();
                     for (int j = i - 1; j >= 0 && !rowOf.containsKey(nodes.get(j)); j--) {
-                        if (!nodes.get(j).transitions.containsKey(GraphDir.DOWN)) {
-                            bottom = nodes.get(j);
-                            break;
+                        if (nodes.get(j).transitions.containsKey(GraphDir.DOWN)) {
+                            if (!bottom.isEmpty()) {
+                                break;
+                            }
+                            continue;
                         }
+                        bottom.add(0, nodes.get(j));
                     }
-                    if (bottom == null) {
+                    if (bottom.isEmpty()) {
                         continue;
                     }
-                    bottom.transitions.put(GraphDir.DOWN, new Transition(row.items.get(0).id));
+                    for (GraphNode edge : bottom) {
+                        edge.transitions.put(GraphDir.DOWN, new Transition(row.items.get(0).id));
+                    }
                     for (GraphNode cell : row.items) {
                         if (!cell.transitions.containsKey(GraphDir.UP)) {
-                            cell.transitions.put(GraphDir.UP, new Transition(bottom.id));
+                            cell.transitions.put(GraphDir.UP, new Transition(bottom.get(0).id));
                         }
                     }
                 }
