@@ -128,6 +128,14 @@ public class InventoryScreen extends AccessScreen {
         b.beginStop("party").pushContext(Loc.get("combat", "heroes"), Loc.get("ui", "role.list"));
         for (int hi = 0; hi < heroes.size(); hi++) {
             final Hero hero = heroes.get(hi);
+            // Up/Down keep the column; the row's container names the hero
+            // whose slot focus crossed into.
+            b.pushContext(CompositeKey.of("inv-row", hero), new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameText.t(hero.getName(true));
+                }
+            });
             b.startRow("hero");
 
             NodeVtable heroNode = new NodeVtable();
@@ -230,6 +238,7 @@ public class InventoryScreen extends AccessScreen {
             };
             b.addItem(ControlId.structural(CompositeKey.of("inv-rename", hi)), rename);
             b.endRow();
+            b.popContext();
         }
         b.popContext();
     }

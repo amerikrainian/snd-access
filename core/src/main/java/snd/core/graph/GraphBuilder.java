@@ -159,12 +159,36 @@ public final class GraphBuilder {
         if (role != null && !role.isEmpty()) {
             anns.add(NodeAnnouncement.of(role));
         }
-        GraphNode node = new GraphNode();
         // Stable synthetic identity (label-pathed) so cross-render chain diffs match up.
-        node.id = ControlId.structural("ctx:" + (parent != null ? parent.id.structuralKey : "") + "/" + label);
+        return pushFrame(ControlId.structural("ctx:" + (parent != null ? parent.id.structuralKey : "") + "/" + label),
+                anns, positions);
+    }
+
+    /**
+     * Push a CONTAINER: a context whose identity is key, not its label — the
+     * unit or object a group of controls is about (a hero's row of slots, an
+     * offer's sheet). Focus entering it from another container reads the
+     * label, resolved live, before the landing control; moving inside it
+     * reads the control alone; landing on a control whose label starts with
+     * the container's skips the container's. Two containers with one label
+     * stay two, and a label that changes keeps its container. Close with
+     * {@link #popContext}.
+     */
+    public GraphBuilder pushContext(Object key, Supplier<String> label) {
+        if (key == null) {
+            throw new IllegalArgumentException("A container needs a key");
+        }
+        GraphNode parent = currentParent();
+        return pushFrame(ControlId.structural(CompositeKey.of("ctx", parent != null ? parent.id.structuralKey : null, key)),
+                Arrays.asList(new NodeAnnouncement(label)), true);
+    }
+
+    private GraphBuilder pushFrame(ControlId id, List<NodeAnnouncement> anns, boolean positions) {
+        GraphNode node = new GraphNode();
+        node.id = id;
         node.vtable = new NodeVtable();
         node.vtable.announcements = anns;
-        node.parent = parent;
+        node.parent = currentParent();
         node.focusable = false;
         node.suppressChildPositions = !positions;
         ParentFrame frame = new ParentFrame();

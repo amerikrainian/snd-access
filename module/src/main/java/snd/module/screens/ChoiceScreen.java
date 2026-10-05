@@ -143,10 +143,17 @@ public class ChoiceScreen extends AccessScreen {
             // panel is the hero's EntPanelInventory): the choose button, then
             // the hero as its panel reads.
             List<com.tann.dice.gameplay.trigger.global.GlobalAddHero> recruits = recruits(option);
-            if (levelup) {
-                b.startRow("levelup");
-            } else if (!recruits.isEmpty()) {
-                b.startRow("recruit");
+            final boolean sheetRow = levelup || !recruits.isEmpty();
+            if (sheetRow) {
+                // Up/Down keep the column across offers; the row's container
+                // names the offer focus crossed into.
+                b.pushContext(CompositeKey.of("choice-row", i, option.getSaveString()), new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return nameOf(option);
+                    }
+                });
+                b.startRow(levelup ? "levelup" : "recruit");
             }
             NodeVtable vt = new NodeVtable();
             vt.controlType = optional ? ControlTypes.TEXT : ControlTypes.BUTTON;
@@ -231,13 +238,15 @@ public class ChoiceScreen extends AccessScreen {
             b.addItem(ControlId.referenced(option, CompositeKey.of("choice", i, option.getSaveString())), vt);
             if (levelup) {
                 buildLevelupSheet(b, (LevelupHeroChoosable) option, index);
-                b.endRow();
             } else if (!recruits.isEmpty()) {
                 for (com.tann.dice.gameplay.trigger.global.GlobalAddHero recruit : recruits) {
                     EntPanelNodes.unit(b, recruitHero(recruit), java.util.Collections.<String>emptyList(),
                             java.util.Collections.<String>emptyList());
                 }
+            }
+            if (sheetRow) {
                 b.endRow();
+                b.popContext();
             }
         }
 

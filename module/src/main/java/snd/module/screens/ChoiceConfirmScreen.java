@@ -208,6 +208,14 @@ public class ChoiceConfirmScreen extends AccessScreen {
             return;
         }
 
+        // Up/Down compare one side across the upgrade; each row's container
+        // says which side of it focus crossed into.
+        b.pushContext(CompositeKey.of("confirm-row", "before"), new Supplier<String>() {
+            @Override
+            public String get() {
+                return GameUi.entName(current);
+            }
+        });
         b.startRow("confirm-hero");
         NodeVtable before = new NodeVtable();
         before.controlType = ControlTypes.TEXT;
@@ -242,7 +250,14 @@ public class ChoiceConfirmScreen extends AccessScreen {
             b.addItem(ControlId.structural(CompositeKey.of("confirm", "before", side)), vt);
         }
         b.endRow();
+        b.popContext();
 
+        b.pushContext(CompositeKey.of("confirm-row", "after"), new Supplier<String>() {
+            @Override
+            public String get() {
+                return Loc.get("ui", "confirm.becomes", "name", GameUi.entName(upgraded));
+            }
+        });
         b.startRow("confirm-hero");
         final EntState blank = upgraded.getBlankState();
         NodeVtable after = new NodeVtable();
@@ -274,6 +289,7 @@ public class ChoiceConfirmScreen extends AccessScreen {
             b.addItem(ControlId.structural(CompositeKey.of("confirm", "after", side)), vt);
         }
         b.endRow();
+        b.popContext();
     }
 
     private static com.tann.dice.gameplay.fightLog.EntSideState currentSide(Ent ent, int side) {

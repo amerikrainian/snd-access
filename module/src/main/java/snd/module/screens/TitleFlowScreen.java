@@ -324,6 +324,14 @@ public class TitleFlowScreen extends AccessScreen {
         for (int i = 0; i < modifiers.size(); i++) {
             final com.tann.dice.gameplay.modifier.Modifier modifier = modifiers.get(i);
             final int index = i;
+            // Up/Down keep the column; the row's container names the
+            // modifier whose button focus crossed onto.
+            b.pushContext(CompositeKey.of("custom-row", i, modifier), new Supplier<String>() {
+                @Override
+                public String get() {
+                    return GameText.t(modifier.getName());
+                }
+            });
             b.startRow("custom-mod");
 
             NodeVtable row = new NodeVtable();
@@ -392,6 +400,7 @@ public class TitleFlowScreen extends AccessScreen {
                 b.addItem(ControlId.structural(CompositeKey.of("custom-up", i)), up);
             }
             b.endRow();
+            b.popContext();
         }
 
         addCustomAction(b, mode, "makePlus", "custom.add", false);

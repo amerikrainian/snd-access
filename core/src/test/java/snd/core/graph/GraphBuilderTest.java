@@ -121,6 +121,43 @@ class GraphBuilderTest {
         assertFalse(render.nodes.containsKey(a.parent.id)); // contexts are never navigable
     }
 
+    private static GraphRender heroRows(final String firstName, final String secondName) {
+        return new GraphBuilder()
+                .pushContext(CompositeKey.of("hero", 0), () -> firstName)
+                .startRow("hero").addItem(id("h0"), vt(firstName)).addItem(id("s0"), vt("slot 1")).endRow()
+                .popContext()
+                .pushContext(CompositeKey.of("hero", 1), () -> secondName)
+                .startRow("hero").addItem(id("h1"), vt(secondName)).addItem(id("s1"), vt("slot 1")).endRow()
+                .popContext()
+                .build();
+    }
+
+    @Test
+    void containersAreKeyedNotLabelled() {
+        GraphRender same = heroRows("Thief", "Thief");
+        assertNotEquals(same.nodes.get(id("s0")).parent.id, same.nodes.get(id("s1")).parent.id);
+
+        GraphRender renamed = heroRows("Mah Boy", "Thief");
+        assertEquals(same.nodes.get(id("s0")).parent.id, renamed.nodes.get(id("s0")).parent.id);
+        assertEquals("Mah Boy", GraphAnnouncer.firstPartText(renamed.nodes.get(id("s0")).parent));
+    }
+
+    @Test
+    void containersKeepRowPositionsAndColumns() {
+        GraphRender render = heroRows("Thief", "Lazy");
+        GraphNode s0 = render.nodes.get(id("s0"));
+        assertEquals(id("s1"), s0.transitions.get(GraphDir.DOWN).destination);
+        assertEquals(2, s0.positionIndex);
+        assertEquals(2, s0.positionCount);
+        assertFalse(render.nodes.containsKey(s0.parent.id));
+    }
+
+    @Test
+    void containerNeedsAKey() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new GraphBuilder().pushContext((Object) null, () -> "x"));
+    }
+
     private static GraphRender buildGroups(Set<ControlId> expansion) {
         return new GraphBuilder(expansion)
                 .beginGroup(id("combat"), vt("Combat"))

@@ -254,6 +254,37 @@ class GraphAnnouncerTest {
     }
 
     @Test
+    void crossingIntoAnotherContainerNamesIt() {
+        GraphBuilder b = new GraphBuilder().pushContext("Heroes", "list");
+        String[] names = {"Thief", "Lazy"};
+        for (int i = 0; i < names.length; i++) {
+            b.pushContext(CompositeKey.of("hero", i), fixed(names[i]))
+                    .startRow("hero")
+                    .addItem(ControlId.structural(CompositeKey.of("hero", i, "name")), vtable(names[i] + ", level 1"))
+                    .addItem(ControlId.structural(CompositeKey.of("hero", i, "slot")), vtable("slot 1, empty"))
+                    .endRow()
+                    .popContext();
+        }
+        GraphRender render = b.popContext().build();
+        GraphNode thief = render.nodes.get(ControlId.structural(CompositeKey.of("hero", 0, "name")));
+        GraphNode thiefSlot = render.nodes.get(ControlId.structural(CompositeKey.of("hero", 0, "slot")));
+        GraphNode lazy = render.nodes.get(ControlId.structural(CompositeKey.of("hero", 1, "name")));
+        GraphNode lazySlot = render.nodes.get(ControlId.structural(CompositeKey.of("hero", 1, "slot")));
+
+        assertEquals("Lazy, slot 1, empty", GraphAnnouncer.compose(thiefSlot, lazySlot));
+        assertEquals("slot 1, empty", GraphAnnouncer.compose(thief, thiefSlot));
+        // The landing control already says whose row it is.
+        assertEquals("Lazy, level 1", GraphAnnouncer.compose(thiefSlot, lazy));
+        assertEquals("Heroes, list, Thief, level 1", GraphAnnouncer.composeFull(thief));
+    }
+
+    private static NodeVtable vtable(String label) {
+        NodeVtable vt = new NodeVtable();
+        vt.announcements = Arrays.asList(NodeAnnouncement.of(label));
+        return vt;
+    }
+
+    @Test
     void contextChangeAtSameDepthReadsNewLevel() {
         GraphNode from = node("Fireball", context("Level 1 spells", "table"));
         GraphNode to = node("Haste", context("Level 2 spells", "table"));
