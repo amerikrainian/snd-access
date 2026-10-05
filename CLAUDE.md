@@ -298,6 +298,12 @@ Permanent/reloadable split (verified end-to-end):
   section switch) — every id in the stop changes at once. `KeyGraph.reconcile` then lands on the
   stop's node at the place focus held (`GraphState.lastStopKey`/`lastStopIndex`), and only leaves
   the stop when the stop itself is gone.
+- **A row of one unit sits in a container keyed by that unit.** Rows sharing a row key keep
+  the column on Up/Down, so the cell landed on never says whose row it is. Wrap each such row in
+  `GraphBuilder.pushContext(key, label)` — keyed by the domain object (two heroes with one name
+  stay apart, a rename keeps the row), the label read live. The announcer reads a container's
+  label when focus enters it from outside, skips it when the landing cell starts with it, and
+  stays quiet within it, so cells need not repeat the unit's name.
 - **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
   pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
   achievement's description). `GameUi.activate`/`info` notice such a panel arriving on the
