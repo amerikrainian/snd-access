@@ -412,15 +412,11 @@ public class CombatScreen extends AccessScreen {
     // ---- the two combatant columns: one node per hero/monster ----
 
     /**
-     * The hero column as its own stop, the rows the fight reads: the column
-     * stays on the dungeon screen between fights, under every offer and
-     * dialog ({@link PartyNodes}). Nodes added after it join the stop.
+     * A column as its own stop, the rows the fight reads. Both columns stay
+     * on the dungeon screen between fights, under every offer and dialog
+     * ({@link ColumnNodes}). Nodes added after it join the stop.
      */
-    static void heroStop(GraphBuilder b, HostServices host, DungeonScreen ds) {
-        buildEntityStop(b, host, ds, true);
-    }
-
-    private static void buildEntityStop(GraphBuilder b, HostServices host, final DungeonScreen ds,
+    static void buildEntityStop(GraphBuilder b, HostServices host, final DungeonScreen ds,
             boolean heroes) {
         String key = heroes ? "heroes" : "enemies";
         b.beginStop(key).pushContext(Loc.get("combat", key));

@@ -20,14 +20,15 @@ import snd.module.GameUi;
 
 /**
  * What the dungeon screen keeps on screen between fights, under whatever
- * offer, hub or dialog the phase draws over it: the hero column, each panel
- * opening the hero's sheet as a click does, and the corner Inventory button
- * while the phase slides it in ({@code DungeonScreen.enterPhase} →
- * {@code toggleHiddenInventory(showCornerInventory())}). Every screen over
- * the dungeon outside a fight ends its build with it.
+ * offer, hub or dialog the phase draws over it: the hero column with the
+ * corner Inventory button below it while the phase slides it in
+ * ({@code DungeonScreen.enterPhase} →
+ * {@code toggleHiddenInventory(showCornerInventory())}), then the next
+ * fight's monsters. Each panel opens its unit's sheet as a click does. Every
+ * screen over the dungeon outside a fight ends its build with it.
  */
-final class PartyNodes {
-    private PartyNodes() {
+final class ColumnNodes {
+    private ColumnNodes() {
     }
 
     static void build(GraphBuilder b, HostServices host) {
@@ -35,7 +36,7 @@ final class PartyNodes {
             return;
         }
         final DungeonScreen ds = DungeonScreen.get();
-        CombatScreen.heroStop(b, host, ds);
+        CombatScreen.buildEntityStop(b, host, ds, true);
         Phase phase = PhaseManager.get().getPhase();
         if (phase.showCornerInventory() && ds.getDungeonContext().allowInventory()) {
             NodeVtable inv = new NodeVtable();
@@ -56,5 +57,6 @@ final class PartyNodes {
             inv.speaksOwnPosition = true;
             b.addItem(ControlId.structural(CompositeKey.of("party", "inventory")), inv);
         }
+        CombatScreen.buildEntityStop(b, host, ds, false);
     }
 }

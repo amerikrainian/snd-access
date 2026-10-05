@@ -366,7 +366,7 @@ public class ChoiceScreen extends AccessScreen {
         }
 
         buildAnticheeseReroll(b, p, options.size());
-        PartyNodes.build(b, host);
+        ColumnNodes.build(b, host);
     }
 
     private static String tallyText(ChoiceType ct) {

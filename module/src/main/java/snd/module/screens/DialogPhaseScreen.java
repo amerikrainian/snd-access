@@ -224,7 +224,7 @@ public class DialogPhaseScreen extends AccessScreen {
             ActorNodes.emit(b, dialog);
         }
         b.popContext();
-        PartyNodes.build(b, host);
+        ColumnNodes.build(b, host);
     }
 
     // ---- the event dialogs, read from their phase: what each one asks,
