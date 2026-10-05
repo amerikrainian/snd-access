@@ -449,6 +449,47 @@ public final class KeyGraph {
     }
 
     /**
+     * The region a node jumps by: the one its screen tagged it with, else
+     * its innermost container (a titled group, a unit's row). A collapsible
+     * group's header is no container here — a tree is one region. The nodes
+     * in no container are the stop's own region.
+     */
+    public static Object regionOf(GraphNode node) {
+        if (node.regionKey != null) {
+            return node.regionKey;
+        }
+        for (GraphNode p = node.parent; p != null; p = p.parent) {
+            if (!p.focusable) {
+                return p.id;
+            }
+        }
+        return CompositeKey.of("stop-region", node.stopKey);
+    }
+
+    // The current stop's regions, in declaration order.
+    private List<Object> regionsOfStop(GraphNode node) {
+        List<Object> regions = new ArrayList<Object>();
+        for (GraphNode n : current.order) {
+            if (Objects.equals(n.stopKey, node.stopKey)) {
+                Object region = regionOf(n);
+                if (region != null && !regions.contains(region)) {
+                    regions.add(region);
+                }
+            }
+        }
+        return regions;
+    }
+
+    /** Whether the focused node's stop has regions to jump between. */
+    public boolean hasRegions() {
+        if (!rerender()) {
+            return false;
+        }
+        GraphNode node = currentNode();
+        return node != null && regionsOfStop(node).size() > 1;
+    }
+
+    /**
      * Jump to the next/previous region within the current stop (declaration
      * order), landing on the region's first node.
      */
@@ -461,25 +502,19 @@ public final class KeyGraph {
         GraphNode node = currentNode();
         result.from = node;
         result.to = node;
-        if (node == null || node.regionKey == null) {
+        if (node == null) {
             return result;
         }
 
-        List<Object> regions = new ArrayList<Object>();
-        for (GraphNode n : current.order) {
-            if (Objects.equals(n.stopKey, node.stopKey) && n.regionKey != null && !regions.contains(n.regionKey)) {
-                regions.add(n.regionKey);
-            }
-        }
-
-        int idx = regions.indexOf(node.regionKey);
+        List<Object> regions = regionsOfStop(node);
+        int idx = regions.indexOf(regionOf(node));
         int ni = idx + dir;
         if (idx < 0 || ni < 0 || ni >= regions.size()) {
             return result;
         }
 
         for (GraphNode n : current.order) {
-            if (Objects.equals(n.stopKey, node.stopKey) && Objects.equals(n.regionKey, regions.get(ni))) {
+            if (Objects.equals(n.stopKey, node.stopKey) && Objects.equals(regionOf(n), regions.get(ni))) {
                 setCurrent(n);
                 result.to = n;
                 result.moved = true;

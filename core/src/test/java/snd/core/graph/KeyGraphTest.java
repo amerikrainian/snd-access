@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -236,6 +237,58 @@ class KeyGraphTest {
         assertFalse(r.moved);
         r = g.moveRegion(-1);
         assertEquals(id("i1"), r.to.id);
+    }
+
+    @Test
+    void containersAreRegionsWhereTheScreenTagsNone() {
+        GraphState state = new GraphState();
+        KeyGraph g = new KeyGraph(new Supplier<GraphRender>() {
+            @Override
+            public GraphRender get() {
+                return new GraphBuilder()
+                        .addItem(id("top"), vt("Top"))
+                        .pushContext("Gameplay", "group").addItem(id("g1"), vt("G1")).addItem(id("g2"), vt("G2"))
+                        .popContext()
+                        .pushContext("UI", "group").addItem(id("u1"), vt("U1")).popContext()
+                        .build();
+            }
+        }, state);
+
+        assertTrue(g.hasRegions());
+        KeyGraph.MoveResult r = g.moveRegion(+1);
+        assertEquals(id("g1"), r.to.id);
+        r = g.moveRegion(+1);
+        assertEquals(id("u1"), r.to.id);
+        r = g.moveRegion(-1);
+        assertEquals(id("g1"), r.to.id);
+    }
+
+    @Test
+    void oneContainerOrATreeIsNoRegionsToJump() {
+        GraphState state = new GraphState();
+        KeyGraph single = new KeyGraph(new Supplier<GraphRender>() {
+            @Override
+            public GraphRender get() {
+                return new GraphBuilder()
+                        .pushContext("Heroes").addItem(id("a"), vt("A")).addItem(id("b"), vt("B")).popContext()
+                        .build();
+            }
+        }, state);
+        assertFalse(single.hasRegions());
+
+        Set<ControlId> expanded = new java.util.HashSet<ControlId>(Arrays.asList(id("h")));
+        KeyGraph tree = new KeyGraph(new Supplier<GraphRender>() {
+            @Override
+            public GraphRender get() {
+                return new GraphBuilder(expanded)
+                        .pushContext("Settings")
+                        .beginGroup(id("h"), vt("Header")).addItem(id("c"), vt("Child")).endGroup()
+                        .addItem(id("after"), vt("After"))
+                        .popContext()
+                        .build();
+            }
+        }, new GraphState());
+        assertFalse(tree.hasRegions());
     }
 
     @Test

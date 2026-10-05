@@ -304,6 +304,10 @@ Permanent/reloadable split (verified end-to-end):
   stay apart, a rename keeps the row), the label read live. The announcer reads a container's
   label when focus enters it from outside, skips it when the landing cell starts with it, and
   stays quiet within it, so cells need not repeat the unit's name.
+- **Alt+Up/Down jump between a stop's regions**: the region a builder tags (`setRegion`), else the
+  node's innermost container (`KeyGraph.regionOf`; a collapsible group's header is not one). So
+  every titled group and unit row is a jump target without a builder asking; tag regions only
+  where the jump should differ from the containers.
 - **A pushed panel with nothing to operate is not a dialog.** The game answers many gestures by
   pushing a small bordered panel of text (`Screen.pushAndCenter`: "UI scaling factor", an
   achievement's description). `GameUi.activate`/`info` notice such a panel arriving on the

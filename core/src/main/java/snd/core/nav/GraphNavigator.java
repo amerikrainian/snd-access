@@ -350,11 +350,9 @@ public final class GraphNavigator {
             case END:
                 return jumpEdge(false);
             case REGION_PREV:
-                return graph != null && graph.currentNode() != null
-                        && graph.currentNode().regionKey != null && regionJump(-1);
+                return graph != null && graph.hasRegions() && regionJump(-1);
             case REGION_NEXT:
-                return graph != null && graph.currentNode() != null
-                        && graph.currentNode().regionKey != null && regionJump(1);
+                return graph != null && graph.hasRegions() && regionJump(1);
             case ACTIVATE: {
                 if (graph == null || graph.currentNode() == null) {
                     return false;
@@ -415,7 +413,7 @@ public final class GraphNavigator {
                 return KeyGraph.inTree(node) ? siblingEdge(node, false) != node : hasWay(node, GraphDir.DOWN);
             case REGION_PREV:
             case REGION_NEXT:
-                return node.regionKey != null;
+                return graph.hasRegions();
             case ACTIVATE:
                 return node.vtable.onActivate != null;
             case SECONDARY:
