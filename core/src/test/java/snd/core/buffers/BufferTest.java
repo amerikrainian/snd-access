@@ -239,5 +239,21 @@ class BufferTest {
             }
         };
         assertEquals(Arrays.asList("First Boss, achieved", "Beat level 4"), NodeLines.lines(tile));
+
+        // A detail repeating the whole head (a card's title line: name, tier)
+        // has been said too.
+        GraphNode card = new GraphNode();
+        card.vtable = new NodeVtable();
+        card.vtable.announcements = Arrays.asList(
+                NodeAnnouncement.kinded(name("Big Hitter^11"), AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(name("tier -1"), AnnouncementKinds.VALUE));
+        card.vtable.details = new Supplier<List<String>>() {
+            @Override
+            public List<String> get() {
+                return Arrays.asList("Big Hitter^11, tier -1", "[red]All monsters:[cu] Double the pips");
+            }
+        };
+        assertEquals(Arrays.asList("Big Hitter^11, tier -1", "[red]All monsters:[cu] Double the pips"),
+                NodeLines.lines(card));
     }
 }

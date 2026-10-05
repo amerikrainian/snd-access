@@ -93,7 +93,7 @@ public class GameModalScreen extends AccessScreen {
         } else if (modal instanceof com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) {
             unitPanel(b, (com.tann.dice.screens.dungeon.panels.Explanel.EntPanelInventory) modal);
         } else if (!TextInputNodes.emit(b, modal) && !LedgerNodes.emit(b, modal,
-                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero, null)) {
+                com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Hero, null, place(modal))) {
             // Hero tiles (the Choose-Party class picker, a past run's party)
             // are grouped by colour as in the almanac; anything else is walked.
             ActorNodes.emit(b, modal, place(modal));

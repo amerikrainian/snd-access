@@ -18,9 +18,10 @@ import snd.core.graph.NodeAnnouncement;
  * position), then one line per description part
  * ({@link AnnouncementKinds#TOOLTIP}), then the vtable's
  * {@link snd.core.graph.NodeVtable#details}, one line each. A detail that
- * only repeats a head part or a comma-separated piece of one (an item tooltip
- * whose title is the item's name, through markup or not) or an earlier detail
- * is folded; blank lines are dropped. Read live on every buffer keypress.
+ * only repeats the head line, a head part or a comma-separated piece of one
+ * (an item tooltip whose title is the item's name, through markup or not) or
+ * an earlier detail is folded; blank lines are dropped. Read live on every
+ * buffer keypress.
  */
 public final class NodeLines {
     private NodeLines() {
@@ -66,6 +67,8 @@ public final class NodeLines {
                     seen.add(piece.trim());
                 }
             }
+            // And the whole line: a card's title line is its name and tier.
+            seen.add(TextFilter.clean(sb.toString()));
             out.add(sb.toString());
         }
 

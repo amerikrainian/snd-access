@@ -341,9 +341,16 @@ final class ActorNodes {
         vt.subject = heroClass != null ? heroClass
                 : tileItem != null && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileItem)
                         ? tileItem : null;
-        // A modifier's small panel prints its name and tier; the rest of its
-        // card is read from the modifier it holds.
+        // A modifier's small panel, or an item's or modifier's card
+        // (ConcisePanel), prints its tier as a bare number coloured by sign
+        // beside its name and icons: name and tier are read from what it
+        // holds, the rest of the card too.
         final com.tann.dice.gameplay.modifier.Modifier modifier = modifierOf(actor);
+        final com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel card =
+                actor instanceof com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel
+                        ? (com.tann.dice.screens.dungeon.panels.entPanel.choosablePanel.ConcisePanel) actor : null;
+        final com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choice.choosable.Choosable shown =
+                modifier != null ? modifier : card != null ? ChoosablePanelNodes.choosable(card) : null;
         // What the game's info popup said when this control was last asked
         // (Enter on an info-only row, Backspace anywhere): read on the spot,
         // kept here to step through. A party-layout card adds the heroes
@@ -354,6 +361,10 @@ final class ActorNodes {
                 if (modifier != null) {
                     return UnitLines.modifier(modifier);
                 }
+                List<String> cardLines = shown != null ? ChoosablePanelNodes.lines(card) : null;
+                if (cardLines != null) {
+                    return cardLines;
+                }
                 List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
                 lines.addAll(PartyLayouts.pools(actor));
                 return lines;
@@ -363,8 +374,8 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        if (modifier != null) {
-                            return ChoiceScreen.nameOf(modifier);
+                        if (shown != null) {
+                            return ChoiceScreen.nameOf(shown);
                         }
                         // Model label first: some achievement icons are text
                         // glyphs ("H5") that would win the text search.
@@ -421,7 +432,7 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return modifier != null ? ChoosablePanelNodes.tierText(modifier) : null;
+                        return shown != null ? ChoosablePanelNodes.tierText(shown) : null;
                     }
                 }, AnnouncementKinds.VALUE),
                 // A row of the game's buttons that works as a radio group,

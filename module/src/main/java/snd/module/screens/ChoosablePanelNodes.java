@@ -193,7 +193,7 @@ public final class ChoosablePanelNodes {
         return new java.util.ArrayList<String>();
     }
 
-    private static Choosable choosable(ConcisePanel panel) {
+    static Choosable choosable(ConcisePanel panel) {
         try {
             if (choosableField == null) {
                 choosableField = ConcisePanel.class.getDeclaredField("choosable");

@@ -12,6 +12,8 @@ import com.tann.dice.gameplay.content.ent.type.EntType;
 import com.tann.dice.gameplay.content.ent.type.HeroType;
 import com.tann.dice.gameplay.content.ent.type.MonsterType;
 import com.tann.dice.gameplay.content.item.Item;
+import com.tann.dice.gameplay.modifier.Modifier;
+import com.tann.dice.gameplay.modifier.SmallModifierPanel;
 import com.tann.dice.gameplay.progress.chievo.unlock.UnUtil;
 import com.tann.dice.gameplay.progress.chievo.unlock.Unlockable;
 import com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType;
@@ -34,13 +36,16 @@ import snd.module.GameText;
 import snd.module.GameUi;
 
 /**
- * The almanac's hero, monster and item tabs (LedgerUtils.makeHeroGroup /
- * makeMonsterGroup / makeItemsGroup): a wall of portrait tiles whose order is
- * the only thing that says what they are — heroes by colour and tier,
- * monsters by size, items under a bare tier number. Which tiles there are, and
- * in what order, is the game's: they are the tiles it laid out. What one is
- * comes from the type or item it holds, which also names the group it opens
- * (a jump region) and keys the node, so focus survives the page being rebuilt.
+ * The almanac's hero, monster, item and modifier tabs (LedgerUtils.makeHeroGroup /
+ * makeMonsterGroup / makeItemsGroup / makeModifiersGroup): a wall of tiles
+ * whose order is the only thing that says what they are — heroes by colour
+ * and tier, monsters by size, items and modifiers under a bare tier number (a
+ * curse tier told from a blessing's by colour alone). Which tiles there are,
+ * and in what order, is the game's: they are the tiles it laid out. What one
+ * is comes from the type, item or modifier it holds, which also names the
+ * group it opens (a jump region) and keys the node, so focus survives the page
+ * being rebuilt. A locked modifier is the word "locked" whose click listener
+ * holds the modifier.
  *
  * <p>What the game decided while building the page and kept nowhere (the
  * veil over one not met yet, the seen and banned marks of the current run)
@@ -55,12 +60,13 @@ final class LedgerNodes {
      * False when the content is not this tab's tiles (another tab, or a page
      * of another kind shown in its place): the generic walk reads it.
      */
-    static boolean emit(GraphBuilder b, Actor content, LedgerPageType tab, LedgerFacts facts) {
+    static boolean emit(GraphBuilder b, Actor content, LedgerPageType tab, LedgerFacts facts,
+            ActorNodes.Place place) {
         Class<? extends Actor> tile = tileClass(tab);
         if (tile == null || !holds(content, tile)) {
             return false;
         }
-        Walk walk = new Walk(b, tile, facts);
+        Walk walk = new Walk(b, tile, facts, place);
         walk.visit(content);
         walk.closeGroup();
         return true;
@@ -74,6 +80,8 @@ final class LedgerNodes {
                 return MonsterLedgerView.class;
             case Item:
                 return ItemLedgerView.class;
+            case Modifier:
+                return SmallModifierPanel.class;
             default:
                 return null;
         }
@@ -97,29 +105,35 @@ final class LedgerNodes {
         private final GraphBuilder b;
         private final Class<? extends Actor> tile;
         private final LedgerFacts facts;
+        private final ActorNodes.Place place;
         private Object openGroup;
+        // The Generated and Wild modifier views draw random examples, which
+        // can repeat: the nth showing of one is keyed apart.
+        private final java.util.Map<Object, Integer> shown = new java.util.HashMap<Object, Integer>();
 
-        Walk(GraphBuilder b, Class<? extends Actor> tile, LedgerFacts facts) {
+        Walk(GraphBuilder b, Class<? extends Actor> tile, LedgerFacts facts, ActorNodes.Place place) {
             this.b = b;
             this.tile = tile;
             this.facts = facts;
+            this.place = place;
         }
 
         void visit(Actor actor) {
             if (!actor.isVisible()) {
                 return;
             }
-            if (tile.isInstance(actor)) {
+            if (tile.isInstance(actor) || lockedModifierOf(actor) != null) {
                 tile(actor);
                 return;
             }
             if (actor instanceof Group && holds(actor, tile)) {
-                // The bare number over a run of item tiles is their tier, a
-                // curse tier told apart by colour alone: the group the tiles
-                // open says it, sign included.
-                boolean tierHeadings = tile == ItemLedgerView.class && holdsDirectly((Group) actor);
+                // The bare number over a run of item or modifier tiles is
+                // their tier, a curse tier told apart by colour alone: the
+                // group the tiles open says it, sign included.
+                boolean tierHeadings = (tile == ItemLedgerView.class || tile == SmallModifierPanel.class)
+                        && holdsDirectly((Group) actor);
                 for (Actor child : ((Group) actor).getChildren()) {
-                    if (tierHeadings && child instanceof TextWriter) {
+                    if (tierHeadings && child instanceof TextWriter && !GameUi.isClickable(child)) {
                         continue;
                     }
                     visit(child);
@@ -127,7 +141,23 @@ final class LedgerNodes {
                 return;
             }
             closeGroup();
-            ActorNodes.emit(b, actor); // the "10/128 heroes found" line, anything the page gains
+            // The "10/128 heroes found" line, the Modifier tab's filter rows,
+            // anything the page gains.
+            ActorNodes.emit(b, actor, place);
+        }
+
+        // A locked modifier: the word "locked", its listener showing how to
+        // unlock the modifier it holds.
+        private Modifier lockedModifierOf(Actor actor) {
+            return tile == SmallModifierPanel.class && actor instanceof TextWriter
+                    ? snd.module.Captured.byListener(actor, Modifier.class) : null;
+        }
+
+        private int nth(Object key) {
+            Integer n = shown.get(key);
+            n = n == null ? 0 : n + 1;
+            shown.put(key, n);
+            return n;
         }
 
         private boolean holdsDirectly(Group group) {
@@ -143,6 +173,10 @@ final class LedgerNodes {
             HeroType hero = ActorNodes.heroTypeOf(actor);
             MonsterType monster = ActorNodes.monsterTypeOf(actor);
             Item item = ActorNodes.itemOf(actor);
+            Modifier modifier = ActorNodes.modifierOf(actor);
+            if (modifier == null) {
+                modifier = lockedModifierOf(actor);
+            }
             if (hero != null) {
                 group(CompositeKey.of("ledger-heroes", hero.heroCol, hero.level),
                         Loc.get("ui", "book.hero_group", "colour", GameText.t(hero.heroCol.colName),
@@ -159,6 +193,13 @@ final class LedgerNodes {
                         tier != null ? tier : Loc.get("ui", "book.no_tier"));
                 b.addItem(ControlId.referenced(item, CompositeKey.of("ledger-item", item.getName(false))),
                         tileNode(actor, item, itemName(item), item, facts));
+            } else if (modifier != null) {
+                String tier = ChoosablePanelNodes.tierText(modifier);
+                group(CompositeKey.of("ledger-modifiers", tier != null, modifier.getTier()),
+                        tier != null ? tier : Loc.get("ui", "book.no_tier"));
+                b.addItem(ControlId.referenced(modifier, CompositeKey.of("ledger-modifier", modifier.getName(),
+                                nth(modifier.getName()))),
+                        tileNode(actor, modifier, modifierName(modifier), modifier, facts));
             } else {
                 closeGroup();
                 ActorNodes.emit(b, actor); // the tile's field could not be read (logged there)
@@ -202,6 +243,15 @@ final class LedgerNodes {
         };
     }
 
+    private static Supplier<String> modifierName(final Modifier modifier) {
+        return new Supplier<String>() {
+            @Override
+            public String get() {
+                return ChoiceScreen.nameOf(modifier);
+            }
+        };
+    }
+
     // The game's words for a size (GlobalSize.makePanelActorI).
     private static String sizeName(EntSize size) {
         return GameText.t(size == EntSize.reg ? "regular" : size.name());
@@ -238,6 +288,10 @@ final class LedgerNodes {
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
+                // A modifier has no buffer of its own: its card goes here.
+                if (subject instanceof Modifier && !UnUtil.isLocked(unlockable)) {
+                    return UnitLines.modifier((Modifier) subject);
+                }
                 return GameUi.infoLines(tile);
             }
         };
