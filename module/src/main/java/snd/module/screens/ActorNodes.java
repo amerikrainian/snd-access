@@ -163,10 +163,17 @@ final class ActorNodes {
                 return;
             }
             boolean dieNet = place.dieNetLetters && isDieNetDiagram(group);
+            String optionDesc = describedOptionText(group);
             for (Actor child : group.getChildren()) {
                 // The letters over the net's six faces mean something only to
                 // the eye; the legend says them in words ("L: leftmost").
                 if (dieNet && child instanceof TextWriter) {
+                    continue;
+                }
+                // Option.makeFullDescribedUnlockActor draws the option's
+                // description under it; the option's node says it already.
+                if (optionDesc != null && child instanceof TextWriter
+                        && TextFilter.clean(((TextWriter) child).text).equals(optionDesc)) {
                     continue;
                 }
                 emit(b, child, place);
@@ -234,6 +241,20 @@ final class ActorNodes {
     // A choice option's panel holds it in its info listener
     // (ChOption.makeCogActor); a yes/no option's row holds its check box,
     // whose toggle runnable holds the option (BOption.makeComplexEscMenuActor).
+    // The description of an option drawn among the group's children, as the
+    // option's own text (cleaned), or null.
+    private static String describedOptionText(Group group) {
+        for (Actor child : group.getChildren()) {
+            com.tann.dice.gameplay.save.settings.option.Option option = optionOf(child);
+            if (option != null) {
+                String desc = (String) snd.module.Captured.field(option,
+                        com.tann.dice.gameplay.save.settings.option.Option.class, "desc");
+                return desc != null ? TextFilter.clean(desc) : null;
+            }
+        }
+        return null;
+    }
+
     private static com.tann.dice.gameplay.save.settings.option.Option optionOf(Actor actor) {
         com.tann.dice.gameplay.save.settings.option.ChOption choice =
                 snd.module.Captured.byListener(actor, com.tann.dice.gameplay.save.settings.option.ChOption.class);
@@ -336,11 +357,23 @@ final class ActorNodes {
         com.tann.dice.gameplay.content.ent.type.HeroType tileClass = heroTypeOf(actor);
         final com.tann.dice.gameplay.content.ent.type.HeroType heroClass = tileClass != null
                 && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileClass) ? tileClass : null;
+        // A search result (Resolver.resolveList) is an item's icon, a unit's
+        // portrait or a keyword's word; its click listener holds what it is.
+        final Object result = searchResultOf(actor);
+        final com.tann.dice.gameplay.content.ent.type.EntType resultType =
+                result instanceof com.tann.dice.gameplay.content.ent.type.EntType
+                        ? (com.tann.dice.gameplay.content.ent.type.EntType) result : null;
+        final com.tann.dice.gameplay.effect.eff.keyword.Keyword resultKeyword =
+                result instanceof com.tann.dice.gameplay.effect.eff.keyword.Keyword
+                        ? (com.tann.dice.gameplay.effect.eff.keyword.Keyword) result : null;
         // An item tile concerns its item: the items buffer reads it whole.
-        com.tann.dice.gameplay.content.item.Item tileItem = itemOf(actor);
+        com.tann.dice.gameplay.content.item.Item ledgerItem = itemOf(actor);
+        final com.tann.dice.gameplay.content.item.Item tileItem = ledgerItem != null ? ledgerItem
+                : result instanceof com.tann.dice.gameplay.content.item.Item
+                        ? (com.tann.dice.gameplay.content.item.Item) result : null;
         vt.subject = heroClass != null ? heroClass
                 : tileItem != null && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileItem)
-                        ? tileItem : null;
+                        ? tileItem : resultType;
         // A modifier's small panel, or an item's or modifier's card
         // (ConcisePanel), prints its tier as a bare number coloured by sign
         // beside its name and icons: name and tier are read from what it
@@ -365,6 +398,9 @@ final class ActorNodes {
                 if (cardLines != null) {
                     return cardLines;
                 }
+                if (resultKeyword != null) {
+                    return Terms.keywordLines(java.util.Collections.singletonList(resultKeyword), null);
+                }
                 List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
                 lines.addAll(PartyLayouts.pools(actor));
                 return lines;
@@ -376,6 +412,12 @@ final class ActorNodes {
                     public String get() {
                         if (shown != null) {
                             return ChoiceScreen.nameOf(shown);
+                        }
+                        if (tileItem != null && result != null) {
+                            return GameText.t(tileItem.getName(true));
+                        }
+                        if (resultType != null) {
+                            return GameText.t(resultType.getName(true));
                         }
                         // Model label first: some achievement icons are text
                         // glyphs ("H5") that would win the text search.
@@ -426,13 +468,17 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return heroClass != null ? UnitLines.restHp(heroClass) : null;
+                        com.tann.dice.gameplay.content.ent.type.EntType unit = heroClass != null ? heroClass : resultType;
+                        return unit != null ? UnitLines.restHp(unit) : null;
                     }
                 }, AnnouncementKinds.VALUE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return shown != null ? ChoosablePanelNodes.tierText(shown) : null;
+                        if (shown != null) {
+                            return ChoosablePanelNodes.tierText(shown);
+                        }
+                        return tileItem != null && result != null ? ChoosablePanelNodes.tierText(tileItem) : null;
                     }
                 }, AnnouncementKinds.VALUE),
                 // A row of the game's buttons that works as a radio group,
@@ -661,6 +707,14 @@ final class ActorNodes {
     private static String itemTileName(Actor actor) {
         com.tann.dice.gameplay.content.item.Item item = itemOf(actor);
         return item != null ? GameText.t(item.getName(true)) : null;
+    }
+
+    // What a search result stands for: the object its click listener
+    // resolves (Resolver.resolveList), or null for any other actor.
+    static Object searchResultOf(Actor actor) {
+        com.tann.dice.util.listener.TannListener listener = snd.module.Captured.listenerBuiltBy(actor,
+                com.tann.dice.util.ui.resolver.Resolver.class, "resolveList");
+        return listener != null ? snd.module.Captured.field(listener, listener.getClass(), "val$t") : null;
     }
 
     // The modifier a SmallModifierPanel draws: its run's modifier list, the

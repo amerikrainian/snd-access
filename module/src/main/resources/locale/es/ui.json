@@ -237,6 +237,7 @@
   "inv.rename_hero": "Renombrar a {hero}",
   "inv.rename": "Renombrar",
   "inv.rename_unavailable": "renombrar no disponible",
+  "pin.unpin": "desfijar",
 
   "text.blank": "vacío",
   "text.space": "espacio",

@@ -237,6 +237,7 @@
   "inv.rename_hero": "Renomear {hero}",
   "inv.rename": "Renomear",
   "inv.rename_unavailable": "renomear indisponível",
+  "pin.unpin": "desafixar",
 
   "text.blank": "em branco",
   "text.space": "espaço",

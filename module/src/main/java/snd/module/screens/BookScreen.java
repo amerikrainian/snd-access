@@ -127,6 +127,8 @@ public class BookScreen extends AccessScreen {
         } else if (tab == com.tann.dice.screens.dungeon.panels.book.page.stuffPage.StuffPage.StuffSection.Graph) {
             ActorNodes.emit(b, content); // series icons (named), add/remove
             buildGraphTable(b, content);
+        } else if (tab == com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType.Pin) {
+            PinNodes.emit(b, content, place(tab));
         } else if (!(tab instanceof com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType)
                 || !LedgerNodes.emit(b, content,
                         (com.tann.dice.screens.dungeon.panels.book.page.ledgerPage.LedgerPage.LedgerPageType) tab,

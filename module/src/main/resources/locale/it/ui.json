@@ -237,6 +237,7 @@
   "inv.rename_hero": "Rinomina {hero}",
   "inv.rename": "Rinomina",
   "inv.rename_unavailable": "rinomina non disponibile",
+  "pin.unpin": "rimuovi pin",
 
   "text.blank": "vuoto",
   "text.space": "spazio",

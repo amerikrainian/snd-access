@@ -23,6 +23,7 @@ import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
 import snd.module.GameText;
+import snd.module.GameUi;
 
 /**
  * A unit's panel (EntPanelInventory) wherever the generic walk meets it: a
@@ -48,12 +49,18 @@ final class EntPanelNodes {
      * below (the almanac's chosen record, a hero's marks in the run).
      */
     static void emit(GraphBuilder b, EntPanelInventory panel, List<String> above, List<String> below) {
-        unit(b, panel.ent, above, below);
+        unit(b, panel.ent, above, below, GameUi.isClickable(panel) ? panel : null);
     }
 
     /** A unit as its panel reads, where a place shows one (a dialog's hero). */
     static void unit(GraphBuilder b, final Ent ent, List<String> above, List<String> below) {
+        unit(b, ent, above, below, null);
+    }
 
+    // A panel the game made clickable as a whole (a search result: a click
+    // pins it) answers on its header line.
+    private static void unit(GraphBuilder b, final Ent ent, List<String> above, List<String> below,
+            final com.badlogic.gdx.scenes.scene2d.Actor clickable) {
         NodeVtable header = unitNode(ent);
         header.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
             @Override
@@ -61,6 +68,21 @@ final class EntPanelNodes {
                 return UnitLines.restHeader(ent, state(ent));
             }
         }, AnnouncementKinds.LABEL));
+        if (clickable != null) {
+            header.controlType = ControlTypes.BUTTON;
+            header.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.activate(clickable);
+                }
+            };
+            header.onSecondary = new Runnable() {
+                @Override
+                public void run() {
+                    GameUi.info(clickable);
+                }
+            };
+        }
         b.addItem(id(ent, "header"), header);
         // Drawn above the panel, read after the unit's name: the name says
         // whose record it is.

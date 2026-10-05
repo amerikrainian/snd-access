@@ -237,6 +237,7 @@
   "inv.rename_hero": "Переименовать: {hero}",
   "inv.rename": "Переименовать",
   "inv.rename_unavailable": "переименование недоступно",
+  "pin.unpin": "открепить",
 
   "text.blank": "пусто",
   "text.space": "пробел",
