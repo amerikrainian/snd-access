@@ -274,6 +274,25 @@ public final class UnitLines {
     }
 
     /**
+     * A modifier as its card reads (ModifierPanel): name and tier, the
+     * description, the spells it teaches, the rules of the keywords it
+     * references.
+     */
+    public static List<String> modifier(Modifier modifier) {
+        List<String> lines = new ArrayList<String>();
+        String name = ChoiceScreen.nameOf(modifier);
+        String tier = ChoosablePanelNodes.tierText(modifier);
+        lines.add(tier != null ? name + ", " + tier : name);
+        String desc = modifier.getFullDescription();
+        if (desc != null && !desc.trim().isEmpty()) {
+            lines.add(GameText.t(desc));
+        }
+        lines.addAll(taughtAbilities(modifier));
+        lines.addAll(Terms.forModifier(modifier));
+        return lines;
+    }
+
+    /**
      * One line per unit of a side, its hp display: the heroes as their column
      * stands (the defeated keep their place), the monsters still in the fight.
      */

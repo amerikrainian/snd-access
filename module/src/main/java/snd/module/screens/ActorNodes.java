@@ -336,7 +336,14 @@ final class ActorNodes {
         com.tann.dice.gameplay.content.ent.type.HeroType tileClass = heroTypeOf(actor);
         final com.tann.dice.gameplay.content.ent.type.HeroType heroClass = tileClass != null
                 && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileClass) ? tileClass : null;
-        vt.subject = heroClass;
+        // An item tile concerns its item: the items buffer reads it whole.
+        com.tann.dice.gameplay.content.item.Item tileItem = itemOf(actor);
+        vt.subject = heroClass != null ? heroClass
+                : tileItem != null && !com.tann.dice.gameplay.progress.chievo.unlock.UnUtil.isLocked(tileItem)
+                        ? tileItem : null;
+        // A modifier's small panel prints its name and tier; the rest of its
+        // card is read from the modifier it holds.
+        final com.tann.dice.gameplay.modifier.Modifier modifier = modifierOf(actor);
         // What the game's info popup said when this control was last asked
         // (Enter on an info-only row, Backspace anywhere): read on the spot,
         // kept here to step through. A party-layout card adds the heroes
@@ -344,6 +351,9 @@ final class ActorNodes {
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
+                if (modifier != null) {
+                    return UnitLines.modifier(modifier);
+                }
                 List<String> lines = new java.util.ArrayList<String>(GameUi.infoLines(actor));
                 lines.addAll(PartyLayouts.pools(actor));
                 return lines;
@@ -353,6 +363,9 @@ final class ActorNodes {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
+                        if (modifier != null) {
+                            return ChoiceScreen.nameOf(modifier);
+                        }
                         // Model label first: some achievement icons are text
                         // glyphs ("H5") that would win the text search.
                         String label = achievementTileName(actor);
@@ -403,6 +416,12 @@ final class ActorNodes {
                     @Override
                     public String get() {
                         return heroClass != null ? UnitLines.restHp(heroClass) : null;
+                    }
+                }, AnnouncementKinds.VALUE),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return modifier != null ? ChoosablePanelNodes.tierText(modifier) : null;
                     }
                 }, AnnouncementKinds.VALUE),
                 // A row of the game's buttons that works as a radio group,
@@ -631,6 +650,16 @@ final class ActorNodes {
     private static String itemTileName(Actor actor) {
         com.tann.dice.gameplay.content.item.Item item = itemOf(actor);
         return item != null ? GameText.t(item.getName(true)) : null;
+    }
+
+    // The modifier a SmallModifierPanel draws: its run's modifier list, the
+    // almanac's Modifier tab and keyword pages, custom mode, the run history.
+    static com.tann.dice.gameplay.modifier.Modifier modifierOf(Actor actor) {
+        if (!(actor instanceof com.tann.dice.gameplay.modifier.SmallModifierPanel)) {
+            return null;
+        }
+        return (com.tann.dice.gameplay.modifier.Modifier) snd.module.Captured.field(actor,
+                com.tann.dice.gameplay.modifier.SmallModifierPanel.class, "modifier");
     }
 
     static com.tann.dice.gameplay.content.item.Item itemOf(Actor actor) {
