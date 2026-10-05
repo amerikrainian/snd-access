@@ -235,6 +235,7 @@
   "inv.done": "Готово",
   "inv.randomize": "Случайная экипировка",
   "inv.rename_hero": "Переименовать: {hero}",
+  "inv.rename": "Переименовать",
   "inv.rename_unavailable": "переименование недоступно",
 
   "text.blank": "пусто",

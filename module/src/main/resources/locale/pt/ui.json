@@ -235,6 +235,7 @@
   "inv.done": "Concluído",
   "inv.randomize": "Equipamento aleatório",
   "inv.rename_hero": "Renomear {hero}",
+  "inv.rename": "Renomear",
   "inv.rename_unavailable": "renomear indisponível",
 
   "text.blank": "em branco",

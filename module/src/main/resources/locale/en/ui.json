@@ -235,6 +235,7 @@
   "inv.done": "Done",
   "inv.randomize": "Randomize equipment",
   "inv.rename_hero": "Rename {hero}",
+  "inv.rename": "Rename",
   "inv.rename_unavailable": "rename not available",
 
   "text.blank": "blank",

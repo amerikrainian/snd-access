@@ -218,8 +218,9 @@ public class InventoryScreen extends AccessScreen {
             rename.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
                 public String get() {
-                    // The live name: back from a rename, the button says the new one.
-                    return Loc.get("ui", "inv.rename_hero", "hero", GameText.t(hero.getName(true)));
+                    // Whose name: the row's container, read live — back from a
+                    // rename, focus returns through it and says the new one.
+                    return Loc.get("ui", "inv.rename");
                 }
             }, AnnouncementKinds.LABEL));
             rename.onActivate = new Runnable() {

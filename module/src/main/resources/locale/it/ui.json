@@ -235,6 +235,7 @@
   "inv.done": "Fatto",
   "inv.randomize": "Equipaggiamento casuale",
   "inv.rename_hero": "Rinomina {hero}",
+  "inv.rename": "Rinomina",
   "inv.rename_unavailable": "rinomina non disponibile",
 
   "text.blank": "vuoto",
