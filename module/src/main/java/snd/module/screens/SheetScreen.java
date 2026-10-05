@@ -282,7 +282,14 @@ public class SheetScreen extends AccessScreen {
         return sb.toString();
     }
 
+    // NetPanel.draw's highlight: only while the phase highlights dice (the
+    // fight's own phases) and only for a unit in the fight. Between fights a
+    // die still holds its last face, and the sheet marks none.
     static boolean isRolled(Ent ent, int index) {
+        com.tann.dice.gameplay.phase.Phase phase = com.tann.dice.gameplay.phase.PhaseManager.get().getPhase();
+        if (phase == null || !phase.highlightDice() || !DungeonScreen.checkActive(ent)) {
+            return false;
+        }
         EntDie die = ent.getDie();
         return die.getState() != Die.DieState.Rolling
                 && die.getCurrentSide() != null
