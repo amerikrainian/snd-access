@@ -239,6 +239,7 @@ public class LevelEndScreen extends AccessScreen {
             buildMap(b, dc, above);
         }
 
+        PartyNodes.build(b, host);
         TutorialNodes.build(b, ds);
     }
 

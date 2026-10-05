@@ -180,8 +180,8 @@ public class CombatScreen extends AccessScreen {
         if (ds == null || ds.getFightLog() == null) {
             return;
         }
-        buildEntityStop(b, ds, true);
-        buildEntityStop(b, ds, false);
+        buildEntityStop(b, host, ds, true);
+        buildEntityStop(b, host, ds, false);
         Phase phase = PhaseManager.get().getPhase();
         if (phase instanceof PlayerRollingPhase || phase instanceof TargetingPhase) {
             buildAbilitiesStop(b, ds);
@@ -411,7 +411,17 @@ public class CombatScreen extends AccessScreen {
 
     // ---- the two combatant columns: one node per hero/monster ----
 
-    private void buildEntityStop(GraphBuilder b, final DungeonScreen ds, boolean heroes) {
+    /**
+     * The hero column as its own stop, the rows the fight reads: the column
+     * stays on the dungeon screen between fights, under every offer and
+     * dialog ({@link PartyNodes}). Nodes added after it join the stop.
+     */
+    static void heroStop(GraphBuilder b, HostServices host, DungeonScreen ds) {
+        buildEntityStop(b, host, ds, true);
+    }
+
+    private static void buildEntityStop(GraphBuilder b, HostServices host, final DungeonScreen ds,
+            boolean heroes) {
         String key = heroes ? "heroes" : "enemies";
         b.beginStop(key).pushContext(Loc.get("combat", key));
         // Dead heroes keep their place (the greyed skull panel); dead
@@ -420,17 +430,17 @@ public class CombatScreen extends AccessScreen {
                 .getEntities(heroes, heroes ? null : Boolean.FALSE);
         for (int i = 0; i < ents.size(); i++) {
             final Ent ent = ents.get(i);
-            b.addItem(ControlId.referenced(ent, CompositeKey.of(key, i)), entNode(ds, ent));
+            b.addItem(ControlId.referenced(ent, CompositeKey.of(key, i)), entNode(host, ds, ent));
         }
         if (!heroes) {
-            buildReinforcements(b, ds);
+            buildReinforcements(b, host, ds);
         }
         b.popContext();
     }
 
     // The "Reinforcements: N" box atop the enemy column: the count as the
     // game's own pattern string, the waiting monsters' names on Backspace.
-    private void buildReinforcements(GraphBuilder b, final DungeonScreen ds) {
+    private static void buildReinforcements(GraphBuilder b, final HostServices host, final DungeonScreen ds) {
         final List<com.tann.dice.gameplay.content.ent.Monster> waiting =
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getReinforcements();
         if (waiting == null || waiting.isEmpty()) {
@@ -470,7 +480,7 @@ public class CombatScreen extends AccessScreen {
         b.addItem(ControlId.structural(CompositeKey.of("enemies", "reinforcements")), vt);
     }
 
-    private NodeVtable entNode(final DungeonScreen ds, final Ent ent) {
+    private static NodeVtable entNode(final HostServices host, final DungeonScreen ds, final Ent ent) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
         vt.subject = ent;
@@ -512,9 +522,11 @@ public class CombatScreen extends AccessScreen {
                                     && PhaseManager.get().getPhase() instanceof TargetingPhase) {
                                 return null;
                             }
-                            // Summoned this turn: the panel draws no face, and
-                            // the die it holds is not an intent.
-                            if (present.isSummonedSoNotAttacking()) {
+                            // A monster summoned this turn: the panel blanks its
+                            // die box (EntPanelCombat.draw), and the die it holds
+                            // is not an intent. A hero's face stays drawn, dimmed
+                            // — every hero between fights.
+                            if (present.isSummonedSoNotAttacking() && !ent.isPlayer()) {
                                 return null;
                             }
                         }

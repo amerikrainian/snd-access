@@ -21,6 +21,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.choi
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.reveal.RandomRevealPhase;
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.trade.TradePhase;
 
+import snd.contracts.HostServices;
 import snd.contracts.SndLog;
 import snd.core.graph.AnnouncementKinds;
 import snd.core.graph.CompositeKey;
@@ -74,6 +75,11 @@ public class DialogPhaseScreen extends AccessScreen {
     }
 
     private final Map<Class<?>, Field> fieldCache = new HashMap<Class<?>, Field>();
+    private final HostServices host;
+
+    public DialogPhaseScreen(HostServices host) {
+        this.host = host;
+    }
 
     @Override
     public String key() {
@@ -218,6 +224,7 @@ public class DialogPhaseScreen extends AccessScreen {
             ActorNodes.emit(b, dialog);
         }
         b.popContext();
+        PartyNodes.build(b, host);
     }
 
     // ---- the event dialogs, read from their phase: what each one asks,
