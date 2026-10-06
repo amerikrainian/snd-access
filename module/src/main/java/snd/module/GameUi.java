@@ -448,12 +448,16 @@ public final class GameUi {
         }
     }
 
-    /** A button-ish actor's label: its own text, else its TextWriters joined. */
+    /**
+     * A button-ish actor's label as drawn: its own text, else its TextWriters
+     * joined. A StandardButton holds the source text it hands its TextWriter,
+     * which translates it; the TextWriters' text is translated already.
+     */
     public static String labelOf(Actor actor) {
         if (actor instanceof StandardButton) {
             String text = ((StandardButton) actor).getText();
             if (text != null && !text.trim().isEmpty()) {
-                return text;
+                return GameText.t(text);
             }
         }
         List<String> texts = textsUnder(actor);

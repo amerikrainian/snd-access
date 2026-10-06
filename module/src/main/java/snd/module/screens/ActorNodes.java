@@ -57,7 +57,10 @@ final class ActorNodes {
     static final class Place {
         static final Place PLAIN = new Place(java.util.Collections.<String, String>emptyMap(), null, false, false);
 
-        /** Shorthand captions, whole caption to the ui key naming it ("fs" is "fullscreen" in the cog menu). */
+        /**
+         * Shorthand captions, whole caption as drawn (translated) to the ui key
+         * naming it ("-" is "decrease" in the cog menu).
+         */
         final java.util.Map<String, String> glyphs;
         /**
          * Which of a row of plain buttons is the chosen one, read from what
