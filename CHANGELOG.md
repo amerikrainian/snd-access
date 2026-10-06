@@ -1,5 +1,9 @@
 # Changelog
 
+## V0.1.7
+
+- Fixed some bugs related to localization of things like item descriptions.
+
 ## V0.1.6
 
 - Added hero panels as a separate tab stop where you might care to look: rewards, dialogues and events are just a few examples.
