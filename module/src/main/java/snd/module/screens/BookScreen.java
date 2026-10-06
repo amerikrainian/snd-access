@@ -24,6 +24,7 @@ import snd.core.loc.Loc;
 import snd.core.nav.AccessScreen;
 import snd.core.nav.KeyOffer;
 import snd.module.GameKeys;
+import snd.module.GameText;
 import snd.module.GameUi;
 
 /**
@@ -99,7 +100,7 @@ public class BookScreen extends AccessScreen {
         }
 
         b.beginStop("tabs").pushContext(
-                Loc.get("ui", "book.tabs", "page", stripMarkup(page.title)),
+                Loc.get("ui", "book.tabs", "page", stripMarkup(GameText.t(page.title))),
                 Loc.get("ui", "role.list"));
         for (TopTab tab : page.getSideBar().getItems()) {
             b.addItem(ControlId.referenced(tab, CompositeKey.of("book-tab", tab.getTabName())),
@@ -570,7 +571,7 @@ public class BookScreen extends AccessScreen {
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return tab.getTabName();
+                        return GameText.t(tab.getTabName()); // the source TopTab hands its TextWriter
                     }
                 }, AnnouncementKinds.LABEL));
         // Moving onto a tab opens it (the navigator's rule for tabs), so the
