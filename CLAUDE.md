@@ -201,10 +201,14 @@ Permanent/reloadable split (verified end-to-end):
 - **Two localization channels, don't cross them.** The mod's OWN strings (role words, glue
   phrases) resolve through `Loc` ("ui" table, `module/src/main/resources/locale/<lang>/`;
   English is the always-loaded fallback, and the module follows the game's live language by
-  per-frame poll — `Locales.tick`). GAME text read from the model (`Mode.getName()`, item and
-  side descriptions) is English source the game translates at display time — route it through
+  per-frame poll — `Locales.tick`). GAME text read from the model (`Mode.getName()`, side
+  descriptions) is English source the game translates at display time — route it through
   `GameText.t` (= the game's `Main.t`) before speaking. Actor text (`TextWriter.text`) is
-  already translated at set time; never bridge it twice.
+  already translated at set time; never bridge it twice. `StandardButton.getText()` is NOT
+  actor text: it is the source the button hands its TextWriter. An item's description is
+  `GameText.itemDescription` — `Item.getDescription()` is frozen in the language it was built in.
+  A game word the game only ever uses inside a sentence (`Choosable.describe()`'s "item") has
+  no translation of its own: speak it through a `Loc` key instead.
 - **Every key of the mod's own is bound in one table** (`SndKeys`, over `snd.core.input`):
   `SndInput` resolves presses through it (most specific chord wins; held modifiers no chord asks
   for are ignored), the key help reads labels and spoken chords from it, and the dev driver drives
