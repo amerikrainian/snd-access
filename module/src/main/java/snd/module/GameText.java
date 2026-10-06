@@ -22,4 +22,16 @@ public final class GameText {
         }
         return main.translator.translate(text);
     }
+
+    /**
+     * An item's rules as its panel draws them (ItemPanel.getFullDescription),
+     * built now and so in the current language — already translated, never
+     * pass it through {@link #t}. Item.getDescription() is the same text fixed
+     * when the item was built: in the language of that moment, or English for
+     * one the game's pipes built with the translator disabled.
+     */
+    public static String itemDescription(com.tann.dice.gameplay.content.item.Item item) {
+        return com.tann.dice.gameplay.trigger.Trigger.describeTriggers(
+                new java.util.ArrayList<com.tann.dice.gameplay.trigger.personal.Personal>(item.getPersonals()));
+    }
 }

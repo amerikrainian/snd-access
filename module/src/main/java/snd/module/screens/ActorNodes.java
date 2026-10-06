@@ -787,7 +787,7 @@ final class ActorNodes {
         }
         com.tann.dice.gameplay.content.item.Item item =
                 ((com.tann.dice.screens.dungeon.panels.entPanel.ItemHeroPanel) actor).item;
-        return item != null ? GameText.t(item.getDescription()) : null;
+        return item != null ? GameText.itemDescription(item) : null;
     }
 
     // Bare die-side tiles carry no text: named by the side they hold.
@@ -858,7 +858,7 @@ final class ActorNodes {
             }
             Object choosable = choosableField.get(actor);
             if (choosable instanceof com.tann.dice.gameplay.content.item.Item) {
-                return GameText.t(((com.tann.dice.gameplay.content.item.Item) choosable).getDescription());
+                return GameText.itemDescription((com.tann.dice.gameplay.content.item.Item) choosable);
             }
             if (choosable instanceof com.tann.dice.gameplay.modifier.Modifier) {
                 return GameText.t(((com.tann.dice.gameplay.modifier.Modifier) choosable).getFullDescription());

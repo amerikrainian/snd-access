@@ -565,7 +565,7 @@ public class ChoiceScreen extends AccessScreen {
                 return GameText.t(((com.tann.dice.gameplay.modifier.Modifier) option).getFullDescription());
             }
             if (option instanceof com.tann.dice.gameplay.content.item.Item) {
-                return GameText.t(((com.tann.dice.gameplay.content.item.Item) option).getDescription());
+                return GameText.itemDescription((com.tann.dice.gameplay.content.item.Item) option);
             }
             if (option instanceof LevelupHeroChoosable) {
                 return levelupSheet((LevelupHeroChoosable) option, index);
@@ -694,9 +694,9 @@ public class ChoiceScreen extends AccessScreen {
                         NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
                             public String get() {
-                                String desc = item.getDescription();
+                                String desc = GameText.itemDescription(item);
                                 return desc == null || desc.trim().isEmpty()
-                                        ? null : GameText.t(desc);
+                                        ? null : desc;
                             }
                         }, AnnouncementKinds.VALUE));
                 b.addItem(ControlId.structural(CompositeKey.of("choice", index, "item", n)), vt);

@@ -264,9 +264,9 @@ public final class UnitLines {
         List<String> lines = new ArrayList<String>();
         String name = GameText.t(item.getName(true));
         lines.add(item.hasTier() ? name + ", " + Loc.get("ui", "choice.tier", "tier", item.getTier()) : name);
-        String desc = item.getDescription();
+        String desc = GameText.itemDescription(item);
         if (desc != null && !desc.trim().isEmpty()) {
-            lines.add(GameText.t(desc));
+            lines.add(desc);
         }
         lines.addAll(taughtAbilities(item));
         lines.addAll(Terms.forItem(item));

@@ -201,8 +201,8 @@ final class EntPanelNodes {
                     @Override
                     public String get() {
                         Item item = itemIn(ent, slot);
-                        String desc = item != null ? item.getDescription() : null;
-                        return desc == null || desc.trim().isEmpty() ? null : GameText.t(desc);
+                        String desc = item != null ? GameText.itemDescription(item) : null;
+                        return desc == null || desc.trim().isEmpty() ? null : desc;
                     }
                 }, AnnouncementKinds.VALUE));
         vt.details = new Supplier<List<String>>() {

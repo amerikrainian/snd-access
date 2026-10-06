@@ -302,7 +302,7 @@ public class InventoryScreen extends AccessScreen {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            return GameText.t(item.getDescription());
+                            return GameText.itemDescription(item);
                         }
                     }, AnnouncementKinds.TOOLTIP));
             vt.onActivate = new Runnable() {
@@ -433,9 +433,9 @@ public class InventoryScreen extends AccessScreen {
         if (item.hasTier()) {
             sb.append(", ").append(Loc.get("ui", "choice.tier", "tier", item.getTier()));
         }
-        String desc = item.getDescription();
+        String desc = GameText.itemDescription(item);
         if (desc != null && !desc.trim().isEmpty()) {
-            sb.append(". ").append(GameText.t(desc));
+            sb.append(". ").append(desc);
         }
         return sb.toString();
     }

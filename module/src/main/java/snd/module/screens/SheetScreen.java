@@ -157,9 +157,9 @@ public class SheetScreen extends AccessScreen {
                         NodeAnnouncement.kinded(new Supplier<String>() {
                             @Override
                             public String get() {
-                                String desc = item.getDescription();
+                                String desc = GameText.itemDescription(item);
                                 return desc == null || desc.trim().isEmpty()
-                                        ? null : GameText.t(desc);
+                                        ? null : desc;
                             }
                         }, AnnouncementKinds.VALUE));
                 b.addItem(ControlId.structural(CompositeKey.of("sheet", "item", i)), vt);
@@ -240,9 +240,9 @@ public class SheetScreen extends AccessScreen {
                     sb.append("; ");
                 }
                 sb.append(GameText.t(items.get(i).getName()));
-                String desc = items.get(i).getDescription();
+                String desc = GameText.itemDescription(items.get(i));
                 if (desc != null && !desc.trim().isEmpty()) {
-                    sb.append(", ").append(GameText.t(desc));
+                    sb.append(", ").append(desc);
                 }
                 for (String taught : UnitLines.taughtAbilities(items.get(i))) {
                     sb.append(", ").append(taught);
