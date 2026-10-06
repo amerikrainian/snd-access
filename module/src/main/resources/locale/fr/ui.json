@@ -101,7 +101,7 @@
   "title.back_to": "Retour à {mode}",
   "title.continue": "Continuer la partie sauvegardée",
   "title.start": "Commencer {name}",
-  "title.record": "{wins} victoires en {runs} parties",
+  "title.record": "victoires : {wins} sur {runs}",
   "title.streak": "série {streak}",
   "title.unavailable": "indisponible",
 
@@ -152,7 +152,7 @@
   "book.achieved": "obtenu",
   "book.not_achieved": "non obtenu",
   "book.value_table": "Valeurs des faces",
-  "book.pips_col": "{n} points",
+  "book.pips_col": "points : {n}",
   "book.hero_group": "{colour}, niveau {tier}",
   "book.no_tier": "sans niveau",
 

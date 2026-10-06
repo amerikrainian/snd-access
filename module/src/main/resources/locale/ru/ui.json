@@ -101,7 +101,7 @@
   "title.back_to": "Назад: {mode}",
   "title.continue": "Продолжить сохранённый забег",
   "title.start": "Начать: {name}",
-  "title.record": "побед: {wins}, забегов: {runs}",
+  "title.record": "побед: {wins} из {runs}",
   "title.streak": "череда побед {streak}",
   "title.unavailable": "недоступно",
 

@@ -101,7 +101,7 @@
   "title.back_to": "Volver a {mode}",
   "title.continue": "Continuar partida guardada",
   "title.start": "Comenzar {name}",
-  "title.record": "{wins} victorias en {runs} partidas",
+  "title.record": "victorias: {wins} de {runs}",
   "title.streak": "racha {streak}",
   "title.unavailable": "no disponible",
 

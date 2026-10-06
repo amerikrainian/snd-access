@@ -101,7 +101,7 @@
   "title.back_to": "Back to {mode}",
   "title.continue": "Continue saved run",
   "title.start": "Start {name}",
-  "title.record": "{wins} wins in {runs} runs",
+  "title.record": "won {wins} of {runs}",
   "title.streak": "streak {streak}",
   "title.unavailable": "not available",
 
@@ -152,7 +152,7 @@
   "book.achieved": "achieved",
   "book.not_achieved": "not achieved",
   "book.value_table": "Side values",
-  "book.pips_col": "{n} pips",
+  "book.pips_col": "pips: {n}",
   "book.hero_group": "{colour}, tier {tier}",
   "book.no_tier": "no tier",
 
