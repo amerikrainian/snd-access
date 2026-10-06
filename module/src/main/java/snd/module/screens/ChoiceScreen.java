@@ -533,10 +533,7 @@ public class ChoiceScreen extends AccessScreen {
                 SndLog.error("failed to find level-up target hero", t);
             }
         }
-        // The kinds whose describe() is a type word ("item", "hero",
-        // "level-up", a modifier's "curse" or "blessing"); every other kind
-        // describes itself whole, which is its name already.
-        String type = hasTypeWord(option.getType()) ? safeDescribe(option) : null;
+        String type = typeWord(option);
         if (type != null) {
             if (sb.length() > 0) {
                 sb.append(", ");
@@ -553,9 +550,24 @@ public class ChoiceScreen extends AccessScreen {
         return sb.length() > 0 ? sb.toString() : null;
     }
 
-    private static boolean hasTypeWord(ChoosableType kind) {
-        return kind == ChoosableType.Item || kind == ChoosableType.Hero
-                || kind == ChoosableType.Levelup || kind == ChoosableType.Modifier;
+    // The kinds whose describe() is a type word; every other kind describes
+    // itself whole, which is its name already. The game translates "hero",
+    // "curse" and "blessing" on their own; "item", "level-up" and "modifier"
+    // it only ever uses inside a sentence ("Choose an item"), so those words
+    // are ours.
+    private static String typeWord(Choosable option) {
+        switch (option.getType()) {
+            case Item:
+                return Loc.get("ui", "choice.kind.item");
+            case Levelup:
+                return Loc.get("ui", "choice.kind.levelup");
+            case Hero:
+                return safeDescribe(option);
+            case Modifier:
+                return option.getTier() == 0 ? Loc.get("ui", "choice.kind.modifier") : safeDescribe(option);
+            default:
+                return null;
+        }
     }
 
     // The full effect text — the same content the visual panels render.
