@@ -24,6 +24,13 @@ class TextFilterTest {
     }
 
     @Test
+    void nonBreakingSpaceTagIsASpace() {
+        // es.json's "Online"; the half-space [h] sits inside a word and is dropped.
+        assertEquals("En línea", TextFilter.clean("En[nbs]línea"));
+        assertEquals("Xs rolled:", TextFilter.clean("[red]X[cu][h]s rolled:"));
+    }
+
+    @Test
     void keepsPlainText() {
         assertEquals("full 20-fight dungeon", TextFilter.clean("full 20-fight dungeon"));
     }

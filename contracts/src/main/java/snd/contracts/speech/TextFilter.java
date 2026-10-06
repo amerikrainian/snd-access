@@ -4,7 +4,7 @@ package snd.contracts.speech;
  * Cleans Slice &amp; Dice's inline markup out of text before it is spoken. The
  * game's TextWriter/TannFont markup uses square-bracket tags: colour tags
  * ([green], [cu], [text], [light], hex-ish colour triples), layout tags ([n] =
- * newline, [b] = border), image tags ([hp], [tinyDice], [reroll]...), and
+ * newline, [nbs] = non-breaking space, [b] = border), image tags ([hp], [tinyDice], [reroll]...), and
  * [notranslate]. A synthesizer must hear none of them.
  */
 public final class TextFilter {
@@ -28,6 +28,8 @@ public final class TextFilter {
                     String tag = raw.substring(i + 1, close);
                     if (tag.equals("n")) {
                         out.append('\n');
+                    } else if (tag.equals("nbs")) {
+                        out.append(' '); // TextWriter draws it a space wide
                     }
                     // every other tag (colours, images, [b], [notranslate], ...) is dropped
                     i = close + 1;
