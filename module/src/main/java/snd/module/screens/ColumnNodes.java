@@ -23,9 +23,10 @@ import snd.module.GameUi;
  * offer, hub or dialog the phase draws over it: the hero column with the
  * corner Inventory button below it while the phase slides it in
  * ({@code DungeonScreen.enterPhase} →
- * {@code toggleHiddenInventory(showCornerInventory())}), then the next
- * fight's monsters. Each panel opens its unit's sheet as a click does. Every
- * screen over the dungeon outside a fight ends its build with it.
+ * {@code toggleHiddenInventory(showCornerInventory())}), and the next
+ * fight's monsters in the column beside it — one stop, as in a fight. Each
+ * panel opens its unit's sheet as a click does. Every screen over the
+ * dungeon outside a fight ends its build with it.
  */
 final class ColumnNodes {
     private ColumnNodes() {
@@ -36,10 +37,11 @@ final class ColumnNodes {
             return;
         }
         final DungeonScreen ds = DungeonScreen.get();
-        CombatScreen.buildEntityStop(b, host, ds, true);
+        ControlId invId = null;
+        NodeVtable inv = null;
         Phase phase = PhaseManager.get().getPhase();
         if (phase.showCornerInventory() && ds.getDungeonContext().allowInventory()) {
-            NodeVtable inv = new NodeVtable();
+            inv = new NodeVtable();
             inv.controlType = ControlTypes.BUTTON;
             inv.announcements = Arrays.asList(NodeAnnouncement.kinded(new Supplier<String>() {
                 @Override
@@ -55,8 +57,8 @@ final class ColumnNodes {
             };
             // Below the column, as drawn; the hero rows count no positions.
             inv.speaksOwnPosition = true;
-            b.addItem(ControlId.structural(CompositeKey.of("party", "inventory")), inv);
+            invId = ControlId.structural(CompositeKey.of("party", "inventory"));
         }
-        CombatScreen.buildEntityStop(b, host, ds, false);
+        CombatScreen.buildColumns(b, host, ds, invId, inv);
     }
 }

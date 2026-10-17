@@ -225,7 +225,7 @@ screens announce); unknown phases stay silent rather than reading class names.
 - Keyboard: **1–9** lock/unlock hero N's die, **R** rolls, **Space/Enter** confirms. There is **no keyboard path to an individual physical die's info**
 - Unspent rerolls carry into targeting (can be "un-rolled" back via Undo)
 
-> **Coverage:** `CombatScreen` (heroes stop: name, rolled side's calculated text, locked state;
+> **Coverage:** `CombatScreen` (combatants stop, heroes left and monsters right: name, rolled side's calculated text, locked state;
 buttons stop: Reroll with the n/max counter, the confirm button's own state text read
 reflectively) + `DiceWatcher` (when the last tumbling die settles, each rolled die reads its
 landed side followed by "Reroll n/max"; lock toggles speak "name locked/unlocked" from any input
@@ -294,7 +294,7 @@ The right-click panel for any hero or monster:
 > **Coverage:** Backspace on any combatant reads the sheet as one utterance: name, level (heroes),
 hp/shield, defeated state with the game's own half-HP-return sentence, the six-side die net,
 equipped items (name + description), and each visible status. Dead heroes keep their place in
-the heroes stop (the greyed skull panel) with a "defeated" state; dead monsters vanish like
+the hero column (the greyed skull panel) with a "defeated" state; dead monsters vanish like
 their corpses. Dialogs that embed sheet pieces read too: DieSidePanels speak their side's base
 text and ItemHeroPanels their item (or "empty slot") in the modal reader. Per-side right-click
 detail beyond the side text and the cosmetic spinner/portrait are visual-only.
@@ -357,7 +357,7 @@ intents and the damage preview.
 
 When more monsters wait off-screen: a "Reinforcements: N" box atop the enemy column; click lists upcoming monster names. Flashes on change. Mouse only.
 
-> **Coverage:** a node at the end of the enemies stop whenever `Snapshot.getReinforcements()` is
+> **Coverage:** a node at the foot of the enemy column whenever `Snapshot.getReinforcements()` is
 non-empty — the game's own "Reinforcements: N" pattern string, with the waiting monsters' names
 on Backspace.
 

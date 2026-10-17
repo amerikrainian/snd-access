@@ -29,6 +29,7 @@ import snd.core.graph.CompositeKey;
 import snd.core.graph.ControlId;
 import snd.core.graph.ControlTypes;
 import snd.core.graph.GraphBuilder;
+import snd.core.graph.GraphDir;
 import snd.core.graph.NodeAnnouncement;
 import snd.core.graph.NodeVtable;
 import snd.core.loc.Loc;
@@ -180,8 +181,7 @@ public class CombatScreen extends AccessScreen {
         if (ds == null || ds.getFightLog() == null) {
             return;
         }
-        buildEntityStop(b, host, ds, true);
-        buildEntityStop(b, host, ds, false);
+        buildColumns(b, host, ds, null, null);
         Phase phase = PhaseManager.get().getPhase();
         if (phase instanceof PlayerRollingPhase || phase instanceof TargetingPhase) {
             buildAbilitiesStop(b, ds);
@@ -412,35 +412,75 @@ public class CombatScreen extends AccessScreen {
     // ---- the two combatant columns: one node per hero/monster ----
 
     /**
-     * A column as its own stop, the rows the fight reads. Both columns stay
-     * on the dungeon screen between fights, under every offer and dialog
-     * ({@link ColumnNodes}). Nodes added after it join the stop.
+     * Both columns as one stop, laid out as drawn: heroes on the left,
+     * monsters on the right, Up/Down within a column, Left/Right across to
+     * the row level with it (the other column's last row where it is
+     * shorter). The columns stay on the dungeon screen between fights, under
+     * every offer and dialog ({@link ColumnNodes}); heroFoot, when given, sits
+     * below the hero column.
      */
-    static void buildEntityStop(GraphBuilder b, HostServices host, final DungeonScreen ds,
-            boolean heroes) {
-        String key = heroes ? "heroes" : "enemies";
-        b.beginStop(key).pushContext(Loc.get("combat", key));
+    static void buildColumns(GraphBuilder b, HostServices host, final DungeonScreen ds,
+            ControlId heroFoot, NodeVtable heroFootVt) {
+        b.beginStop("combatants");
+        com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
         // Dead heroes keep their place (the greyed skull panel); dead
         // monsters vanish, matching the visual column.
-        List<Ent> ents = ds.getFightLog().getSnapshot(FightLog.Temporality.Present)
-                .getEntities(heroes, heroes ? null : Boolean.FALSE);
-        for (int i = 0; i < ents.size(); i++) {
-            final Ent ent = ents.get(i);
-            b.addItem(ControlId.referenced(ent, CompositeKey.of(key, i)), entNode(host, ds, ent));
+        b.pushContext(Loc.get("combat", "heroes"));
+        List<ControlId> left = column(b, host, ds, present.getEntities(true, null), "heroes");
+        b.popContext();
+        if (heroFoot != null) {
+            b.addNode(heroFoot, heroFootVt);
+            left.add(heroFoot);
         }
-        if (!heroes) {
-            buildReinforcements(b, host, ds);
+        b.pushContext(Loc.get("combat", "enemies"));
+        List<ControlId> right = column(b, host, ds, present.getEntities(false, Boolean.FALSE), "enemies");
+        ControlId reinforcements = buildReinforcements(b, host, ds);
+        if (reinforcements != null) {
+            right.add(reinforcements);
         }
         b.popContext();
+        chain(b, left);
+        chain(b, right);
+        across(b, left, right, GraphDir.RIGHT);
+        across(b, right, left, GraphDir.LEFT);
+    }
+
+    // A column's unit rows, top to bottom; the ids in that order.
+    private static List<ControlId> column(GraphBuilder b, HostServices host, DungeonScreen ds,
+            List<Ent> ents, String key) {
+        List<ControlId> ids = new java.util.ArrayList<ControlId>();
+        for (int i = 0; i < ents.size(); i++) {
+            Ent ent = ents.get(i);
+            ControlId id = ControlId.referenced(ent, CompositeKey.of(key, i));
+            b.addNode(id, entNode(host, ds, ent));
+            ids.add(id);
+        }
+        return ids;
+    }
+
+    private static void chain(GraphBuilder b, List<ControlId> column) {
+        for (int i = 1; i < column.size(); i++) {
+            b.connect(column.get(i - 1), GraphDir.DOWN, column.get(i));
+            b.connect(column.get(i), GraphDir.UP, column.get(i - 1));
+        }
+    }
+
+    private static void across(GraphBuilder b, List<ControlId> from, List<ControlId> to, GraphDir dir) {
+        if (to.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < from.size(); i++) {
+            b.connect(from.get(i), dir, to.get(Math.min(i, to.size() - 1)));
+        }
     }
 
     // The "Reinforcements: N" box atop the enemy column: the count as the
     // game's own pattern string, the waiting monsters' names on Backspace.
-    private static void buildReinforcements(GraphBuilder b, final HostServices host, final DungeonScreen ds) {
+    private static ControlId buildReinforcements(GraphBuilder b, final HostServices host, final DungeonScreen ds) {
         final List<com.tann.dice.gameplay.content.ent.Monster> waiting =
                 ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getReinforcements();
         if (waiting == null || waiting.isEmpty()) {
-            return;
+            return null;
         }
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.TEXT;
@@ -473,7 +513,9 @@ public class CombatScreen extends AccessScreen {
                 host.speech().speak(sb.toString(), false);
             }
         };
-        b.addItem(ControlId.structural(CompositeKey.of("enemies", "reinforcements")), vt);
+        ControlId id = ControlId.structural(CompositeKey.of("enemies", "reinforcements"));
+        b.addNode(id, vt);
+        return id;
     }
 
     private static NodeVtable entNode(final HostServices host, final DungeonScreen ds, final Ent ent) {
