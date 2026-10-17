@@ -40,6 +40,9 @@
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "niente in arrivo",
+  "not_targeted": "non preso di mira",
+  "no_targets": "nessun bersaglio",
+  "no_statuses": "nessuno stato",
 
   "phase.enemy_rolling": "I nemici lanciano",
   "phase.player_rolling": "Il tuo lancio",

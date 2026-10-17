@@ -218,10 +218,12 @@ Permanent/reloadable split (verified end-to-end):
   The exception is a key the game binds elsewhere, marked `.yieldsToGame()`: where it does not
   apply the press is the game's (the plain digits read a die's sides on a control concerning a
   unit outside a fight, and are the game's in a fight and on its choice and level-end options).
-  The Ctrl tiers of the digits are the glances' (Ctrl+1 = the hp display of the unit the focused
-  control concerns); the unassigned ones are bound to a silent placeholder for the same reason.
-  Ctrl+I is the party's incoming damage in a fight. Ctrl+arrows review the buffers; the section
-  jump is Alt+Up/Down.
+  The Ctrl tiers of the digits are the glances at the unit the focused control concerns (Ctrl+1
+  its hp display, Ctrl+2 who it targets and who targets it, Ctrl+3 its statuses); the unassigned
+  ones are bound to a silent placeholder for the same reason. Ctrl+letters are glances at the
+  whole fight: Ctrl+I the party's incoming damage, Ctrl+T the turn, rerolls and mana. The game
+  reads no modifiers, so an unbound Ctrl+letter is the game's letter. Ctrl+arrows review the
+  buffers; the section jump is Alt+Up/Down.
 - **The game's hotkeys are never in the table** — they are the game's, reached by fall-through. A
   screen offers the ones live in its state from `AccessScreen.keys()`, gated on what the game's
   own `keyPress` checks and labelled with the game's words (`GameKeys`).

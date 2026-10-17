@@ -40,6 +40,9 @@
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "ничего входящего",
+  "not_targeted": "не под прицелом",
+  "no_targets": "нет целей",
+  "no_statuses": "нет эффектов",
 
   "phase.enemy_rolling": "Враги бросают",
   "phase.player_rolling": "Ваш бросок",

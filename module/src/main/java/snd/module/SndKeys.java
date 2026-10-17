@@ -25,7 +25,7 @@ import snd.module.screens.UnitLines;
  * binds (a fall-through fires the game's action), so new keys take Ctrl or
  * Shift tiers of existing ones, or keys that type nothing — or a game key
  * only where the game leaves it unused, yielding it everywhere else. Shift+digit is the
- * game's (target the other side); the Ctrl tiers of the digits, and Ctrl+I,
+ * game's (target the other side); the Ctrl tiers of the digits, Ctrl+I and Ctrl+T,
  * are the glances'. Keycodes are the game's libGDX ({@code Input.Keys}).
  */
 final class SndKeys {
@@ -82,6 +82,49 @@ final class SndKeys {
                     public void accept(int digit) {
                         // In place, interrupting, like any answer to a key press.
                         speech.speak(CombatScreen.vitalsLine(CombatScreen.focusedUnit(nav)), true);
+                    }
+                }));
+        // Aim exists only while a fight's commands are in the log.
+        keys.register(InputAction.of("glance.aim", "help.glance.aim")
+                .bind(KeyChord.of(9, "key.2").ctrl()).alias(KeyChord.of(146, "key.2").ctrl())
+                .when(new BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return CombatScreen.inFight() && CombatScreen.focusedUnit(nav) != null;
+                    }
+                })
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        speech.speak(CombatScreen.aimLine(CombatScreen.focusedUnit(nav)), true);
+                    }
+                }));
+        keys.register(InputAction.of("glance.statuses", "help.glance.statuses")
+                .bind(KeyChord.of(10, "key.3").ctrl()).alias(KeyChord.of(147, "key.3").ctrl())
+                .when(new BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return CombatScreen.focusedUnit(nav) != null;
+                    }
+                })
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        speech.speak(CombatScreen.statusLine(CombatScreen.focusedUnit(nav)), true);
+                    }
+                }));
+        keys.register(InputAction.of("glance.turn", "help.glance.turn")
+                .bind(KeyChord.of(48, "key.t").ctrl())
+                .when(new BooleanSupplier() {
+                    @Override
+                    public boolean getAsBoolean() {
+                        return CombatScreen.inFight();
+                    }
+                })
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        speech.speak(CombatScreen.turnLine(), true);
                     }
                 }));
         keys.register(InputAction.of("glance.incoming", "help.glance.incoming")

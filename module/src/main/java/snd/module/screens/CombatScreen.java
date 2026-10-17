@@ -175,6 +175,61 @@ public class CombatScreen extends AccessScreen {
         return sb.toString();
     }
 
+    /**
+     * "Rat 1, targets Splint"; "Splint, targeted by Rat 1, Rat 3" — the hover
+     * arrows both ways. A monster's own targets are named in full, even when
+     * they are every hero. "Defender, not targeted", "Rat 2, no targets".
+     */
+    public static String aimLine(Ent ent) {
+        DungeonScreen ds = DungeonScreen.get();
+        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present != null && present.isDead()) {
+            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
+        }
+        String targets = ent.isPlayer() ? null : targetsText(ds, ent);
+        String targetedBy = targetedByText(ds, ent);
+        if (!ent.isPlayer()) {
+            sb.append(", ").append(targets != null ? targets : Loc.get("combat", "no_targets"));
+        }
+        if (targetedBy != null) {
+            sb.append(", ").append(targetedBy);
+        } else if (ent.isPlayer()) {
+            sb.append(", ").append(Loc.get("combat", "not_targeted"));
+        }
+        return sb.toString();
+    }
+
+    /** "Archer, Back-row": the statuses the unit's row speaks, alone. */
+    public static String statusLine(Ent ent) {
+        DungeonScreen ds = DungeonScreen.get();
+        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
+        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
+        if (present != null && present.isDead()) {
+            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
+        }
+        String statuses = statusText(ds, ent);
+        return sb.append(", ").append(statuses != null ? statuses : Loc.get("combat", "no_statuses")).toString();
+    }
+
+    /**
+     * "Turn 2, Reroll 1/2, 2/3 mana stored": the hourglass's turn, the Reroll
+     * button's counter while rolling, and the mana pips where the fight has
+     * mana — each in the game's own words.
+     */
+    public static String turnLine() {
+        DungeonScreen ds = DungeonScreen.get();
+        com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
+        StringBuilder sb = new StringBuilder(GameText.t("Turn " + present.getTurn()));
+        if (PhaseManager.get().getPhase() instanceof PlayerRollingPhase) {
+            sb.append(", ").append(GameText.t("Reroll")).append(' ').append(rollCounter(ds));
+        }
+        if (present.getMaxMana() > 0 || present.getTotalMana() > 0) {
+            sb.append(", ").append(GameText.t(present.getTotalMana() + "/" + present.getMaxMana() + " mana stored"));
+        }
+        return sb.toString();
+    }
+
     @Override
     public void build(GraphBuilder b) {
         DungeonScreen ds = DungeonScreen.get();
