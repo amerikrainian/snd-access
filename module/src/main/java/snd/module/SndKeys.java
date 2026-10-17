@@ -96,7 +96,11 @@ final class SndKeys {
                 .handle(new IntConsumer() {
                     @Override
                     public void accept(int digit) {
-                        speech.speak(CombatScreen.aimLine(CombatScreen.focusedUnit(nav)), true);
+                        // Nothing to say is said by silence.
+                        String line = CombatScreen.aimLine(CombatScreen.focusedUnit(nav));
+                        if (line != null) {
+                            speech.speak(line, true);
+                        }
                     }
                 }));
         keys.register(InputAction.of("glance.statuses", "help.glance.statuses")
@@ -110,7 +114,11 @@ final class SndKeys {
                 .handle(new IntConsumer() {
                     @Override
                     public void accept(int digit) {
-                        speech.speak(CombatScreen.statusLine(CombatScreen.focusedUnit(nav)), true);
+                        // Nothing to say is said by silence.
+                        String line = CombatScreen.statusLine(CombatScreen.focusedUnit(nav));
+                        if (line != null) {
+                            speech.speak(line, true);
+                        }
                     }
                 }));
         keys.register(InputAction.of("glance.turn", "help.glance.turn")

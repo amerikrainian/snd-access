@@ -40,9 +40,6 @@
   "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "nada entrante",
-  "not_targeted": "no es objetivo",
-  "no_targets": "sin objetivos",
-  "no_statuses": "sin estados",
 
   "phase.enemy_rolling": "Los enemigos tiran",
   "phase.player_rolling": "Tu tirada",

@@ -176,40 +176,31 @@ public class CombatScreen extends AccessScreen {
     }
 
     /**
-     * "Rat 1, targets Splint"; "Splint, targeted by Rat 1, Rat 3" — the hover
-     * arrows both ways. A monster's own targets are named in full, even when
-     * they are every hero. "Defender, not targeted", "Rat 2, no targets".
+     * "targets Splint"; "targeted by Rat 1, Rat 3" — the hover arrows both
+     * ways, a monster's own targets named in full even when they are every
+     * hero. Null when no arrow touches the unit, or it is dead.
      */
     public static String aimLine(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
-        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null && present.isDead()) {
-            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
+            return null;
         }
-        String targets = ent.isPlayer() ? null : targetsText(ds, ent);
-        String targetedBy = targetedByText(ds, ent);
-        if (!ent.isPlayer()) {
-            sb.append(", ").append(targets != null ? targets : Loc.get("combat", "no_targets"));
+        StringBuilder sb = new StringBuilder();
+        for (String part : new String[] {ent.isPlayer() ? null : targetsText(ds, ent), targetedByText(ds, ent)}) {
+            if (part != null) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(part);
+            }
         }
-        if (targetedBy != null) {
-            sb.append(", ").append(targetedBy);
-        } else if (ent.isPlayer()) {
-            sb.append(", ").append(Loc.get("combat", "not_targeted"));
-        }
-        return sb.toString();
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
-    /** "Archer, Back-row": the statuses the unit's row speaks, alone. */
+    /** "Back-row": the statuses the unit's row speaks, alone; null with none. */
     public static String statusLine(Ent ent) {
-        DungeonScreen ds = DungeonScreen.get();
-        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
-        EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-        if (present != null && present.isDead()) {
-            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
-        }
-        String statuses = statusText(ds, ent);
-        return sb.append(", ").append(statuses != null ? statuses : Loc.get("combat", "no_statuses")).toString();
+        return statusText(DungeonScreen.get(), ent);
     }
 
     /**
