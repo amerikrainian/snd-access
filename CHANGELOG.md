@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.1.8
+
+- Heroes and enemies in combat are now one tab stop with two columns: heroes on the left, enemies on the right.
+- New status keys for the focused unit: ctrl+2 reads who it targets and who targets it, ctrl+3 reads its statuses.
+- Ctrl+t in combat reads the turn number, rerolls left, and stored mana.
+- Drop unit's name from glance keys since you're already on it.
+
 ## V0.1.7
 
 - Fixed some bugs related to localization of things like item descriptions.
