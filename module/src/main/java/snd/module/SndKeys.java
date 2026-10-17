@@ -81,7 +81,7 @@ final class SndKeys {
                     @Override
                     public void accept(int digit) {
                         // In place, interrupting, like any answer to a key press.
-                        speech.speak(CombatScreen.vitalsLine(CombatScreen.focusedUnit(nav)), true);
+                        speech.speak(CombatScreen.vitalsText(CombatScreen.focusedUnit(nav)), true);
                     }
                 }));
         // Aim exists only while a fight's commands are in the log.

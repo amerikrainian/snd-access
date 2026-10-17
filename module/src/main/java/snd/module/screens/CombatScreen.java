@@ -161,15 +161,23 @@ public class CombatScreen extends AccessScreen {
 
     /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse. */
     public static String vitalsLine(Ent ent) {
+        return GameUi.entName(ent) + ", " + vitalsText(ent);
+    }
+
+    /** {@link #vitalsLine} without the name, for the unit focus is already on. */
+    public static String vitalsText(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
-        StringBuilder sb = new StringBuilder(GameUi.entName(ent));
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null && present.isDead()) {
-            return sb.append(", ").append(Loc.get("combat", "defeated")).toString();
+            return Loc.get("combat", "defeated");
         }
+        StringBuilder sb = new StringBuilder();
         for (String part : new String[] {healthText(ds, ent), previewText(ds, ent)}) {
             if (part != null) {
-                sb.append(", ").append(part);
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(part);
             }
         }
         return sb.toString();
