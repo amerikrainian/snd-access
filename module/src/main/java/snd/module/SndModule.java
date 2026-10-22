@@ -39,6 +39,7 @@ public class SndModule implements ModModule {
     private ScreenManager screens;
     private SndInput input;
     private HelpScreen help;
+    private snd.module.screens.ModMenuScreen menu;
     private Buffers buffers;
     private EventLog events;
     private PopupWatcher popups;
@@ -67,6 +68,7 @@ public class SndModule implements ModModule {
         GraphDefaults.install();
         GameUi.bind(h.speech());
         Locales.load(); // before anything speaks
+        snd.module.settings.ModSettings settings = snd.module.settings.ModSettings.load();
         nav = new GraphNavigator(h.speech());
         screens = new ScreenManager(nav, h.speech());
         screens.register(new TitleFlowScreen(h));
@@ -83,13 +85,15 @@ public class SndModule implements ModModule {
         screens.register(new PauseRecoveryScreen());
         screens.register(new RunEndStatsScreen());
         screens.register(new BookScreen(h));
+        menu = new snd.module.screens.ModMenuScreen(h, nav);
+        screens.register(menu);
         dropdown = new snd.module.screens.DropdownScreen(h, nav);
         screens.register(dropdown);
         help = new HelpScreen(h, nav);
         screens.register(help);
-        events = new EventLog(h.speech());
+        events = new EventLog(h.speech(), settings.announcements);
         buffers = new Buffers(nav, events, h.speech());
-        InputRegistry keys = SndKeys.build(help, nav, buffers, h.speech());
+        InputRegistry keys = SndKeys.build(help, menu, nav, buffers, h.speech());
         help.setKeys(keys);
         input = new SndInput(screens, nav, help, keys);
         popups = new PopupWatcher(events, h.speech());
@@ -102,8 +106,12 @@ public class SndModule implements ModModule {
         SndLog.info("module generation " + h.generation() + " loaded, version " + ModVersion.current());
         if (h.generation() == 1) {
             // The launch update check: one background request per game launch.
-            updates = new UpdateChecker();
-            updates.start(ModVersion.current());
+            if (settings.checkUpdates.get()) {
+                updates = new UpdateChecker();
+                updates.start(ModVersion.current());
+            } else {
+                SndLog.info("update check skipped: turned off in the settings");
+            }
         } else {
             h.speech().speak(Loc.get("ui", "module_reloaded", "generation", h.generation()), true);
         }
@@ -153,7 +161,7 @@ public class SndModule implements ModModule {
         // the focus readout, so the notice queues behind what the player is on.
         if (!updateAnnounced && updates != null && updates.newerVersion() != null) {
             updateAnnounced = true;
-            events.say(Loc.get("ui", "update_available", "version", updates.newerVersion()), false);
+            events.say(snd.module.screens.EventParts.UPDATE, Loc.get("ui", "update_available", "version", updates.newerVersion()), false);
         }
     }
 

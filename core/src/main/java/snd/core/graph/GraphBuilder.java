@@ -144,6 +144,9 @@ public final class GraphBuilder {
      * navigable, announced when focus enters from outside. Close with
      * {@link #popContext}.
      */
+    /** The readout every context and container speaks as: its label, then its role word. */
+    public static final String CONTAINER_READOUT = "container";
+
     public GraphBuilder pushContext(String label) {
         return pushContext(label, null, true);
     }
@@ -155,9 +158,9 @@ public final class GraphBuilder {
     public GraphBuilder pushContext(String label, String role, boolean positions) {
         GraphNode parent = currentParent();
         List<NodeAnnouncement> anns = new ArrayList<NodeAnnouncement>();
-        anns.add(NodeAnnouncement.of(label));
+        anns.add(kinded(label, AnnouncementKinds.LABEL));
         if (role != null && !role.isEmpty()) {
-            anns.add(NodeAnnouncement.of(role));
+            anns.add(kinded(role, AnnouncementKinds.ROLE));
         }
         // Stable synthetic identity (label-pathed) so cross-render chain diffs match up.
         return pushFrame(ControlId.structural("ctx:" + (parent != null ? parent.id.structuralKey : "") + "/" + label),
@@ -180,7 +183,13 @@ public final class GraphBuilder {
         }
         GraphNode parent = currentParent();
         return pushFrame(ControlId.structural(CompositeKey.of("ctx", parent != null ? parent.id.structuralKey : null, key)),
-                Arrays.asList(new NodeAnnouncement(label)), true);
+                Arrays.asList(NodeAnnouncement.kinded(label, AnnouncementKinds.LABEL)), true);
+    }
+
+    private static NodeAnnouncement kinded(String text, String kind) {
+        NodeAnnouncement a = NodeAnnouncement.of(text);
+        a.kind = kind;
+        return a;
     }
 
     private GraphBuilder pushFrame(ControlId id, List<NodeAnnouncement> anns, boolean positions) {
@@ -188,6 +197,7 @@ public final class GraphBuilder {
         node.id = id;
         node.vtable = new NodeVtable();
         node.vtable.announcements = anns;
+        node.vtable.readout = CONTAINER_READOUT;
         node.parent = currentParent();
         node.focusable = false;
         node.suppressChildPositions = !positions;

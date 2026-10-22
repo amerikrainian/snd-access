@@ -2,8 +2,9 @@ package snd.core.graph;
 
 /**
  * The well-known announcement-part kinds. A part's kind is its identity for
- * control-type ordering, node-over-type overriding, and the user's per-kind
- * announcement settings.
+ * readout ordering, node-over-type overriding, and the player's per-part
+ * announcement settings; any other string names a part of a readout the
+ * module declares (a combatant's "hp").
  */
 public final class AnnouncementKinds {
     private AnnouncementKinds() {
@@ -21,5 +22,8 @@ public final class AnnouncementKinds {
     public static final String SELECTED = "selected";
     public static final String ENABLED = "enabled";
     public static final String TOOLTIP = "tooltip";
+    /** An expandable group's expanded/collapsed word, supplied by the engine. */
+    public static final String EXPANDED = "expanded";
+    /** "3 of 6": supplied by the engine from the sibling count, unless a node declares its own. */
     public static final String POSITION = "position";
 }

@@ -27,17 +27,14 @@
   "level": "niveau {n}",
   "caster_defeated": "lanceur vaincu",
 
-  "change.clause": "{name} {parts}",
   "change.all_heroes": "tous les héros",
   "change.all_enemies": "tous les ennemis",
-  "change.source": "{source} : {changes}",
   "change.joins": "rejoint le combat",
   "change.poison": "{n} poison",
   "change.max_hp": "PV max {n}",
   "change.lost": "perd {status}",
   "change.flees": "fuit",
   "change.returns": "revient",
-  "intent": "{name} : {side}",
   "intent.fate": "{name} : {fate}",
   "party_safe": "rien à venir",
 

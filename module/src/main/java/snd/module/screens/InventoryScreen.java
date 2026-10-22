@@ -264,6 +264,7 @@ public class InventoryScreen extends AccessScreen {
             NodeVtable vt = new NodeVtable();
             vt.controlType = ControlTypes.BUTTON;
             vt.subject = item;
+            vt.readout = UnitParts.BAG_ITEM;
             vt.announcements = Arrays.asList(
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
@@ -274,37 +275,31 @@ public class InventoryScreen extends AccessScreen {
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
-                            StringBuilder sb = new StringBuilder();
-                            if (item == held) {
-                                sb.append(Loc.get("ui", "inv.held"));
-                            }
-                            if (item.hasTier()) {
-                                if (sb.length() > 0) {
-                                    sb.append(", ");
-                                }
-                                sb.append(Loc.get("ui", "choice.tier", "tier", item.getTier()));
-                            }
+                            return item == held ? Loc.get("ui", "inv.held") : null;
+                        }
+                    }, UnitParts.HELD),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
+                            return item.hasTier() ? Loc.get("ui", "choice.tier", "tier", item.getTier()) : null;
+                        }
+                    }, UnitParts.TIER),
+                    NodeAnnouncement.kinded(new Supplier<String>() {
+                        @Override
+                        public String get() {
                             // The red glow: force-equip; the yellow glow: new.
                             if (item.isForceEquip()) {
-                                if (sb.length() > 0) {
-                                    sb.append(", ");
-                                }
-                                sb.append(Loc.get("ui", "inv.force_equip"));
-                            } else if (item.isNew()) {
-                                if (sb.length() > 0) {
-                                    sb.append(", ");
-                                }
-                                sb.append(Loc.get("ui", "inv.new"));
+                                return Loc.get("ui", "inv.force_equip");
                             }
-                            return sb.length() > 0 ? sb.toString() : null;
+                            return item.isNew() ? Loc.get("ui", "inv.new") : null;
                         }
-                    }, AnnouncementKinds.VALUE),
+                    }, UnitParts.ITEM_FLAG),
                     NodeAnnouncement.kinded(new Supplier<String>() {
                         @Override
                         public String get() {
                             return GameText.itemDescription(item);
                         }
-                    }, AnnouncementKinds.TOOLTIP));
+                    }, UnitParts.EFFECT).ownLine());
             vt.onActivate = new Runnable() {
                 @Override
                 public void run() {

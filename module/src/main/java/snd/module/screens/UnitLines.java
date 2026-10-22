@@ -1,8 +1,10 @@
 package snd.module.screens;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.tann.dice.gameplay.content.ent.Ent;
@@ -22,7 +24,9 @@ import com.tann.dice.screens.dungeon.panels.Explanel.NetPanel;
 
 import snd.contracts.SndLog;
 import snd.core.loc.Loc;
+import snd.core.settings.Announcements;
 import snd.module.GameText;
+import snd.module.settings.ModSettings;
 
 /**
  * A unit as review lines, for the subject-fed buffers: the whole of a hero or
@@ -44,7 +48,7 @@ public final class UnitLines {
      */
     public static List<String> of(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
-        List<String> lines = new ArrayList<String>();
+        Map<String, List<String>> sections = new HashMap<String, List<String>>();
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
 
         StringBuilder head = new StringBuilder(SheetScreen.headerText(ds, ent));
@@ -56,19 +60,45 @@ public final class UnitLines {
                 head.append(", ").append(incoming);
             }
         }
-        lines.add(head.toString());
+        put(sections, HEADER, head.toString());
         if (present != null && present.isDead() && ent.isPlayer()) {
             // The sheet's skull-tag rule, the game's own sentence.
-            lines.add(GameText.t("Heroes defeated last fight return with half hp"));
+            put(sections, DEFEAT_RULE, GameText.t("Heroes defeated last fight return with half hp"));
         }
         // Who aims at whom: a monster's targets, and whoever targets this unit.
-        for (String aim : new String[] {ent.isPlayer() ? null : CombatScreen.targetsText(ds, ent),
-                CombatScreen.targetedByText(ds, ent)}) {
-            if (aim != null) {
-                lines.add(aim);
-            }
+        put(sections, UnitParts.AIM, ent.isPlayer() ? null : CombatScreen.targetsText(ds, ent));
+        put(sections, UnitParts.TARGETED_BY, CombatScreen.targetedByText(ds, ent));
+        body(sections, ent, present, true);
+        return ModSettings.get().announcements.lines(UNIT_BUFFER, sections);
+    }
+
+    /** The hero and monster buffers' readout: a unit, section by section. */
+    static final String UNIT_BUFFER = Announcements.BUFFERS + ".unit";
+    static final String HEADER = "header";
+    static final String DEFEAT_RULE = "defeat_rule";
+    static final String SIDES = "sides";
+    static final String KEYWORDS = "keywords";
+    static final String TRAITS = "traits";
+    static final String TERMS = "terms";
+    static final String GLOSSARY = "glossary";
+
+    static void declare(Announcements a) {
+        a.readout(Announcements.BUFFERS, "unit", java.util.Arrays.asList(HEADER, DEFEAT_RULE, UnitParts.AIM,
+                UnitParts.TARGETED_BY, SIDES, KEYWORDS, UnitParts.STATUSES, TRAITS, TERMS, GLOSSARY));
+    }
+
+    private static void put(Map<String, List<String>> sections, String part, String line) {
+        if (line != null) {
+            section(sections, part).add(line);
         }
-        body(lines, ent, present, true);
+    }
+
+    private static List<String> section(Map<String, List<String>> sections, String part) {
+        List<String> lines = sections.get(part);
+        if (lines == null) {
+            lines = new ArrayList<String>();
+            sections.put(part, lines);
+        }
         return lines;
     }
 
@@ -85,11 +115,11 @@ public final class UnitLines {
 
     /** A unit outside the fight (a type's fresh unit, a panel's): its state is the game's blank one. */
     public static List<String> atRest(Ent ent) {
-        List<String> lines = new ArrayList<String>();
+        Map<String, List<String>> sections = new HashMap<String, List<String>>();
         EntState state = ent.getState(FightLog.Temporality.Present);
-        lines.add(restHeader(ent, state));
-        body(lines, ent, state, false);
-        return lines;
+        put(sections, HEADER, restHeader(ent, state));
+        body(sections, ent, state, false);
+        return ModSettings.get().announcements.lines(UNIT_BUFFER, sections);
     }
 
     /** "Thief, orange, level 1, 4 hp": who a unit at rest is and its hp. */
@@ -107,36 +137,43 @@ public final class UnitLines {
 
     // The sides, their rules, the statuses and traits the sheet draws, and
     // the glossary entries the lines use.
-    private static void body(List<String> lines, Ent ent, EntState present, boolean rolledMarks) {
+    private static void body(Map<String, List<String>> sections, Ent ent, EntState present, boolean rolledMarks) {
         // A rule is given once, however many sides carry the keyword.
         Set<String> rules = new LinkedHashSet<String>();
         EntSide[] sides = ent.getSides();
+        List<String> sideLines = section(sections, SIDES);
         for (int i : SideText.readingOrder()) {
             EntSideState side = sides[i].findState(FightLog.Temporality.Present, ent);
             String line = SideText.at(i, SideText.of(side));
-            lines.add(rolledMarks && SheetScreen.isRolled(ent, i) ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
+            sideLines.add(rolledMarks && SheetScreen.isRolled(ent, i)
+                    ? line + ", " + Loc.get("ui", "sheet.rolled") : line);
             try {
                 rules.addAll(CombatScreen.keywordRuleLines(side.getCalculatedEffect()));
             } catch (Throwable t) {
                 SndLog.error("unit lines: side keyword rules failed", t);
             }
         }
-        lines.addAll(rules);
+        section(sections, KEYWORDS).addAll(rules);
 
         // Statuses and traits, each in full, then the keywords they reference.
         Set<String> referenced = new LinkedHashSet<String>();
         for (Personal p : sheetPersonals(present)) {
-            lines.add(SpecialPips.describe(p));
+            section(sections, UnitParts.STATUSES).add(SpecialPips.describe(p));
             referenced.addAll(Terms.forPersonal(p));
         }
         // The traits drawn beside the net, a caster's spell among them.
         for (Trait t : netTraits(ent, present)) {
-            lines.add(netTraitLine(t));
+            section(sections, TRAITS).add(netTraitLine(t));
             referenced.addAll(netTraitRules(t));
         }
         referenced.removeAll(rules);
-        lines.addAll(referenced);
-        lines.addAll(Terms.glossary(lines));
+        section(sections, TERMS).addAll(referenced);
+        // The glossary entries every other section uses.
+        List<String> all = new ArrayList<String>();
+        for (List<String> lines : sections.values()) {
+            all.addAll(lines);
+        }
+        section(sections, GLOSSARY).addAll(Terms.glossary(all));
     }
 
     /**

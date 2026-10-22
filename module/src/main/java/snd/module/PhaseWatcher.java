@@ -15,6 +15,7 @@ import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta
 import com.tann.dice.gameplay.phase.levelEndPhase.rewardPhase.decisionPhase.meta.TransformPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.module.screens.EventParts;
 import snd.contracts.SndLog;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
@@ -67,12 +68,12 @@ final class PhaseWatcher {
                 intentsTurn = turn;
                 intentsFight = fight;
                 for (String intent : CombatScreen.enemyIntents()) {
-                    events.say(intent, false);
+                    events.say(EventParts.INTENT, intent, false);
                 }
             }
         }
         if (line != null) {
-            events.say(line, false);
+            events.say(EventParts.PHASE, line, false);
         }
     }
 
@@ -87,10 +88,10 @@ final class PhaseWatcher {
             return stamped(Loc.get("combat", "phase.targeting"));
         }
         if (p instanceof DamagePhase) {
-            return Loc.get("combat", "phase.damage");
+            return phaseOnly(Loc.get("combat", "phase.damage"));
         }
         if (p instanceof SurrenderPhase) {
-            return Loc.get("combat", "phase.surrender");
+            return phaseOnly(Loc.get("combat", "phase.surrender"));
         }
         if (p instanceof LevelEndPhase) {
             // The LevelEndScreen announces itself; only the turn stamps reset here.
@@ -115,27 +116,32 @@ final class PhaseWatcher {
 
     private final java.util.Set<String> loggedUnknown = new java.util.HashSet<String>();
 
+    private static String phaseOnly(String phrase) {
+        return EventParts.line(EventParts.PHASE, java.util.Collections.singletonMap(EventParts.PHASE_NAME, phrase));
+    }
+
     private void resetStamps() {
         lastFight = null;
         lastTurn = -1;
     }
 
     // "Fight 3/20, Turn 1, Enemies rolling" — each stamp speaks when its
-    // value changes, ahead of the phase phrase.
+    // value changes, with the phase phrase.
     private String stamped(String phrase) {
-        StringBuilder sb = new StringBuilder();
+        java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
         String fight = fightProgress();
         if (fight != null && !fight.equals(lastFight)) {
             lastFight = fight;
             lastTurn = -1;
-            sb.append(fight).append(", ");
+            parts.put(EventParts.FIGHT, fight);
         }
         int turn = currentTurn();
         if (turn > 0 && turn != lastTurn) {
             lastTurn = turn;
-            sb.append(GameText.t("Turn " + turn)).append(", "); // the game's own pattern string
+            parts.put(EventParts.TURN, GameText.t("Turn " + turn)); // the game's own pattern string
         }
-        return sb.append(phrase).toString();
+        parts.put(EventParts.PHASE_NAME, phrase);
+        return EventParts.line(EventParts.PHASE, parts);
     }
 
     private static int currentTurn() {

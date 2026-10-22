@@ -9,6 +9,8 @@ import com.tann.dice.gameplay.phase.PhaseManager;
 import com.tann.dice.gameplay.phase.gameplay.PlayerRollingPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.module.screens.EventParts;
+import snd.module.screens.UnitParts;
 import snd.core.loc.Loc;
 import snd.core.buffers.EventLog;
 import snd.contracts.speech.SpeechPipeline;
@@ -56,7 +58,7 @@ final class DiceWatcher {
         }
         if (wasRolling && !rolling) {
             for (String result : rollResults(ds, heroes)) {
-                events.say(result, false);
+                events.say(EventParts.ROLL, result, false);
             }
         }
         wasRolling = rolling;
@@ -72,6 +74,12 @@ final class DiceWatcher {
         }
     }
 
+    private static void addLine(List<String> lines, String line) {
+        if (line != null) {
+            lines.add(line);
+        }
+    }
+
     // A line per die that rolled, then the rerolls left — each an event of its own.
     private static List<String> rollResults(DungeonScreen ds, List<Ent> heroes) {
         List<String> lines = new java.util.ArrayList<String>();
@@ -79,9 +87,13 @@ final class DiceWatcher {
             if (h.getDie().getState().isLockedOrLocking()) {
                 continue; // sat out the roll
             }
-            lines.add(GameUi.entName(h) + ": " + CombatScreen.currentSideText(h));
+            java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+            parts.put(snd.core.graph.AnnouncementKinds.LABEL, GameUi.entName(h));
+            parts.put(UnitParts.SIDE, CombatScreen.currentSideText(h));
+            addLine(lines, EventParts.line(EventParts.ROLL, parts));
         }
-        lines.add(GameText.t("Reroll") + ' ' + CombatScreen.rollCounter(ds));
+        addLine(lines, EventParts.line(EventParts.ROLL, java.util.Collections.singletonMap(EventParts.REROLLS,
+                GameText.t("Reroll") + ' ' + CombatScreen.rollCounter(ds))));
         return lines;
     }
 }

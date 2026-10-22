@@ -12,6 +12,7 @@ import snd.core.nav.GraphNavigator;
 import snd.core.nav.NavAction;
 import snd.module.screens.CombatScreen;
 import snd.module.screens.HelpScreen;
+import snd.module.screens.ModMenuScreen;
 import snd.module.screens.UnitLines;
 
 /**
@@ -32,9 +33,19 @@ final class SndKeys {
     private SndKeys() {
     }
 
-    static InputRegistry build(final HelpScreen help, final GraphNavigator nav, final Buffers buffers,
-            final SpeechPipeline speech) {
+    static InputRegistry build(final HelpScreen help, final ModMenuScreen menu, final GraphNavigator nav,
+            final Buffers buffers, final SpeechPipeline speech) {
         InputRegistry keys = new InputRegistry();
+
+        keys.register(InputAction.of("menu", "help.menu")
+                .bind(KeyChord.of(41, "key.m").ctrl().shift())
+                .overOverlay()
+                .handle(new IntConsumer() {
+                    @Override
+                    public void accept(int digit) {
+                        menu.toggle();
+                    }
+                }));
 
         keys.register(InputAction.of("help", "help.title")
                 .bind(KeyChord.of(131, "key.f1"))
@@ -81,7 +92,11 @@ final class SndKeys {
                     @Override
                     public void accept(int digit) {
                         // In place, interrupting, like any answer to a key press.
-                        speech.speak(CombatScreen.vitalsText(CombatScreen.focusedUnit(nav)), true);
+                        // Nothing to say (every part silenced) is said by silence.
+                        String line = CombatScreen.vitalsText(CombatScreen.focusedUnit(nav));
+                        if (line != null) {
+                            speech.speak(line, true);
+                        }
                     }
                 }));
         // Aim exists only while a fight's commands are in the log.
@@ -132,7 +147,10 @@ final class SndKeys {
                 .handle(new IntConsumer() {
                     @Override
                     public void accept(int digit) {
-                        speech.speak(CombatScreen.turnLine(), true);
+                        String line = CombatScreen.turnLine();
+                        if (line != null) {
+                            speech.speak(line, true);
+                        }
                     }
                 }));
         keys.register(InputAction.of("glance.incoming", "help.glance.incoming")

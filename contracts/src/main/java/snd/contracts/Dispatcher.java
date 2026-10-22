@@ -117,11 +117,12 @@ public final class Dispatcher {
     // and the module drains it each tick to speak. Bounded so a runaway
     // caller can't hoard memory; overflow drops newest and logs. ----
 
-    private static final java.util.concurrent.ConcurrentLinkedQueue<String> TRANSIENT =
-            new java.util.concurrent.ConcurrentLinkedQueue<String>();
+    private static final java.util.concurrent.ConcurrentLinkedQueue<TransientText> TRANSIENT =
+            new java.util.concurrent.ConcurrentLinkedQueue<TransientText>();
     private static final int TRANSIENT_CAP = 32;
 
-    public static void transientText(String text) {
+    /** method: the game method that showed it; speaker: the unit it was shown over, or null. */
+    public static void transientText(String method, String speaker, String text) {
         if (text == null || text.trim().isEmpty()) {
             return;
         }
@@ -129,11 +130,11 @@ public final class Dispatcher {
             SndLog.error("transient text queue full; dropping: " + text, null);
             return;
         }
-        TRANSIENT.add(text);
+        TRANSIENT.add(new TransientText(method, speaker, text));
     }
 
     /** The oldest undrained transient line, or null. */
-    public static String pollTransientText() {
+    public static TransientText pollTransientText() {
         return TRANSIENT.poll();
     }
 

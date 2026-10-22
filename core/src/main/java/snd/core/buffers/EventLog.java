@@ -6,6 +6,7 @@ import java.util.List;
 
 import snd.contracts.speech.SpeechPipeline;
 import snd.contracts.speech.TextFilter;
+import snd.core.settings.Announcements;
 
 /**
  * What happened, as it was spoken: the lines the game's own events produce
@@ -15,22 +16,31 @@ import snd.contracts.speech.TextFilter;
  * player's own navigation (a focus readout, "selected", a typed character)
  * are not events and go straight to the pipeline. Bounded: the oldest lines
  * fall off. A line repeated back to back (the same refusal banner on every
- * retry) is kept once.
+ * retry) is kept once. Every line names its event ({@link Announcements#event}),
+ * whose settings say whether it is spoken and whether it is kept.
  */
 public final class EventLog {
     private static final int CAPACITY = 300;
 
     private final SpeechPipeline speech;
+    private final Announcements announcements;
     private final LinkedList<String> lines = new LinkedList<String>();
 
-    public EventLog(SpeechPipeline speech) {
+    public EventLog(SpeechPipeline speech, Announcements announcements) {
         this.speech = speech;
+        this.announcements = announcements;
     }
 
-    /** Speak the line as {@link SpeechPipeline#speak} would, and keep it. */
-    public void say(String text, boolean interrupt) {
-        speech.speak(text, interrupt);
-        if (TextFilter.clean(text).isEmpty() || (!lines.isEmpty() && lines.getLast().equals(text))) {
+    /** Speak the line of event as {@link SpeechPipeline#speak} would, and keep it, as its settings say. */
+    public void say(String event, String text, boolean interrupt) {
+        if (text == null) {
+            return; // every part of the line was silenced
+        }
+        if (announcements.announces(event)) {
+            speech.speak(text, interrupt);
+        }
+        if (!announcements.logs(event) || TextFilter.clean(text).isEmpty()
+                || (!lines.isEmpty() && lines.getLast().equals(text))) {
             return;
         }
         lines.add(text);

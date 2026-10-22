@@ -1,5 +1,6 @@
 package snd.module.screens;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
@@ -157,32 +158,23 @@ public class ChoiceScreen extends AccessScreen {
             }
             NodeVtable vt = new NodeVtable();
             vt.controlType = optional ? ControlTypes.TEXT : ControlTypes.BUTTON;
-            vt.announcements = Arrays.asList(
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return nameOf(option);
-                        }
-                    }, AnnouncementKinds.LABEL),
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return valueOf(option, index);
-                        }
-                    }, AnnouncementKinds.VALUE),
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return ct != null && ChoicePhases.currentChoices(ct).contains(option)
-                                    ? Loc.get("ui", "state.selected") : null;
-                        }
-                    }, AnnouncementKinds.SELECTED),
-                    NodeAnnouncement.kinded(new Supplier<String>() {
-                        @Override
-                        public String get() {
-                            return levelup ? null : effectOf(option, index);
-                        }
-                    }, AnnouncementKinds.TOOLTIP));
+            vt.readout = UnitParts.OFFER;
+            List<NodeAnnouncement> parts = new ArrayList<NodeAnnouncement>();
+            parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return nameOf(option);
+                }
+            }, AnnouncementKinds.LABEL));
+            parts.addAll(offerParts(option, index, !levelup));
+            parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return ct != null && ChoicePhases.currentChoices(ct).contains(option)
+                            ? Loc.get("ui", "state.selected") : null;
+                }
+            }, AnnouncementKinds.SELECTED));
+            vt.announcements = parts;
             // The right-click route: the option's big panel — description
             // plus a rules box per referenced keyword — pushed the way
             // ConcisePanel's info listener pushes its copy. It is a
@@ -521,33 +513,62 @@ public class ChoiceScreen extends AccessScreen {
 
     // The short qualifier: the type word ("curse", "item"), the tier, and for
     // level-ups which hero upgrades.
-    static String valueOf(Choosable option, int index) {
-        StringBuilder sb = new StringBuilder();
-        if (option instanceof LevelupHeroChoosable) {
-            try {
-                Hero target = targetHero((LevelupHeroChoosable) option, index);
-                if (target != null) {
-                    sb.append(Loc.get("ui", "choice.upgrades", "hero", GameText.t(target.getName(true))));
+    /**
+     * An offer's parts after its name, read as {@link UnitParts#OFFER}: whose
+     * level-up it is, its kind and tier, then (withEffect) what it does.
+     */
+    static List<NodeAnnouncement> offerParts(final Choosable option, final int index, boolean withEffect) {
+        List<NodeAnnouncement> parts = new ArrayList<NodeAnnouncement>();
+        parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return upgradesOf(option, index);
+            }
+        }, UnitParts.UPGRADES));
+        parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return typeWord(option);
+            }
+        }, UnitParts.KIND));
+        parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return tierOf(option);
+            }
+        }, UnitParts.TIER));
+        if (withEffect) {
+            parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+                @Override
+                public String get() {
+                    return effectOf(option, index);
                 }
-            } catch (Throwable t) {
-                SndLog.error("failed to find level-up target hero", t);
-            }
+            }, UnitParts.EFFECT).ownLine());
         }
-        String type = typeWord(option);
-        if (type != null) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(type);
+        return parts;
+    }
+
+    static String valueOf(Choosable option, int index) {
+        return UnitParts.join(upgradesOf(option, index), typeWord(option), tierOf(option));
+    }
+
+    // "upgrades Thief": the hero a level-up goes to.
+    private static String upgradesOf(Choosable option, int index) {
+        if (!(option instanceof LevelupHeroChoosable)) {
+            return null;
         }
+        try {
+            Hero target = targetHero((LevelupHeroChoosable) option, index);
+            return target != null ? Loc.get("ui", "choice.upgrades", "hero", GameText.t(target.getName(true))) : null;
+        } catch (Throwable t) {
+            SndLog.error("failed to find level-up target hero", t);
+            return null;
+        }
+    }
+
+    static String tierOf(Choosable option) {
         int tier = option.getTier();
-        if (tier != 0) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(Loc.get("ui", "choice.tier", "tier", tier));
-        }
-        return sb.length() > 0 ? sb.toString() : null;
+        return tier != 0 ? Loc.get("ui", "choice.tier", "tier", tier) : null;
     }
 
     // The kinds whose describe() is a type word; every other kind describes

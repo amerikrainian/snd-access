@@ -4,8 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Parser for the locale table format: one flat JSON object of string keys to
- * string values (the wotr-access/SayTheSpire2 layout). Deliberately minimal —
+ * Parser and writer for the flat format of the locale tables and the settings
+ * file: one JSON object of string keys to string values (the
+ * wotr-access/SayTheSpire2 layout). Deliberately minimal —
  * nested objects, arrays, numbers and booleans are format errors, reported
  * with their offset so a broken table names its own problem. Pure, so tables
  * parse identically in unit tests and in the game.
@@ -22,6 +23,41 @@ public final class FlatJson {
             throw p.fail("trailing content after the closing brace");
         }
         return result;
+    }
+
+    /** The map as a flat JSON object, one entry per line, in the map's order. */
+    public static String write(Map<String, String> map) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            sb.append(first ? "\n  " : ",\n  ");
+            first = false;
+            quote(sb, e.getKey());
+            sb.append(": ");
+            quote(sb, e.getValue());
+        }
+        return sb.append(first ? "}\n" : "\n}\n").toString();
+    }
+
+    private static void quote(StringBuilder sb, String s) {
+        sb.append('"');
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        sb.append('"');
     }
 
     private static final class Parser {

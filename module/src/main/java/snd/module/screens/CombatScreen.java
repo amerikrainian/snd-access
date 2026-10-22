@@ -119,10 +119,11 @@ public class CombatScreen extends AccessScreen {
             if (state.skipTurn() || state.isSummonedSoNotAttacking()) {
                 continue; // stunned or just summoned: its die is no threat this turn
             }
-            String side = currentSideText(monster);
-            String targets = aimText(ds, monster);
-            lines.add(Loc.get("combat", "intent", "name", GameUi.entName(monster),
-                    "side", targets != null ? side + ", " + targets : side));
+            java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+            parts.put(AnnouncementKinds.LABEL, GameUi.entName(monster));
+            parts.put(UnitParts.SIDE, currentSideText(monster));
+            parts.put(UnitParts.AIM, aimText(ds, monster));
+            addLine(lines, EventParts.line(EventParts.INTENT, parts));
         }
         if (lines.isEmpty()) {
             return lines;
@@ -130,13 +131,19 @@ public class CombatScreen extends AccessScreen {
         for (Ent hero : present.getEntities(true, false)) {
             EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, hero);
             if (future != null && future.isDead()) {
-                String fate = future.isFled() ? Loc.get("combat", "flees")
-                        : future.getHp() < 0 ? Loc.get("combat", "overkill", "n", -future.getHp())
-                        : Loc.get("combat", "dies");
-                lines.add(Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", fate));
+                java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+                parts.put(AnnouncementKinds.LABEL, GameUi.entName(hero));
+                parts.put(UnitParts.FATE, fateText(ds, hero));
+                addLine(lines, EventParts.line(EventParts.INTENT, parts));
             }
         }
         return lines;
+    }
+
+    private static void addLine(List<String> lines, String line) {
+        if (line != null) {
+            lines.add(line);
+        }
     }
 
     /**
@@ -148,39 +155,50 @@ public class CombatScreen extends AccessScreen {
         DungeonScreen ds = DungeonScreen.get();
         StringBuilder sb = new StringBuilder();
         for (Ent hero : ds.getFightLog().getSnapshot(FightLog.Temporality.Present).getEntities(true, false)) {
-            String preview = previewText(ds, hero);
-            if (preview != null) {
+            java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+            parts.put(UnitParts.INCOMING, incomingText(ds, hero));
+            parts.put(UnitParts.FATE, fateText(ds, hero));
+            if (parts.get(UnitParts.INCOMING) == null && parts.get(UnitParts.FATE) == null) {
+                continue;
+            }
+            parts.put(AnnouncementKinds.LABEL, GameUi.entName(hero));
+            String line = UnitParts.line(UnitParts.GLANCE_INCOMING, parts);
+            if (line != null) {
                 if (sb.length() > 0) {
                     sb.append(". ");
                 }
-                sb.append(Loc.get("combat", "intent.fate", "name", GameUi.entName(hero), "fate", preview));
+                sb.append(line);
             }
         }
         return sb.length() > 0 ? sb.toString() : Loc.get("combat", "party_safe");
     }
 
-    /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse. */
+    /** "Ranger, 9 hp, shielded 2, incoming 6"; "Ranger, defeated" for a corpse: a line of the party and enemies buffers. */
     public static String vitalsLine(Ent ent) {
-        return GameUi.entName(ent) + ", " + vitalsText(ent);
+        java.util.Map<String, String> parts = vitalParts(ent);
+        parts.put(AnnouncementKinds.LABEL, GameUi.entName(ent));
+        return UnitParts.line(UnitParts.ROSTER, parts);
     }
 
-    /** {@link #vitalsLine} without the name, for the unit focus is already on. */
+    /** {@link #vitalsLine} without the name, for the unit focus is already on (Ctrl+1); null when all is silenced. */
     public static String vitalsText(Ent ent) {
+        return UnitParts.line(UnitParts.GLANCE_VITALS, vitalParts(ent));
+    }
+
+    private static java.util.Map<String, String> vitalParts(Ent ent) {
         DungeonScreen ds = DungeonScreen.get();
+        java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         if (present != null && present.isDead()) {
-            return Loc.get("combat", "defeated");
+            parts.put(UnitParts.FATE, Loc.get("combat", "defeated"));
+            return parts;
         }
-        StringBuilder sb = new StringBuilder();
-        for (String part : new String[] {healthText(ds, ent), previewText(ds, ent)}) {
-            if (part != null) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(part);
-            }
-        }
-        return sb.toString();
+        parts.put(UnitParts.HP, hpText(ds, ent));
+        parts.put(UnitParts.SHIELD, shieldText(ds, ent));
+        parts.put(UnitParts.MARK, markText(ds, ent));
+        parts.put(UnitParts.INCOMING, incomingText(ds, ent));
+        parts.put(UnitParts.FATE, fateText(ds, ent));
+        return parts;
     }
 
     /**
@@ -194,16 +212,10 @@ public class CombatScreen extends AccessScreen {
         if (present != null && present.isDead()) {
             return null;
         }
-        StringBuilder sb = new StringBuilder();
-        for (String part : new String[] {ent.isPlayer() ? null : targetsText(ds, ent), targetedByText(ds, ent)}) {
-            if (part != null) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(part);
-            }
-        }
-        return sb.length() > 0 ? sb.toString() : null;
+        java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+        parts.put(UnitParts.AIM, ent.isPlayer() ? null : targetsText(ds, ent));
+        parts.put(UnitParts.TARGETED_BY, targetedByText(ds, ent));
+        return UnitParts.line(UnitParts.GLANCE_AIM, parts);
     }
 
     /** "Back-row": the statuses the unit's row speaks, alone; null with none. */
@@ -219,14 +231,15 @@ public class CombatScreen extends AccessScreen {
     public static String turnLine() {
         DungeonScreen ds = DungeonScreen.get();
         com.tann.dice.gameplay.fightLog.Snapshot present = ds.getFightLog().getSnapshot(FightLog.Temporality.Present);
-        StringBuilder sb = new StringBuilder(GameText.t("Turn " + present.getTurn()));
+        java.util.Map<String, String> parts = new java.util.HashMap<String, String>();
+        parts.put(EventParts.TURN, GameText.t("Turn " + present.getTurn()));
         if (PhaseManager.get().getPhase() instanceof PlayerRollingPhase) {
-            sb.append(", ").append(GameText.t("Reroll")).append(' ').append(rollCounter(ds));
+            parts.put(EventParts.REROLLS, GameText.t("Reroll") + ' ' + rollCounter(ds));
         }
         if (present.getMaxMana() > 0 || present.getTotalMana() > 0) {
-            sb.append(", ").append(GameText.t(present.getTotalMana() + "/" + present.getMaxMana() + " mana stored"));
+            parts.put(UnitParts.MANA, GameText.t(present.getTotalMana() + "/" + present.getMaxMana() + " mana stored"));
         }
-        return sb.toString();
+        return UnitParts.line(UnitParts.GLANCE_TURN, parts);
     }
 
     @Override
@@ -355,6 +368,7 @@ public class CombatScreen extends AccessScreen {
             final com.tann.dice.gameplay.effect.targetable.ability.Ability a) {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.BUTTON;
+        vt.readout = UnitParts.ABILITY;
         vt.announcements = Arrays.asList(
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
@@ -367,7 +381,7 @@ public class CombatScreen extends AccessScreen {
                     public String get() {
                         return costText(ds, a);
                     }
-                }, AnnouncementKinds.VALUE),
+                }, UnitParts.COST),
                 // What the card draws: the effect with its keywords' names, as a
                 // die's face reads; their rules are the buffer's.
                 NodeAnnouncement.kinded(new Supplier<String>() {
@@ -375,7 +389,7 @@ public class CombatScreen extends AccessScreen {
                     public String get() {
                         return SideText.of(a.getDerivedEffects());
                     }
-                }, AnnouncementKinds.VALUE),
+                }, UnitParts.EFFECT),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
@@ -395,7 +409,7 @@ public class CombatScreen extends AccessScreen {
                         return state != null && state.isDead()
                                 ? Loc.get("combat", "caster_defeated") : null;
                     }
-                }, AnnouncementKinds.ENABLED));
+                }, UnitParts.CASTER));
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {
@@ -624,43 +638,62 @@ public class CombatScreen extends AccessScreen {
                         }
                         return currentSideText(ent);
                     }
-                }, AnnouncementKinds.VALUE),
+                }, UnitParts.SIDE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
                         return ent.isPlayer() ? null : aimText(ds, ent);
                     }
-                }, AnnouncementKinds.VALUE),
+                }, UnitParts.AIM),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
                         return dieUseState(ds, ent);
                     }
-                }, AnnouncementKinds.STATE),
+                }, UnitParts.DIE_STATE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return healthText(ds, ent);
+                        return hpText(ds, ent);
                     }
-                }, AnnouncementKinds.ENABLED),
+                }, UnitParts.HP),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return shieldText(ds, ent);
+                    }
+                }, UnitParts.SHIELD),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return markText(ds, ent);
+                    }
+                }, UnitParts.MARK),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
                         return statusText(ds, ent);
                     }
-                }, AnnouncementKinds.ENABLED),
+                }, UnitParts.STATUSES),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
-                        return previewText(ds, ent);
+                        return incomingText(ds, ent);
                     }
-                }, AnnouncementKinds.ENABLED),
+                }, UnitParts.INCOMING),
+                NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return fateText(ds, ent);
+                    }
+                }, UnitParts.FATE),
                 NodeAnnouncement.kinded(new Supplier<String>() {
                     @Override
                     public String get() {
                         return invalidTargetText(ds, ent);
                     }
-                }, AnnouncementKinds.STATE));
+                }, UnitParts.INVALID));
+        vt.readout = UnitParts.COMBATANT;
         // No auto "n of m": the roster is fixed for the whole fight, and
         // names already number duplicates ("Bandit 2").
         vt.speaksOwnPosition = true;
@@ -805,28 +838,41 @@ public class CombatScreen extends AccessScreen {
         return ent.getDie().getState().isLockedOrLocking() ? GameText.t("locked") : null;
     }
 
-    // The HP pip grid and shield badge, as text: "4 of 8 hp, shield 2". The
-    // ceiling speaks only when it differs — full hp reads "9 hp". A corpse
-    // has no health readout ("defeated" covers it).
+    // The HP pip grid and shield badge, as text: "4 of 8 hp, shielded 2". A
+    // corpse has no health readout ("defeated" covers it).
     static String healthText(DungeonScreen ds, Ent ent) {
+        return UnitParts.join(hpText(ds, ent), shieldText(ds, ent), markText(ds, ent));
+    }
+
+    private static EntState living(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
-        if (present == null || present.isDead()) {
+        return present == null || present.isDead() ? null : present;
+    }
+
+    // "4 of 8 hp"; the ceiling speaks only when it differs — full hp reads "9 hp".
+    static String hpText(DungeonScreen ds, Ent ent) {
+        EntState present = living(ds, ent);
+        if (present == null) {
             return null;
         }
-        String text = present.getHp() >= present.getMaxHp()
+        return present.getHp() >= present.getMaxHp()
                 ? Loc.get("combat", "hp_full", "hp", present.getHp())
                 : Loc.get("combat", "hp", "hp", present.getHp(), "max", present.getMaxHp());
-        if (present.getShields() > 0) {
-            // "shielded 3", not "Shield 3" — a rolled Shield side in the same
-            // row would read as the same words twice.
-            text += ", " + Loc.get("combat", "shielded", "n", present.getShields());
-        }
-        // The hp bar draws its marked pips; the next one down is where it is.
-        int pip = SpecialPips.next(present);
-        if (pip >= 0) {
-            text += ", " + Loc.get("combat", "pip_at", "hp", pip);
-        }
-        return text;
+    }
+
+    // "shielded 3", not "Shield 3" — a rolled Shield side in the same row
+    // would read as the same words twice.
+    static String shieldText(DungeonScreen ds, Ent ent) {
+        EntState present = living(ds, ent);
+        return present != null && present.getShields() > 0
+                ? Loc.get("combat", "shielded", "n", present.getShields()) : null;
+    }
+
+    // The hp bar draws its marked pips; the next one down is where it is.
+    static String markText(DungeonScreen ds, Ent ent) {
+        EntState present = living(ds, ent);
+        int pip = present != null ? SpecialPips.next(present) : -1;
+        return pip >= 0 ? Loc.get("combat", "pip_at", "hp", pip) : null;
     }
 
     // The TriggerPanel's icon strip, as text: every ACTIVE status/trait the
@@ -903,18 +949,32 @@ public class CombatScreen extends AccessScreen {
     // counters miss (unblockable triggers, incoming heals, modded
     // mechanics): a mechanic must move future hp to matter, so nothing
     // incoming can stay silent. All parts enumerate under one "incoming"
-    // prefix, the blockable damage a bare number: "incoming 6, 2 poison".
+    // prefix, the blockable damage a bare number: "incoming 6, 2 poison";
+    // then what it leads to, "dies" or "overkill 2".
     static String previewText(DungeonScreen ds, Ent ent) {
+        return UnitParts.join(incomingText(ds, ent), fateText(ds, ent));
+    }
+
+    // The present and future states of a living unit within one turn, or
+    // null: across a turn boundary the future counters have reset and diffs
+    // are meaningless — the game blanks its pip preview then too.
+    private static EntState[] previewStates(DungeonScreen ds, Ent ent) {
         EntState present = ds.getFightLog().getState(FightLog.Temporality.Present, ent);
         EntState future = ds.getFightLog().getState(FightLog.Temporality.Future, ent);
-        if (present == null || future == null || present.isDead()) {
+        if (present == null || future == null || present.isDead()
+                || present.getSnapshot().getTurn() != future.getSnapshot().getTurn()) {
             return null;
         }
-        // Across a turn boundary the future counters have reset and diffs
-        // are meaningless — the game blanks its pip preview then too.
-        if (present.getSnapshot().getTurn() != future.getSnapshot().getTurn()) {
+        return new EntState[] {present, future};
+    }
+
+    static String incomingText(DungeonScreen ds, Ent ent) {
+        EntState[] states = previewStates(ds, ent);
+        if (states == null) {
             return null;
         }
+        EntState present = states[0];
+        EntState future = states[1];
         StringBuilder parts = new StringBuilder();
         int damage = future.getBlockableDamageTaken() - present.getBlockableDamageTaken();
         if (damage > 0) {
@@ -950,25 +1010,23 @@ public class CombatScreen extends AccessScreen {
             }
             parts.append(GameText.t(statusName(p)));
         }
-        StringBuilder sb = new StringBuilder();
-        if (parts.length() > 0) {
-            sb.append(Loc.get("combat", "incoming", "parts", parts.toString()));
+        return parts.length() > 0 ? Loc.get("combat", "incoming", "parts", parts.toString()) : null;
+    }
+
+    // Where this turn leaves a living unit: "flees", "dies", or "overkill 2",
+    // which says both that they die and by how much — whether a partial
+    // block can still save them.
+    static String fateText(DungeonScreen ds, Ent ent) {
+        EntState[] states = previewStates(ds, ent);
+        if (states == null || !states[1].isDead()) {
+            return null;
         }
-        if (future.isDead() && !present.isDead()) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            if (future.isFled()) {
-                sb.append(Loc.get("combat", "flees"));
-            } else {
-                // "overkill 2" says both that they die and by how much —
-                // whether a partial block can still save them.
-                int overkill = -future.getHp();
-                sb.append(overkill > 0 ? Loc.get("combat", "overkill", "n", overkill)
-                        : Loc.get("combat", "dies"));
-            }
+        EntState future = states[1];
+        if (future.isFled()) {
+            return Loc.get("combat", "flees");
         }
-        return sb.length() > 0 ? sb.toString() : null;
+        int overkill = -future.getHp();
+        return overkill > 0 ? Loc.get("combat", "overkill", "n", overkill) : Loc.get("combat", "dies");
     }
 
     // "targets Thief, Fighter" — the monster's locked-in targets, from the

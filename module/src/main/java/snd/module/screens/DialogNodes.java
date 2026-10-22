@@ -55,25 +55,16 @@ final class DialogNodes {
         NodeVtable vt = new NodeVtable();
         vt.controlType = ControlTypes.TEXT;
         vt.subject = option instanceof Item || option instanceof EntType ? option : null;
-        vt.announcements = Arrays.asList(
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return ChoiceScreen.nameOf(option);
-                    }
-                }, AnnouncementKinds.LABEL),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return ChoiceScreen.valueOf(option, -1);
-                    }
-                }, AnnouncementKinds.VALUE),
-                NodeAnnouncement.kinded(new Supplier<String>() {
-                    @Override
-                    public String get() {
-                        return ChoiceScreen.effectOf(option, -1);
-                    }
-                }, AnnouncementKinds.TOOLTIP));
+        vt.readout = UnitParts.OFFER;
+        List<NodeAnnouncement> parts = new ArrayList<NodeAnnouncement>();
+        parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return ChoiceScreen.nameOf(option);
+            }
+        }, AnnouncementKinds.LABEL));
+        parts.addAll(ChoiceScreen.offerParts(option, -1, true));
+        vt.announcements = parts;
         vt.details = new Supplier<List<String>>() {
             @Override
             public List<String> get() {

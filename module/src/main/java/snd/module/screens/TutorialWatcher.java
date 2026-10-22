@@ -44,7 +44,7 @@ public final class TutorialWatcher {
             boolean complete = item.isComplete();
             Boolean previous = known.get(item);
             if (previous != null && !previous && complete && item instanceof TutorialQuest) {
-                events.say(Loc.get("ui", "tutorial.complete",
+                events.say(EventParts.TUTORIAL, Loc.get("ui", "tutorial.complete",
                         "quest", item.getSortText()), false);
             }
             next.put(item, complete);

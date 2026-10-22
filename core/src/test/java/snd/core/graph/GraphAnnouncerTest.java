@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class GraphAnnouncerTest {
     @AfterEach
     void resetHooks() {
-        GraphAnnouncer.partFilter = null;
+        GraphAnnouncer.partPolicy = null;
         GraphAnnouncer.positionText = null;
         GraphAnnouncer.expandedStateText = null;
     }
@@ -221,16 +221,44 @@ class GraphAnnouncerTest {
     }
 
     @Test
-    void partFilterDropsParts() {
-        GraphNode node = typedNode(TEST_BUTTON,
-                NodeAnnouncement.kinded(fixed("Continue"), AnnouncementKinds.LABEL));
-        GraphAnnouncer.partFilter = new GraphAnnouncer.PartFilter() {
+    void thePlayersSettingsTurnPartsOffAndReorderThem() {
+        snd.core.settings.CategorySetting root = new snd.core.settings.CategorySetting("root", fixed("Settings"));
+        snd.core.settings.Announcements ann = new snd.core.settings.Announcements(root);
+        snd.core.settings.CategorySetting page = ann.readout(snd.core.settings.Announcements.READOUTS, "button",
+                Arrays.asList(AnnouncementKinds.LABEL, AnnouncementKinds.ROLE, AnnouncementKinds.POSITION));
+        snd.core.settings.Settings settings = new snd.core.settings.Settings(root);
+        GraphAnnouncer.partPolicy = ann;
+        GraphAnnouncer.positionText = new GraphAnnouncer.PositionText() {
             @Override
-            public boolean allow(ControlType type, NodeAnnouncement part) {
-                return !AnnouncementKinds.ROLE.equals(part.kind);
+            public String text(int index, int count) {
+                return index + " of " + count;
             }
         };
-        assertEquals("Continue", GraphAnnouncer.composeFull(node));
+        GraphNode node = typedNode(TEST_BUTTON, NodeAnnouncement.kinded(fixed("Continue"), AnnouncementKinds.LABEL));
+        node.positionIndex = 2;
+        node.positionCount = 3;
+        assertEquals("Continue, button, 2 of 3", GraphAnnouncer.composeFull(node));
+
+        page.partOrder.move(AnnouncementKinds.POSITION, -1);
+        assertEquals("Continue, 2 of 3, button", GraphAnnouncer.composeFull(node));
+
+        ((snd.core.settings.BoolSetting) settings.find("announcements.role.enabled")).set(false);
+        assertEquals("Continue, 2 of 3", GraphAnnouncer.composeFull(node));
+        ((snd.core.settings.BoolSetting) settings.find("readouts.button.role.enabled")).toggle();
+        assertEquals("Continue, 2 of 3, button", GraphAnnouncer.composeFull(node));
+    }
+
+    @Test
+    void aNodeSpeaksAsItsOwnReadout() {
+        snd.core.settings.CategorySetting root = new snd.core.settings.CategorySetting("root", fixed("Settings"));
+        snd.core.settings.Announcements ann = new snd.core.settings.Announcements(root);
+        ann.readout(snd.core.settings.Announcements.READOUTS, "combatant", Arrays.asList("hp", AnnouncementKinds.LABEL));
+        GraphAnnouncer.partPolicy = ann;
+        GraphNode node = typedNode(TEST_BUTTON,
+                NodeAnnouncement.kinded(fixed("Thief"), AnnouncementKinds.LABEL),
+                NodeAnnouncement.kinded(fixed("4 hp"), "hp"));
+        node.vtable.readout = "combatant";
+        assertEquals("4 hp, Thief, button", GraphAnnouncer.composeFull(node));
     }
 
     @Test

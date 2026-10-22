@@ -24,6 +24,12 @@ public final class NodeAnnouncement {
      */
     public String kind;
 
+    /**
+     * In the control buffer, a line of its own rather than part of the head
+     * line: a description, an effect. Parts of kind TOOLTIP always are.
+     */
+    public boolean ownLine;
+
     public NodeAnnouncement(Supplier<String> text) {
         this(text, false, null);
     }
@@ -45,5 +51,11 @@ public final class NodeAnnouncement {
 
     public static NodeAnnouncement kinded(Supplier<String> text, String kind) {
         return new NodeAnnouncement(text, false, kind);
+    }
+
+    /** This part, marked to take its own line in the control buffer. */
+    public NodeAnnouncement ownLine() {
+        ownLine = true;
+        return this;
     }
 }

@@ -265,7 +265,20 @@ Permanent/reloadable split (verified end-to-end):
 - **An event is spoken through the `EventLog`** (`events.say`), not the pipeline directly: a
   banner, a roll's results, a die's outcome, a phase turning over, a notification are heard once
   and gone, and the log buffer is the only way back to them. Echoes of the player's own
-  navigation (focus readouts, "selected", typed characters) are not events.
+  navigation (focus readouts, "selected", typed characters) are not events. Every line names its
+  event (`EventParts`), whose settings say whether it is spoken and whether it is kept.
+- **What is spoken is made of parts the player arranges** (`snd.core.settings.Announcements`,
+  the SayTheSpire2 model; settings in `<game>\mods\snd-access\settings.json`, menu on
+  Ctrl+Shift+M). A READOUT — a control type's focus line, a domain node's (`NodeVtable.readout`:
+  combatant, offer, ability, bag item), a buffer, a glance, an event — is declared once with its
+  parts in default order (`Readouts`, `UnitParts`, `EventParts`, `UnitLines.declare`). A focus
+  line's parts are its `NodeAnnouncement` kinds, ordered and filtered by the navigator through
+  `GraphAnnouncer.partPolicy`; position and expanded/collapsed are parts like any other. A line
+  built as a string is composed from a part map (`Announcements.compose`, each part followed by
+  its suffix — "," unless declared, ":" after an intent's name), a buffer from part sections
+  (`Announcements.lines`). One name per fact: the same key everywhere the fact is said, so the
+  global switch silences it everywhere. A new fact in a readout is a new part, declared and given
+  `part.<key>` labels in every locale; never append it to another part's text.
 - **Selection follows focus on tabs.** A `ControlTypes.TAB` node is opened (its `onActivate`) by the
   navigator when a move the player made lands on it — arrows, Home/End, Tab, type-ahead — never
   by focus merely landing (a screen opening). So a tab does not announce "selected": it declares

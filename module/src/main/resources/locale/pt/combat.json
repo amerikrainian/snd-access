@@ -27,17 +27,14 @@
   "level": "nível {n}",
   "caster_defeated": "conjurador derrotado",
 
-  "change.clause": "{name} {parts}",
   "change.all_heroes": "todos os heróis",
   "change.all_enemies": "todos os inimigos",
-  "change.source": "{source}: {changes}",
   "change.joins": "entra no combate",
   "change.poison": "{n} de veneno",
   "change.max_hp": "pv máximos {n}",
   "change.lost": "perdeu {status}",
   "change.flees": "foge",
   "change.returns": "volta",
-  "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "nada iminente",
 

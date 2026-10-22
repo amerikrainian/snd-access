@@ -36,7 +36,8 @@ public final class NodeLines {
         List<String> details = new ArrayList<String>();
         for (NodeAnnouncement part : GraphAnnouncer.effectiveAnnouncements(node)) {
             if (part == null || part.text == null || AnnouncementKinds.ROLE.equals(part.kind)
-                    || AnnouncementKinds.POSITION.equals(part.kind)) {
+                    || AnnouncementKinds.POSITION.equals(part.kind)
+                    || AnnouncementKinds.EXPANDED.equals(part.kind)) {
                 continue;
             }
             String text = null;
@@ -48,7 +49,7 @@ public final class NodeLines {
             if (text == null || text.trim().isEmpty()) {
                 continue;
             }
-            (AnnouncementKinds.TOOLTIP.equals(part.kind) ? details : head).add(text);
+            (part.ownLine || AnnouncementKinds.TOOLTIP.equals(part.kind) ? details : head).add(text);
         }
 
         Set<String> seen = new HashSet<String>();

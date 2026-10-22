@@ -6,11 +6,11 @@ package snd.module;
  * is named from the same property). The module loader defines the package from
  * that manifest.
  */
-final class ModVersion {
+public final class ModVersion {
     private ModVersion() {
     }
 
-    static String current() {
+    public static String current() {
         String v = SndModule.class.getPackage().getImplementationVersion();
         if (v == null || v.trim().isEmpty()) {
             throw new IllegalStateException("module jar manifest carries no Implementation-Version");

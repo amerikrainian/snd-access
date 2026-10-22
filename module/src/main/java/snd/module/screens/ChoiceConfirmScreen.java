@@ -1,5 +1,6 @@
 package snd.module.screens;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
@@ -168,25 +169,16 @@ public class ChoiceConfirmScreen extends AccessScreen {
                 final int optIndex = options.indexOf(option);
                 NodeVtable vt = new NodeVtable();
                 vt.controlType = ControlTypes.TEXT;
-                vt.announcements = Arrays.asList(
-                        NodeAnnouncement.kinded(new Supplier<String>() {
-                            @Override
-                            public String get() {
-                                return ChoiceScreen.nameOf(option);
-                            }
-                        }, AnnouncementKinds.LABEL),
-                        NodeAnnouncement.kinded(new Supplier<String>() {
-                            @Override
-                            public String get() {
-                                return ChoiceScreen.valueOf(option, optIndex);
-                            }
-                        }, AnnouncementKinds.VALUE),
-                        NodeAnnouncement.kinded(new Supplier<String>() {
-                            @Override
-                            public String get() {
-                                return ChoiceScreen.effectOf(option, optIndex);
-                            }
-                        }, AnnouncementKinds.TOOLTIP));
+                vt.readout = UnitParts.OFFER;
+                List<NodeAnnouncement> parts = new ArrayList<NodeAnnouncement>();
+                parts.add(NodeAnnouncement.kinded(new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return ChoiceScreen.nameOf(option);
+                    }
+                }, AnnouncementKinds.LABEL));
+                parts.addAll(ChoiceScreen.offerParts(option, optIndex, true));
+                vt.announcements = parts;
                 b.addItem(ControlId.structural(CompositeKey.of("confirm", "option", i)), vt);
             }
         }

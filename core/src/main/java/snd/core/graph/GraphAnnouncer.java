@@ -1,8 +1,11 @@
 package snd.core.graph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Composes the spoken line for a focus change by diffing the old and new focus
@@ -18,9 +21,17 @@ public final class GraphAnnouncer {
     private GraphAnnouncer() {
     }
 
-    /** Per-part filter installed by the host (the user's announcement settings). */
-    public interface PartFilter {
-        boolean allow(ControlType type, NodeAnnouncement part);
+    /**
+     * The player's announcement settings, installed by the module: for a
+     * readout (a node's {@link NodeVtable#readout}, else its control type's
+     * key), the order its parts speak in and whether a part speaks at all.
+     */
+    public interface PartPolicy {
+        /** The readout's parts in speaking order, or null for its control type's default order. */
+        List<String> order(String readout);
+
+        /** Whether part speaks in readout; readout null for a node that has none (its global setting). */
+        boolean enabled(String readout, String part);
     }
 
     /** "n of m" wording, localized by the host. */
@@ -33,8 +44,8 @@ public final class GraphAnnouncer {
         String text(boolean expanded);
     }
 
-    /** Null (tests, boot) = everything speaks. Filters readouts AND the live watch. */
-    public static volatile PartFilter partFilter;
+    /** Null (tests, boot) = every part speaks, in the default order. Governs readouts AND the live watch. */
+    public static volatile PartPolicy partPolicy;
 
     /** Null = no auto positions. */
     public static volatile PositionText positionText;
@@ -125,13 +136,26 @@ public final class GraphAnnouncer {
         return path;
     }
 
+    /** The readout a node speaks as: its own, else its control type's. Null when it has neither. */
+    public static String readoutOf(GraphNode node) {
+        NodeVtable vt = node != null ? node.vtable : null;
+        if (vt == null) {
+            return null;
+        }
+        if (vt.readout != null) {
+            return vt.readout;
+        }
+        return vt.controlType != null ? vt.controlType.key : null;
+    }
+
     /**
      * A node's EFFECTIVE announcement parts: the control type's common parts
      * (the role word) merged with the node's own — a node part overrides a
-     * common part of the same kind — sorted by the type's kind order
-     * (unknown/kindless parts append in declaration order), then filtered by
-     * the user's settings. This is the single list readouts and the live watch
-     * operate on.
+     * common part of the same kind — and the parts the engine supplies (an
+     * expandable group's state, the sibling position), sorted by the
+     * readout's order (unknown/kindless parts append in declaration order),
+     * then filtered by the player's settings. This is the single list
+     * readouts, the live watch and the control buffer operate on.
      */
     public static List<NodeAnnouncement> effectiveAnnouncements(GraphNode node) {
         List<NodeAnnouncement> result = new ArrayList<NodeAnnouncement>();
@@ -156,17 +180,31 @@ public final class GraphAnnouncer {
                 }
             }
         }
+        NodeAnnouncement expansion = expansionPart(node);
+        if (expansion != null) {
+            result.add(expansion);
+        }
+        NodeAnnouncement position = positionPart(node);
+        if (position != null) {
+            result.add(position);
+        }
 
-        if (type != null && type.order != null && type.order.length > 0 && result.size() > 1) {
+        String readout = readoutOf(node);
+        PartPolicy policy = partPolicy;
+        List<String> order = policy != null && readout != null ? policy.order(readout) : null;
+        if (order == null && type != null && type.order != null) {
+            order = Arrays.asList(type.order);
+        }
+        if (order != null && !order.isEmpty() && result.size() > 1) {
             // Stable: composite key = (kind's order index, declaration index).
             final List<NodeAnnouncement> unsorted = new ArrayList<NodeAnnouncement>(result);
             final long[] keys = new long[unsorted.size()];
             Integer[] indices = new Integer[unsorted.size()];
             for (int i = 0; i < unsorted.size(); i++) {
-                keys[i] = ((long) orderIndex(type.order, unsorted.get(i).kind) << 32) | i;
+                keys[i] = ((long) orderIndex(order, unsorted.get(i).kind) << 32) | i;
                 indices[i] = i;
             }
-            java.util.Arrays.sort(indices, new java.util.Comparator<Integer>() {
+            Arrays.sort(indices, new Comparator<Integer>() {
                 @Override
                 public int compare(Integer a, Integer b) {
                     return Long.compare(keys[a], keys[b]);
@@ -178,15 +216,46 @@ public final class GraphAnnouncer {
             }
         }
 
-        PartFilter filter = partFilter;
-        if (filter != null) {
+        if (policy != null) {
             for (int i = result.size() - 1; i >= 0; i--) {
-                if (!filter.allow(type, result.get(i))) {
+                String kind = result.get(i).kind;
+                if (kind != null && !policy.enabled(readout, kind)) {
                     result.remove(i);
                 }
             }
         }
         return result;
+    }
+
+    // An expandable group's expanded/collapsed word, unless it speaks its own.
+    private static NodeAnnouncement expansionPart(final GraphNode node) {
+        final ExpandedStateText est = expandedStateText;
+        if (!node.expandable || node.vtable.speaksOwnExpansion || est == null) {
+            return null;
+        }
+        return NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return est.text(node.expanded);
+            }
+        }, AnnouncementKinds.EXPANDED);
+    }
+
+    // The auto-stamped sibling position, unless the node carries its own.
+    private static NodeAnnouncement positionPart(GraphNode node) {
+        final PositionText pt = positionText;
+        if (node.positionCount <= 1 || pt == null || node.vtable.speaksOwnPosition
+                || hasKind(node.vtable.announcements, AnnouncementKinds.POSITION)) {
+            return null;
+        }
+        final int index = node.positionIndex;
+        final int count = node.positionCount;
+        return NodeAnnouncement.kinded(new Supplier<String>() {
+            @Override
+            public String get() {
+                return pt.text(index, count);
+            }
+        }, AnnouncementKinds.POSITION);
     }
 
     private static boolean hasKind(List<NodeAnnouncement> anns, String kind) {
@@ -201,32 +270,18 @@ public final class GraphAnnouncer {
         return false;
     }
 
-    // Sort key: declared kinds by their order index; everything else after
+    // Sort key: ordered kinds by their index; everything else after
     // (one shared bucket, declaration-index tie-break keeps relative order).
-    private static int orderIndex(String[] order, String kind) {
-        if (kind != null) {
-            for (int i = 0; i < order.length; i++) {
-                if (order[i].equals(kind)) {
-                    return i;
-                }
-            }
-        }
-        return order.length;
+    private static int orderIndex(List<String> order, String kind) {
+        int i = kind != null ? order.indexOf(kind) : -1;
+        return i >= 0 ? i : order.size();
     }
 
-    /**
-     * A node's own readout: its effective announcement parts, resolved live,
-     * non-empty ones joined — plus, for an expandable group, its
-     * expanded/collapsed state word, plus the auto-stamped sibling position.
-     */
+    /** A node's own readout: its effective announcement parts, resolved live, non-empty ones joined. */
     public static String leafText(GraphNode node) {
-        List<NodeAnnouncement> anns = effectiveAnnouncements(node);
         StringBuilder sb = new StringBuilder();
-        for (NodeAnnouncement a : anns) {
-            String t = null;
-            if (a != null && a.text != null) {
-                t = a.text.get();
-            }
+        for (NodeAnnouncement a : effectiveAnnouncements(node)) {
+            String t = a.text != null ? a.text.get() : null;
             if (t == null || t.isEmpty()) {
                 continue;
             }
@@ -235,45 +290,8 @@ public final class GraphAnnouncer {
             }
             sb.append(t);
         }
-        ExpandedStateText est = expandedStateText;
-        if (node != null && node.expandable && !node.vtable.speaksOwnExpansion && est != null) {
-            String state = est.text(node.expanded);
-            if (state != null && !state.isEmpty()) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(state);
-            }
-        }
-
-        // The auto-stamped sibling position, unless the node carries its own.
-        // Honors the user's per-kind setting via the stand-in probe part.
-        PositionText pt = positionText;
-        PartFilter filter = partFilter;
-        if (node != null && node.positionCount > 1 && pt != null
-                && !node.vtable.speaksOwnPosition
-                && !hasKind(node.vtable.announcements, AnnouncementKinds.POSITION)
-                && (filter == null || filter.allow(node.vtable.controlType, AUTO_POSITION_PROBE))) {
-            String pos = pt.text(node.positionIndex, node.positionCount);
-            if (pos != null && !pos.isEmpty()) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(pos);
-            }
-        }
         return sb.length() > 0 ? sb.toString() : null;
     }
-
-    // A stand-in part handed to the partFilter so the user's position-kind
-    // toggle governs the auto-stamped position too.
-    private static final NodeAnnouncement AUTO_POSITION_PROBE =
-            NodeAnnouncement.kinded(new java.util.function.Supplier<String>() {
-                @Override
-                public String get() {
-                    return null;
-                }
-            }, AnnouncementKinds.POSITION);
 
     /** The first announcement part's text (the label) — for dedupe and search. */
     public static String firstPartText(GraphNode node) {

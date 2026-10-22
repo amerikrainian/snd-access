@@ -16,7 +16,7 @@ public final class TransientTextAdvice {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(@Advice.Argument(0) String text) {
-        Dispatcher.transientText(text);
+    public static void enter(@Advice.Origin("#m") String method, @Advice.Argument(0) String text) {
+        Dispatcher.transientText(method, null, text);
     }
 }

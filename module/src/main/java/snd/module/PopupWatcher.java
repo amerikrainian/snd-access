@@ -6,6 +6,7 @@ import java.util.WeakHashMap;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 
+import snd.module.screens.EventParts;
 import snd.contracts.speech.SpeechPipeline;
 import snd.core.buffers.EventLog;
 import snd.core.text.TextEcho;
@@ -69,7 +70,7 @@ final class PopupWatcher {
             if (description != null) {
                 sb.append(", ").append(description);
             }
-            events.say(sb.toString(), false);
+            events.say(EventParts.POPUP, sb.toString(), false);
         }
     }
 

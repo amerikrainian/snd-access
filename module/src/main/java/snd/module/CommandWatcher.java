@@ -13,6 +13,7 @@ import com.tann.dice.gameplay.fightLog.command.Command;
 import com.tann.dice.gameplay.fightLog.command.TargetableCommand;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.module.screens.EventParts;
 import snd.contracts.SndLog;
 import snd.core.buffers.EventLog;
 import snd.core.loc.Loc;
@@ -88,7 +89,7 @@ final class CommandWatcher {
             return;
         }
         for (String line : linesFor(log, command, players(command))) {
-            events.say(line, false);
+            events.say(EventParts.OUTCOME, line, false);
         }
     }
 
@@ -103,9 +104,13 @@ final class CommandWatcher {
         Ent target = command instanceof TargetableCommand ? ((TargetableCommand) command).target : null;
         // Everyone the step touched, the one aimed at first: a cleave's other
         // victims, the attacker's own pain or shield, a kill's on-death fallout.
-        List<String> changes = CombatChanges.lines(before, after, target);
+        // Empty for a skipped, wasted or wholly blocked step: nothing spoken
+        // moved. Who did it opens the first line, unless it was the player.
+        boolean playersPress = players && command instanceof TargetableCommand;
+        String source = !playersPress && command.getSource() != null ? GameUi.entName(command.getSource()) : null;
+        List<String> changes = CombatChanges.lines(before, after, target, source);
 
-        if (players && command instanceof TargetableCommand) {
+        if (playersPress) {
             // "Bandit 1 2, defeated" — the player knows who acted and what
             // with, so the outcome is the whole line. Target-conditional
             // keywords (engage, cruel, wham...) multiply damage at
@@ -119,12 +124,6 @@ final class CommandWatcher {
                         : Loc.get("combat", "applied", "eff", eff, "target", GameUi.entName(target)));
             }
             return changes;
-        }
-        // Empty for a skipped, wasted or wholly blocked step: nothing spoken
-        // moved. Who did it opens the first line; the rest follow it.
-        if (!changes.isEmpty() && command.getSource() != null) {
-            changes.set(0, Loc.get("combat", "change.source", "source", GameUi.entName(command.getSource()),
-                    "changes", changes.get(0)));
         }
         return changes;
     }

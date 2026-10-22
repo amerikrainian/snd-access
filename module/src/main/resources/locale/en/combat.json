@@ -27,17 +27,14 @@
   "level": "level {n}",
   "caster_defeated": "caster defeated",
 
-  "change.clause": "{name} {parts}",
   "change.all_heroes": "all heroes",
   "change.all_enemies": "all enemies",
-  "change.source": "{source}: {changes}",
   "change.joins": "joins the fight",
   "change.poison": "{n} poison",
   "change.max_hp": "max hp {n}",
   "change.lost": "lost {status}",
   "change.flees": "flees",
   "change.returns": "returns",
-  "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "nothing incoming",
 

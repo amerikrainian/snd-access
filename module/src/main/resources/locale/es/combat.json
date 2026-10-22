@@ -27,17 +27,14 @@
   "level": "nivel {n}",
   "caster_defeated": "lanzador derrotado",
 
-  "change.clause": "{name} {parts}",
   "change.all_heroes": "todos los héroes",
   "change.all_enemies": "todos los enemigos",
-  "change.source": "{source}: {changes}",
   "change.joins": "se une al combate",
   "change.poison": "{n} de veneno",
   "change.max_hp": "ps máximos {n}",
   "change.lost": "pierde {status}",
   "change.flees": "huye",
   "change.returns": "vuelve",
-  "intent": "{name}: {side}",
   "intent.fate": "{name}: {fate}",
   "party_safe": "nada entrante",
 

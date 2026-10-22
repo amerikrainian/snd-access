@@ -49,6 +49,8 @@ public final class GraphNavigator {
     // A focus request whose target isn't in the render yet (lazy content).
     private ControlId pendingFocus;
     private boolean pendingAnnounce;
+    private boolean pendingInterrupt;
+    private boolean interruptLanding;
     private Object pendingStop;
 
     public GraphNavigator(SpeechPipeline speech) {
@@ -117,11 +119,17 @@ public final class GraphNavigator {
 
     /** Request focus on a node that may not be in the render yet. */
     public void focusNode(ControlId id, boolean announce) {
+        focusNode(id, announce, false);
+    }
+
+    /** As {@link #focusNode(ControlId, boolean)}; interrupt: the landing cuts off what is being said (a page change). */
+    public void focusNode(ControlId id, boolean announce, boolean interrupt) {
         if (id == null) {
             return;
         }
         pendingFocus = id;
         pendingAnnounce = announce;
+        pendingInterrupt = interrupt;
     }
 
     /** Request a landing on a stop (resolved to its landing node at apply time). */
@@ -173,6 +181,7 @@ public final class GraphNavigator {
                         lastSpokenKey = pendingFocus;
                         lastSpokenNode = graph.currentNode();
                     }
+                    interruptLanding = pendingInterrupt;
                 }
                 pendingFocus = null;
             }
@@ -192,13 +201,14 @@ public final class GraphNavigator {
 
         if (lastSpokenKey == null || !lastSpokenKey.equals(node.id)) {
             // Queued (not interrupting): landings follow the screen name /
-            // preceding feedback.
+            // preceding feedback — unless the focus request asked otherwise.
             if (!takeQuietLanding()) {
-                speak(GraphAnnouncer.compose(lastSpokenNode, node), false);
+                speak(GraphAnnouncer.compose(lastSpokenNode, node), interruptLanding);
             }
             lastSpokenKey = node.id;
             lastSpokenNode = node;
         }
+        interruptLanding = false;
 
         watchLive(node);
         watchText(node);

@@ -8,6 +8,7 @@ import com.tann.dice.gameplay.phase.PhaseManager;
 import com.tann.dice.gameplay.phase.gameplay.TargetingPhase;
 import com.tann.dice.screens.dungeon.DungeonScreen;
 
+import snd.module.screens.EventParts;
 import snd.contracts.speech.SpeechPipeline;
 import snd.core.buffers.EventLog;
 import snd.core.loc.Loc;
@@ -43,7 +44,7 @@ final class TargetingWatcher {
         int count = commands != null ? commands.size() : 0;
         boolean applied = lastCommandCount >= 0 && count > lastCommandCount;
         if (lastCommandCount >= 0 && count < lastCommandCount) {
-            events.say(GameText.t("Undo"), true);
+            events.say(EventParts.UNDO, GameText.t("Undo"), true);
         }
         lastCommandCount = count;
 

@@ -21,9 +21,9 @@ public final class EntTextAdvice {
     // in the body, which is inlined into EntPanelCombat itself where
     // self-references are legal.
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(@Advice.This Object panel, @Advice.Argument(0) String text) {
-        Dispatcher.transientText(
-                ((com.tann.dice.screens.dungeon.panels.entPanel.EntPanelCombat) panel)
-                        .ent.getName(true) + ": " + text);
+    public static void enter(@Advice.This Object panel, @Advice.Origin("#m") String method,
+            @Advice.Argument(0) String text) {
+        Dispatcher.transientText(method,
+                ((com.tann.dice.screens.dungeon.panels.entPanel.EntPanelCombat) panel).ent.getName(true), text);
     }
 }

@@ -17,11 +17,11 @@ public final class ControlTypes {
     private ControlTypes() {
     }
 
-    /** The shared speak order: state, label, role, value, selected, enabled, tooltip, position. */
+    /** The shared default speak order: state, label, role, value, selected, enabled, tooltip, expanded, position. */
     public static final String[] STANDARD_ORDER = {
             AnnouncementKinds.STATE, AnnouncementKinds.LABEL, AnnouncementKinds.ROLE,
             AnnouncementKinds.VALUE, AnnouncementKinds.SELECTED, AnnouncementKinds.ENABLED,
-            AnnouncementKinds.TOOLTIP, AnnouncementKinds.POSITION,
+            AnnouncementKinds.TOOLTIP, AnnouncementKinds.EXPANDED, AnnouncementKinds.POSITION,
     };
 
     private static ControlType make(String key, boolean spoken) {

@@ -29,6 +29,13 @@ public final class NodeVtable {
     public ControlType controlType;
 
     /**
+     * Optional. The readout the control speaks as, when it is not its control
+     * type's: a unit's row reads as a combatant, not a button. Keys the
+     * player's order and on/off settings for its parts.
+     */
+    public String readout;
+
+    /**
      * Optional. The domain object the control CONCERNS: the combatant a row or
      * a sheet line is about, the item in a slot. The glance keys and the
      * subject-fed review buffers read it, so they answer from any control
