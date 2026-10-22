@@ -210,22 +210,53 @@ class SettingsTest {
     void aComposedLineFollowsTheOrderTheSettingsAndEachPartsSuffix() {
         CategorySetting root = root();
         Announcements a = new Announcements(root);
+        a.unsuffixed("affected");
         CategorySetting page = a.event("intent", Arrays.asList("label", "side", "aim"));
-        a.suffix("events.intent", "label", ":");
+        a.event("outcome", Arrays.asList("affected", "damage", "fate"));
         Settings settings = new Settings(root);
         Map<String, String> texts = new LinkedHashMap<String, String>();
         texts.put("aim", "targets Thief");
         texts.put("side", "2 damage");
         texts.put("label", "Rat 1");
 
-        assertEquals("Rat 1: 2 damage, targets Thief", a.compose("events.intent", texts));
+        assertEquals("Rat 1, 2 damage, targets Thief", a.compose("events.intent", texts));
         page.partOrder.move("label", 1);
-        assertEquals("2 damage, Rat 1: targets Thief", a.compose("events.intent", texts));
+        assertEquals("2 damage, Rat 1, targets Thief", a.compose("events.intent", texts));
         ((BoolSetting) settings.find("announcements.side.enabled")).set(false);
-        assertEquals("Rat 1: targets Thief", a.compose("events.intent", texts));
+        assertEquals("Rat 1, targets Thief", a.compose("events.intent", texts));
         texts.remove("label");
         texts.remove("aim");
         assertNull(a.compose("events.intent", texts));
+
+        // A part with no suffix runs on into the next, wherever it lands.
+        Map<String, String> outcome = new LinkedHashMap<String, String>();
+        outcome.put("affected", "Bandit 1");
+        outcome.put("damage", "2");
+        outcome.put("fate", "defeated");
+        assertEquals("Bandit 1 2, defeated", a.compose("events.outcome", outcome));
+        assertNull(settings.find("announcements.affected.include_suffix"));
+    }
+
+    @Test
+    void aPartsCommaCanBeTurnedOffEverywhereOrOnOneReadout() {
+        CategorySetting root = root();
+        Announcements a = new Announcements(root);
+        a.event("intent", Arrays.asList("label", "side"));
+        a.event("roll", Arrays.asList("label", "side"));
+        a.readout(Announcements.BUFFERS, "unit", Arrays.asList("label", "sides"), false);
+        Settings settings = new Settings(root);
+        Map<String, String> texts = new LinkedHashMap<String, String>();
+        texts.put("label", "Thief");
+        texts.put("side", "2 damage");
+
+        ((BoolSetting) settings.find("announcements.label.include_suffix")).set(false);
+        assertEquals("Thief 2 damage", a.compose("events.intent", texts));
+        assertEquals("Thief 2 damage", a.compose("events.roll", texts));
+        ((BoolSetting) settings.find("events.roll.label.include_suffix")).toggle();
+        assertEquals("Thief, 2 damage", a.compose("events.roll", texts));
+        assertEquals("Thief 2 damage", a.compose("events.intent", texts));
+        // A buffer's sections are lines: they take no suffix.
+        assertNull(settings.find("buffers.unit.label.include_suffix"));
     }
 
     @Test

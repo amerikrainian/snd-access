@@ -84,7 +84,7 @@ public final class UnitLines {
 
     static void declare(Announcements a) {
         a.readout(Announcements.BUFFERS, "unit", java.util.Arrays.asList(HEADER, DEFEAT_RULE, UnitParts.AIM,
-                UnitParts.TARGETED_BY, SIDES, KEYWORDS, UnitParts.STATUSES, TRAITS, TERMS, GLOSSARY));
+                UnitParts.TARGETED_BY, SIDES, KEYWORDS, UnitParts.STATUSES, TRAITS, TERMS, GLOSSARY), false);
     }
 
     private static void put(Map<String, List<String>> sections, String part, String line) {

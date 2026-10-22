@@ -46,6 +46,8 @@ public final class EventParts {
 
     /** Who acted, opening an outcome. */
     public static final String SOURCE = "source";
+    /** Whom a step of the fight changed: a name with no suffix, what changed running on from it ("Bandit 1 2"). */
+    public static final String AFFECTED = "affected";
     /** Hp lost, a bare number after the name. */
     public static final String DAMAGE = "damage";
     public static final String POISON = "poison";
@@ -65,18 +67,14 @@ public final class EventParts {
 
     public static void declare(Announcements a) {
         String label = AnnouncementKinds.LABEL;
-        a.event(OUTCOME, Arrays.asList(SOURCE, label, DAMAGE, POISON, HEAL, UnitParts.SHIELD, MAX_HP,
+        a.unsuffixed(AFFECTED);
+        a.event(OUTCOME, Arrays.asList(SOURCE, AFFECTED, DAMAGE, POISON, HEAL, UnitParts.SHIELD, MAX_HP,
                 UnitParts.STATUSES, LOST, UnitParts.FATE));
-        a.suffix(id(OUTCOME), SOURCE, ":");
-        a.suffix(id(OUTCOME), label, ""); // "Bandit 1 2": the hp lost runs on from the name
         a.event(INTENT, Arrays.asList(label, UnitParts.SIDE, UnitParts.AIM, UnitParts.FATE));
-        a.suffix(id(INTENT), label, ":");
         a.event(PHASE, Arrays.asList(FIGHT, TURN, PHASE_NAME));
         a.event(ROLL, Arrays.asList(label, UnitParts.SIDE, REROLLS));
-        a.suffix(id(ROLL), label, ":");
         for (String overUnit : new String[] {FLOATER, CHATTER}) {
             a.event(overUnit, Arrays.asList(label, MESSAGE));
-            a.suffix(id(overUnit), label, ":");
         }
         for (String whole : new String[] {BANNER, REFUSAL, WISP, POPUP, UNDO, TUTORIAL, UPDATE}) {
             a.event(whole, Collections.<String>emptyList());

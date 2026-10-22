@@ -368,5 +368,7 @@
   "events.wisp": "Mana et défausses",
   "events.floater": "Mots au-dessus des unités",
   "events.chatter": "Bavardage des unités",
-  "part.message": "Message"
+  "part.message": "Message",
+  "settings.include_suffix": "Inclure la ponctuation finale",
+  "part.affected": "Unité touchée"
 }

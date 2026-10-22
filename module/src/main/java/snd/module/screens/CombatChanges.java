@@ -10,7 +10,6 @@ import com.tann.dice.gameplay.fightLog.EntState;
 import com.tann.dice.gameplay.fightLog.Snapshot;
 import com.tann.dice.gameplay.trigger.personal.Personal;
 
-import snd.core.graph.AnnouncementKinds;
 import snd.core.loc.Loc;
 import snd.module.GameText;
 import snd.module.GameUi;
@@ -62,7 +61,7 @@ public final class CombatChanges {
         List<String> clauses = new ArrayList<String>();
         for (int i = 0; i < names.size(); i++) {
             Map<String, String> parts = new HashMap<String, String>(changes.get(i));
-            parts.put(AnnouncementKinds.LABEL, names.get(i));
+            parts.put(EventParts.AFFECTED, names.get(i));
             if (clauses.isEmpty() && source != null) {
                 parts.put(EventParts.SOURCE, source);
             }

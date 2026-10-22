@@ -246,6 +246,9 @@ class GraphAnnouncerTest {
         assertEquals("Continue, 2 of 3", GraphAnnouncer.composeFull(node));
         ((snd.core.settings.BoolSetting) settings.find("readouts.button.role.enabled")).toggle();
         assertEquals("Continue, 2 of 3, button", GraphAnnouncer.composeFull(node));
+
+        ((snd.core.settings.BoolSetting) settings.find("readouts.button.label.include_suffix")).toggle();
+        assertEquals("Continue 2 of 3, button", GraphAnnouncer.composeFull(node));
     }
 
     @Test

@@ -368,5 +368,7 @@
   "events.wisp": "Мана и сброс",
   "events.floater": "Надписи над участниками",
   "events.chatter": "Реплики участников",
-  "part.message": "Сообщение"
+  "part.message": "Сообщение",
+  "settings.include_suffix": "Знак препинания после части",
+  "part.affected": "Затронутый участник"
 }

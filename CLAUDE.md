@@ -274,9 +274,11 @@ Permanent/reloadable split (verified end-to-end):
   parts in default order (`Readouts`, `UnitParts`, `EventParts`, `UnitLines.declare`). A focus
   line's parts are its `NodeAnnouncement` kinds, ordered and filtered by the navigator through
   `GraphAnnouncer.partPolicy`; position and expanded/collapsed are parts like any other. A line
-  built as a string is composed from a part map (`Announcements.compose`, each part followed by
-  its suffix — "," unless declared, ":" after an intent's name), a buffer from part sections
-  (`Announcements.lines`). One name per fact: the same key everywhere the fact is said, so the
+  built as a string is composed from a part map (`Announcements.compose`), a buffer from part
+  sections (`Announcements.lines`). Parts join as SayTheSpire2 joins them: text, suffix, space —
+  the suffix a comma the player can turn off ("include suffix punctuation"), or none for a part
+  declared `unsuffixed` (the outcome's "affected": "Bandit 1 2"), wherever the part lands; never
+  punctuation that only reads right in one position. One name per fact: the same key everywhere the fact is said, so the
   global switch silences it everywhere. A new fact in a readout is a new part, declared and given
   `part.<key>` labels in every locale; never append it to another part's text.
 - **Selection follows focus on tabs.** A `ControlTypes.TAB` node is opened (its `onActivate`) by the

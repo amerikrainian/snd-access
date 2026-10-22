@@ -360,13 +360,18 @@ public final class ModMenuScreen extends AccessScreen {
         moveButton(b, order, part, -1, "settings.move_up");
         moveButton(b, order, part, 1, "settings.move_down");
         if (part.shown().size() > 1) {
-            button(b, ControlId.referenced(part, CompositeKey.of("menu", "part", part.path(), "configure")),
-                    Setting.loc("settings.configure"), new Runnable() {
-                        @Override
-                        public void run() {
-                            openPage(part);
-                        }
-                    });
+            NodeVtable vt = new NodeVtable();
+            vt.controlType = ControlTypes.BUTTON;
+            vt.announcements = Arrays.asList(
+                    NodeAnnouncement.kinded(Setting.loc("settings.configure"), AnnouncementKinds.LABEL));
+            vt.speaksOwnPosition = true;
+            vt.onActivate = new Runnable() {
+                @Override
+                public void run() {
+                    openPage(part);
+                }
+            };
+            add(b, ControlId.referenced(part, CompositeKey.of("menu", "part", part.path(), "configure")), vt);
         }
         b.endRow();
         b.popContext();

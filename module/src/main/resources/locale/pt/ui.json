@@ -368,5 +368,7 @@
   "events.wisp": "Mana e descartes",
   "events.floater": "Palavras sobre as unidades",
   "events.chatter": "Falas das unidades",
-  "part.message": "Mensagem"
+  "part.message": "Mensagem",
+  "settings.include_suffix": "Incluir pontuação final",
+  "part.affected": "Unidade afetada"
 }

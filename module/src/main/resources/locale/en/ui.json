@@ -368,5 +368,7 @@
   "events.wisp": "Mana and discards",
   "events.floater": "Words over units",
   "events.chatter": "Unit chatter",
-  "part.message": "Message"
+  "part.message": "Message",
+  "settings.include_suffix": "Include suffix punctuation",
+  "part.affected": "Unit affected"
 }

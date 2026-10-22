@@ -88,7 +88,6 @@ public final class UnitParts {
         a.readout(Announcements.GLANCES, "aim", Arrays.asList(AIM, TARGETED_BY));
         a.readout(Announcements.GLANCES, "turn", Arrays.asList(EventParts.TURN, EventParts.REROLLS, MANA));
         a.readout(Announcements.GLANCES, "incoming", Arrays.asList(AnnouncementKinds.LABEL, INCOMING, FATE));
-        a.suffix(GLANCE_INCOMING, AnnouncementKinds.LABEL, ":");
     }
 
     /** A line of readout id from its parts' texts, as the player arranged them; null when nothing is left to say. */

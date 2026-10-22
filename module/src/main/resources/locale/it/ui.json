@@ -368,5 +368,7 @@
   "events.wisp": "Mana e scarti",
   "events.floater": "Parole sopra le unità",
   "events.chatter": "Chiacchiere delle unità",
-  "part.message": "Messaggio"
+  "part.message": "Messaggio",
+  "settings.include_suffix": "Includi punteggiatura finale",
+  "part.affected": "Unità colpita"
 }

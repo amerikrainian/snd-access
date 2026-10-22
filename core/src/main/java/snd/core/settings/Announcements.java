@@ -21,6 +21,12 @@ import snd.core.graph.GraphAnnouncer;
  * ("readouts.combatant.hp.enabled"). A readout's order is saved on its page
  * ("readouts.combatant.order").
  *
+ * <p>Parts are joined as SayTheSpire2 joins them: each part's text, its
+ * suffix, a space. A part's suffix is a comma unless its part is declared
+ * {@link #unsuffixed} (a name the rest runs on from: "Bandit 1 2"), wherever
+ * the part lands; "include suffix punctuation" turns a part's comma off, on
+ * the same global-then-readout terms as "speak".</p>
+ *
  * <p>Readouts live in groups, one settings page each: {@link #READOUTS} (the
  * focus lines, read by the navigator through {@link GraphAnnouncer.PartPolicy}),
  * {@link #BUFFERS}, {@link #GLANCES}, {@link #EVENTS}. A readout is named
@@ -37,13 +43,15 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
         CategorySetting page;
         PartOrder order;
         final Map<String, BoolSetting> enabled = new HashMap<String, BoolSetting>();
-        final Map<String, String> suffixes = new HashMap<String, String>();
+        final Map<String, BoolSetting> includeSuffix = new HashMap<String, BoolSetting>();
         BoolSetting announce;
         BoolSetting log;
     }
 
-    /** What follows a part's text before the next part, unless the readout gives it another. */
-    public static final String DEFAULT_SUFFIX = ",";
+    /** What follows a part's text before the next part, unless the part has none or the player turned it off. */
+    public static final String SUFFIX = ",";
+
+    private final Set<String> unsuffixed = new HashSet<String>();
 
     private final CategorySetting root;
     private final CategorySetting global;
@@ -60,9 +68,20 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
     public CategorySetting part(String part) {
         CategorySetting page = global.category(part, Setting.loc("part." + part));
         if (page.child("enabled") == null) {
-            page.add(new BoolSetting("enabled", Setting.loc("settings.speak"), true));
+            page.add(new BoolSetting("enabled", Setting.loc("settings.speak"), true)).sortPriority = -1;
+            if (!unsuffixed.contains(part)) {
+                page.add(new BoolSetting("include_suffix", Setting.loc("settings.include_suffix"), true));
+            }
         }
         return page;
+    }
+
+    /** Declare part as one with no suffix, before any readout uses it: what follows runs on from it. */
+    public void unsuffixed(String part) {
+        if (global.child(part) != null) {
+            throw new IllegalStateException("part " + part + " is already in use");
+        }
+        unsuffixed.add(part);
     }
 
     /** The settings page of a group of readouts, made on first use. */
@@ -76,6 +95,14 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
      * (an event's "announce").
      */
     public CategorySetting readout(String group, String key, List<String> parts) {
+        return readout(group, key, parts, true);
+    }
+
+    /**
+     * As {@link #readout(String, String, List)}; joined false for a readout
+     * whose parts are sections of lines (a buffer), which take no suffix.
+     */
+    public CategorySetting readout(String group, String key, List<String> parts, boolean joined) {
         String id = group + "." + key;
         if (readouts.containsKey(id)) {
             throw new IllegalArgumentException("readout " + id + " declared twice");
@@ -86,8 +113,15 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
         for (String p : parts) {
             BoolSetting globalEnabled = (BoolSetting) part(p).child("enabled");
             CategorySetting partPage = r.page.add(new CategorySetting(p, Setting.loc("part." + p)));
-            r.enabled.put(p, partPage.add(BoolSetting.inheriting("enabled", Setting.loc("settings.speak"),
-                    globalEnabled)));
+            BoolSetting speak = partPage.add(BoolSetting.inheriting("enabled", Setting.loc("settings.speak"),
+                    globalEnabled));
+            speak.sortPriority = -1;
+            r.enabled.put(p, speak);
+            if (joined && !unsuffixed.contains(p)) {
+                BoolSetting globalSuffix = (BoolSetting) part(p).child("include_suffix");
+                r.includeSuffix.put(p, partPage.add(BoolSetting.inheriting("include_suffix",
+                        Setting.loc("settings.include_suffix"), globalSuffix)));
+            }
         }
         readouts.put(id, r);
         return r.page;
@@ -97,17 +131,18 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
         return readouts.containsKey(id);
     }
 
-    /**
-     * What follows part's text in readout id wherever it lands: ":" after an
-     * intent's name ("Rat 1: 2 damage"), "" for a name the rest runs on from
-     * ("Bandit 1 2"). The default is {@link #DEFAULT_SUFFIX}.
-     */
-    public void suffix(String id, String part, String suffix) {
-        Readout r = readouts.get(id);
-        if (r == null || !r.enabled.containsKey(part)) {
-            throw new IllegalArgumentException(id + " has no part " + part);
+    /** What follows part's text in readout id (null for a node with none): a comma, or nothing. */
+    public String suffixOf(String id, String part) {
+        if (unsuffixed.contains(part)) {
+            return "";
         }
-        r.suffixes.put(part, suffix);
+        Readout r = id != null ? readouts.get(id) : null;
+        BoolSetting s = r != null ? r.includeSuffix.get(part) : null;
+        if (s == null) {
+            CategorySetting g = (CategorySetting) global.child(part);
+            s = g != null ? (BoolSetting) g.child("include_suffix") : null;
+        }
+        return s == null || s.get() ? SUFFIX : "";
     }
 
     /**
@@ -159,7 +194,6 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
      * is left to say.
      */
     public String compose(String id, Map<String, String> texts) {
-        Readout r = readout(id);
         StringBuilder sb = new StringBuilder();
         String pending = null;
         for (String p : parts(id)) {
@@ -171,8 +205,7 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
                 sb.append(pending).append(' ');
             }
             sb.append(t);
-            String suffix = r != null ? r.suffixes.get(p) : null;
-            pending = suffix != null ? suffix : DEFAULT_SUFFIX;
+            pending = suffixOf(id, p);
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
@@ -208,6 +241,12 @@ public final class Announcements implements GraphAnnouncer.PartPolicy {
     public List<String> order(String readout) {
         Readout r = readout(READOUTS + "." + readout);
         return r != null ? r.order.order() : null;
+    }
+
+    @Override
+    public String suffix(String readout, String part) {
+        String id = READOUTS + "." + readout;
+        return suffixOf(readout != null && readouts.containsKey(id) ? id : null, part);
     }
 
     @Override

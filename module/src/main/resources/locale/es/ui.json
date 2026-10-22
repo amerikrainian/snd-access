@@ -368,5 +368,7 @@
   "events.wisp": "Maná y descartes",
   "events.floater": "Palabras sobre las unidades",
   "events.chatter": "Charla de las unidades",
-  "part.message": "Mensaje"
+  "part.message": "Mensaje",
+  "settings.include_suffix": "Incluir puntuación final",
+  "part.affected": "Unidad afectada"
 }

@@ -32,6 +32,9 @@ public final class GraphAnnouncer {
 
         /** Whether part speaks in readout; readout null for a node that has none (its global setting). */
         boolean enabled(String readout, String part);
+
+        /** What follows part's text in readout before the next part: "," or "". */
+        String suffix(String readout, String part);
     }
 
     /** "n of m" wording, localized by the host. */
@@ -277,18 +280,26 @@ public final class GraphAnnouncer {
         return i >= 0 ? i : order.size();
     }
 
-    /** A node's own readout: its effective announcement parts, resolved live, non-empty ones joined. */
+    /**
+     * A node's own readout: its effective announcement parts, resolved live,
+     * the non-empty ones joined as SayTheSpire2 joins them — each part's
+     * text, its suffix (a comma unless the player turned it off), a space.
+     */
     public static String leafText(GraphNode node) {
+        PartPolicy policy = partPolicy;
+        String readout = readoutOf(node);
         StringBuilder sb = new StringBuilder();
+        String pending = null;
         for (NodeAnnouncement a : effectiveAnnouncements(node)) {
             String t = a.text != null ? a.text.get() : null;
             if (t == null || t.isEmpty()) {
                 continue;
             }
-            if (sb.length() > 0) {
-                sb.append(", ");
+            if (pending != null) {
+                sb.append(pending).append(' ');
             }
             sb.append(t);
+            pending = policy != null && a.kind != null ? policy.suffix(readout, a.kind) : ",";
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
