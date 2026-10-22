@@ -1,5 +1,10 @@
 # Changelog
 
+## V0.1.9
+
+- Fixed (hopefully)  an issue where your focus could get trapped in challenge fights.
+- Add first pass at reordering speech.
+
 ## V0.1.8
 
 - Heroes and enemies in combat are now one tab stop with two columns: heroes on the left, enemies on the right.
