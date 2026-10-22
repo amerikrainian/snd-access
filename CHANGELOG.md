@@ -1,5 +1,9 @@
 # Changelog
 
+## V0.2.0
+
+- More work on speech announcements, suffixes, and reordering.
+
 ## V0.1.9
 
 - Fixed (hopefully)  an issue where your focus could get trapped in challenge fights.
