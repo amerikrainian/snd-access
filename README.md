@@ -33,17 +33,6 @@ Buffers are those of STS2:
 | party, enemies | Everyone on a side, one line each, with hp, shields and incoming damage                        |
 | log            | What happened — banners, rolls, outcomes, phases, notifications; opens on the latest line     |
 
-### Settings
-
-Ctrl+Shift+M opens the mod menu; its Settings page holds what the mod speaks, as in
-SayTheSpire2. Every readout (a button, a combatant, an offer, a spell), buffer, glance and event
-is made of parts, and each readout's page lists them in speaking order: Enter on a part turns it
-on or off, Move up and Move down rearrange it (focus stays on the button, and the mod says where
-the part landed). Announcements turns a part off everywhere at once; a readout's own setting
-follows that until changed there, and is then called custom. Events also choose whether they are
-spoken at all and whether they go to the log buffer. Settings are kept in
-`<game folder>\mods\snd-access\settings.json`.
-
 ## Installing (players)
 
 1. Install the game via Steam.
