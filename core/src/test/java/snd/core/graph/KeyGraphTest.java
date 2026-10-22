@@ -135,6 +135,30 @@ class KeyGraphTest {
     }
 
     @Test
+    void reconcileKeepsFocusAmongNodesSharingAnObject() {
+        GraphState state = new GraphState();
+        final Object type = new Object(); // one monster type, shown three times
+
+        KeyGraph g = new KeyGraph(new Supplier<GraphRender>() {
+            @Override
+            public GraphRender get() {
+                return new GraphBuilder()
+                        .addItem(ControlId.referenced(type, "m0"), vt("Archer"))
+                        .addItem(ControlId.referenced(type, "m1"), vt("Archer"))
+                        .addItem(ControlId.referenced(type, "m2"), vt("Archer"))
+                        .addItem(ControlId.structural("accept"), vt("Accept"))
+                        .build();
+            }
+        }, state);
+
+        for (String expected : new String[] {"m1", "m2", "accept"}) {
+            g.move(GraphDir.DOWN);
+            assertTrue(g.rerender());
+            assertEquals(expected, state.curKey.structuralKey);
+        }
+    }
+
+    @Test
     void reconcileFallsBackToNearestSurvivor() {
         GraphState state = new GraphState();
         final List<String> items = new ArrayList<String>(Arrays.asList("a", "b", "c", "d"));

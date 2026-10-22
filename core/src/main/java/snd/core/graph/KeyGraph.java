@@ -108,12 +108,25 @@ public final class KeyGraph {
 
         if (old != null) {
             // Tier 1: the same backing object, even if its structural key changed (it moved).
+            // Several nodes can show one object (two extra monsters of one type share their
+            // MonsterType): the node focus was on wins while it still shows the object, and
+            // an object shown more than once is no guide to where focus went.
             if (old.reference != null) {
-                for (Map.Entry<ControlId, GraphNode> kv : render.nodes.entrySet()) {
-                    if (kv.getValue().id.referenceMatches(old.reference)) {
-                        resolved = kv.getValue().id;
-                        break;
+                GraphNode same = render.nodes.get(old);
+                if (same != null && same.id.referenceMatches(old.reference)) {
+                    resolved = same.id;
+                } else {
+                    GraphNode moved = null;
+                    for (Map.Entry<ControlId, GraphNode> kv : render.nodes.entrySet()) {
+                        if (kv.getValue().id.referenceMatches(old.reference)) {
+                            if (moved != null) {
+                                moved = null;
+                                break;
+                            }
+                            moved = kv.getValue();
+                        }
                     }
+                    resolved = moved != null ? moved.id : null;
                 }
             }
 
