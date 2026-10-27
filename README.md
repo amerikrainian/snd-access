@@ -2,6 +2,8 @@
 
 Accessibility mod for [Slice & Dice](https://store.steampowered.com/app/1775490/Slice__Dice/).
 
+Docs are [here](https://amerikrainian.com/snd-access/)
+
 ## Keys
 
 | Key                                  | Action                                                                               |

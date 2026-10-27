@@ -1,5 +1,6 @@
 # Build the distributable mod zip: the mod jars, prism.dll and its licenses
-# under mods\snd-access. The zip root IS the game folder, so the installer (and
+# under mods\snd-access, and the rendered mdbook manual under SnDAccessDocs
+# when docs_src exists. The zip root IS the game folder, so the installer (and
 # a manual user) extracts it straight into the game dir. The installer then
 # patches SliceAndDice.json; a manual user runs deploy.ps1 instead,
 # which does both steps from a local build.
@@ -21,11 +22,20 @@ $version = ($versionLine -split '=', 2)[1].Trim()
 $hostJar = Join-Path $root "host\build\libs\snd-host-all.jar"
 $moduleJar = Join-Path $root "module\build\libs\snd-module.jar"
 $prismDir = Join-Path $root "third_party\prism"
+$docsDir = Join-Path $root "docs_src"
 $zipPath = Join-Path $releaseDir "SnDAccess-v$version.zip"
 
 & gradle -p $root build
 if ($LASTEXITCODE -ne 0) {
     throw "gradle build failed with exit code $LASTEXITCODE"
+}
+
+$hasDocs = Test-Path (Join-Path $docsDir "book.toml")
+if ($hasDocs) {
+    mdbook build $docsDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "Docs build failed with exit code $LASTEXITCODE"
+    }
 }
 
 foreach ($required in @($hostJar, $moduleJar, (Join-Path $prismDir "prism.dll"))) {
@@ -46,6 +56,11 @@ Copy-Item -LiteralPath $moduleJar -Destination $modDir
 Copy-Item -LiteralPath (Join-Path $prismDir "prism.dll") -Destination $modDir
 # Prism is MPL-2.0 (plus dependency licenses); redistribution ships them beside the dll.
 Copy-Item -Path (Join-Path $prismDir "LICENSES") -Destination (Join-Path $modDir "LICENSES") -Recurse
+
+if ($hasDocs) {
+    # Packaging pattern adapted from SayTheSpire2: https://github.com/bradjrenshaw/say-the-spire2
+    Copy-Item -Path (Join-Path $docsDir "book") -Destination (Join-Path $stageDir "SnDAccessDocs") -Recurse
+}
 
 if (Test-Path $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force

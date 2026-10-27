@@ -6,3 +6,5 @@ build/
 */build/
 releases/
 installer/target/
+# The rendered manual (mdbook build docs_src)
+docs_src/book/
